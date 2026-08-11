@@ -1,0 +1,32 @@
+{
+  "youtube_hotstar": {
+    "play_pause": "space",
+    "skip_forward": "l",
+    "skip_back": "j",
+    "skip_forward_30": ["l", "l", "l"],
+    "next": ["shift", "n"],
+    "fullscreen": "f",
+    "subtitles": "c",
+    "back": ["alt", "left"]
+  },
+  "universal": {
+    "play_pause": "space",
+    "skip_forward": "right",
+    "skip_back": "left",
+    "skip_forward_30": ["right", "right", "right"],
+    "next": "right",
+    "fullscreen": "f",
+    "subtitles": "c",
+    "back": ["alt", "left"]
+  },
+  "vlc": {
+    "play_pause": "space",
+    "skip_forward": "right",
+    "skip_back": "left",
+    "skip_forward_30": ["right", "right", "right"],
+    "next": ["ctrl", "right"],
+    "fullscreen": "f",
+    "subtitles": "v",
+    "back": ["alt", "left"]
+  }
+}

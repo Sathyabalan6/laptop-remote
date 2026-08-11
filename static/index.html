@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>REMOTE DECK</title>
+  <script src="/static/socket.io.min.js"></script>
+  <meta name="theme-color" content="#131315">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <style>
+    /* ── DESIGN SYSTEM & TOKENS ── */
+    :root {
+      /* Colors */
+      --background: #131315;
+      --surface: #18181b;
+      --surface-dim: #131315;
+      --surface-container-lowest: #0e0e10;
+      --surface-container-low: #1c1b1d;
+      --surface-container: #201f22;
+      --surface-container-high: #2a2a2c;
+      --surface-container-highest: #353437;
+      --surface-hover: #27272a;
+      --surface-bright: #39393b;
+      --on-surface: #e5e1e4;
+      --on-surface-variant: #c7c4d7;
+      --primary: #c0c1ff;
+      --primary-container: #8083ff;
+      --on-primary-container: #0d0096;
+      --secondary: #c7c5ce;
+      --secondary-container: #4b4b52;
+      --on-secondary-container: #bcbbc3;
+      --tertiary: #4edea3;
+      --border: #27272a;
+      --danger: #ef4444;
+      --foreground: #fafafa;
+      --foreground-muted: #a1a1aa;
+      --outline: #908fa0;
+      --outline-variant: #464554;
+
+      /* Spacing */
+      --container-padding: 20px;
+      --container-padding-mobile: 16px;
+      --card-padding: 14px;
+      --gap-standard: 12px;
+      --gap-grid: 8px;
+      --gap-icon: 6px;
+
+      /* Border Radius */
+      --radius-cards: 16px;
+      --radius-buttons: 12px;
+      --radius-small: 8px;
+      --radius-pills: 9999px;
+    }
+
+    /* ── TYPOGRAPHY TOKENS ── */
+    .heading-caps {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .metadata-caps {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .nav-caps {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .ui-action {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .numeric-display {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .subheading {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .micro-label {
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .body-text {
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.4;
+    }
+
+    .headline-lg {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── BASE RESET ── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      touch-action: none;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── HEADER ── */
+    header {
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--background);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--container-padding);
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-left svg {
+      width: 20px;
+      height: 20px;
+      color: var(--primary);
+    }
+
+    .header-title {
+      color: var(--foreground);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--surface-container-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pills);
+      padding: 6px 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+      animation: statusPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
+    }
+
+    .status-label {
+      color: var(--on-surface-variant);
+    }
+
+    .status-wifi-icon svg {
+      width: 14px;
+      height: 14px;
+      color: var(--on-surface-variant);
+      display: block;
+    }
+
+    .battery-chip {
+      color: var(--tertiary);
+      background-color: var(--surface-container-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pills);
+      padding: 6px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* ── CONNECTION BANNER ── */
+    .banner {
+      background-color: var(--danger);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--container-padding);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 99;
+      flex-shrink: 0;
+    }
+
+    .banner.visible {
+      max-height: 48px;
+      padding: 12px var(--container-padding);
+    }
+
+    .banner button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: var(--radius-small);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--gap-icon);
+      transition: transform 0.1s;
+    }
+
+    .banner button:active {
+      transform: scale(0.95);
+    }
+
+    .banner button svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ── MAIN CONTENT & PANELS ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+    }
+
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      padding: var(--container-padding);
+      gap: var(--gap-standard);
+      overflow: hidden;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    /* ── CARDS & SECTIONS ── */
+    .card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-cards);
+      padding: var(--card-padding);
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-standard);
+    }
+
+    /* ── TAB 1: MEDIA PANEL ── */
+    #tab-media {
+      overflow: hidden;
+    }
+
+    .media-scroll-container {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-standard);
+      padding-bottom: 12px;
+      touch-action: pan-y;
+    }
+
+    .media-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Preset Selector */
+    .section-preset {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-grid);
+    }
+
+    .section-label {
+      color: var(--on-surface-variant);
+      margin-left: 4px;
+    }
+
+    .preset-pill-row {
+      display: flex;
+      background-color: var(--surface-container-lowest);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pills);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .preset-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--on-surface-variant);
+      padding: 10px 8px;
+      border-radius: var(--radius-pills);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .preset-btn.active {
+      background-color: var(--primary-container);
+      color: var(--on-primary-container);
+      box-shadow: 0 0 15px rgba(192, 193, 255, 0.3);
+    }
+
+    .preset-btn:hover:not(.active) {
+      background-color: var(--surface-hover);
+    }
+
+    /* Playback Hub */
+    .playback-hub-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .playback-glow {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      right: -6px;
+      bottom: -6px;
+      background: linear-gradient(135deg, rgba(192, 193, 255, 0.2) 0%, rgba(78, 222, 163, 0.2) 100%);
+      filter: blur(20px);
+      border-radius: 30px;
+      opacity: 0.25;
+      z-index: 1;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
+
+    .playback-hub-container:hover .playback-glow {
+      opacity: 0.40;
+    }
+
+    .playback-card {
+      position: relative;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      z-index: 2;
+    }
+
+    .progress-bar-row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background-color: var(--surface-container-high);
+      border-radius: var(--radius-pills);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 33.333%;
+      height: 100%;
+      background-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      border-radius: var(--radius-pills);
+    }
+
+    .progress-timestamps {
+      display: flex;
+      justify-content: space-between;
+      color: var(--on-surface-variant);
+    }
+
+    .main-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .control-btn-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .skip-btn-circle {
+      width: 56px;
+      height: 56px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--on-surface-variant);
+    }
+
+    .skip-btn-circle:active {
+      transform: scale(0.9);
+    }
+
+    .play-btn-circle {
+      width: 96px;
+      height: 96px;
+      border: none;
+      background-color: var(--primary-container);
+      color: var(--on-primary-container);
+      box-shadow: 0 0 30px rgba(128, 131, 255, 0.4);
+    }
+
+    .play-btn-circle:active {
+      transform: scale(0.95);
+    }
+
+    .secondary-controls-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .control-pill {
+      display: flex;
+      align-items: center;
+      gap: var(--gap-icon);
+      border: 1px solid var(--border);
+      background-color: var(--surface-container-low);
+      border-radius: var(--radius-pills);
+      padding: 8px 16px;
+      color: var(--on-surface);
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .control-pill:active {
+      transform: scale(0.95);
+    }
+
+    .control-pill svg {
+      width: 14px;
+      height: 14px;
+      color: var(--on-surface-variant);
+    }
+
+    /* Volume & System Controls */
+    .volume-system-card {
+      background-color: var(--surface-container-low);
+    }
+
+    .volume-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .volume-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .volume-title-left {
+      display: flex;
+      align-items: center;
+      gap: var(--gap-icon);
+      color: var(--on-surface);
+    }
+
+    .volume-title-left svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary);
+    }
+
+    .volume-value-right {
+      color: var(--foreground);
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: var(--radius-pills);
+      background-color: var(--surface-container-highest);
+      outline: none;
+      cursor: pointer;
+      margin: 8px 0;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s ease;
+    }
+
+    .volume-slider::-webkit-slider-thumb:active {
+      transform: scale(1.2);
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s ease;
+    }
+
+    .volume-slider::-moz-range-thumb:active {
+      transform: scale(1.2);
+    }
+
+    .quick-toggles-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--gap-grid);
+    }
+
+    .toggle-btn {
+      background-color: var(--surface-container);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-buttons);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--gap-grid);
+      color: var(--on-surface-variant);
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
+    }
+
+    .toggle-btn:active {
+      transform: scale(0.95);
+      background-color: var(--surface-hover);
+    }
+
+    .toggle-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--secondary);
+    }
+
+    .forget-device-btn {
+      width: 100%;
+      background-color: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-buttons);
+      padding: 10px;
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--gap-icon);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-top: var(--gap-standard);
+    }
+
+    .forget-device-btn:active {
+      transform: scale(0.98);
+      background-color: rgba(239, 68, 68, 0.1);
+      border-color: var(--danger);
+    }
+
+    .forget-device-btn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--danger);
+      display: block;
+    }
+
+    /* ── TAB 2: MOUSE PANEL ── */
+    #tab-mouse {
+      overflow: hidden;
+    }
+
+    .sensitivity-card {
+      background-color: var(--surface);
+    }
+
+    .sensitivity-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sensitivity-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: var(--radius-pills);
+      background-color: var(--surface-container-highest);
+      outline: none;
+      cursor: pointer;
+      margin: 8px 0;
+    }
+
+    .sensitivity-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      cursor: pointer;
+      border: none;
+    }
+
+    .sensitivity-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      cursor: pointer;
+      border: none;
+    }
+
+    .trackpad-panel {
+      flex: 1;
+      min-height: 300px;
+      background: radial-gradient(circle at center, #18181b 0%, #0e0e10 100%);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-cards);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      touch-action: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .trackpad-panel.active {
+      border-color: var(--primary);
+      box-shadow: inset 0 0 20px rgba(192, 193, 255, 0.05), 0 0 15px rgba(192, 193, 255, 0.1);
+    }
+
+    .trackpad-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: var(--on-surface-variant);
+      opacity: 0.6;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .trackpad-hint svg {
+      width: 32px;
+      height: 32px;
+      opacity: 0.3;
+      color: var(--on-surface);
+    }
+
+    .cursor-ghost {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(192, 193, 255, 0.2);
+      background: rgba(192, 193, 255, 0.05);
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 5;
+      /* positioned via JS left/top + translate offset */
+      margin-left: -16px;
+      margin-top: -16px;
+    }
+
+    .cursor-ghost.visible {
+      opacity: 1;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(192, 193, 255, 0.05);
+      border: 1px solid var(--primary);
+      padding: 6px 4px;
+      border-radius: 20px;
+      z-index: 10;
+    }
+
+    .scroll-indicator.show {
+      opacity: 1;
+    }
+
+    .scroll-dots {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .scroll-dots i {
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: block;
+    }
+
+    .scroll-indicator span {
+      font-size: 7px;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      margin-top: 2px;
+    }
+
+    .mouse-buttons-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr 1.2fr;
+      gap: var(--gap-standard);
+      height: 96px;
+      flex-shrink: 0;
+    }
+
+    .scroll-buttons-col {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-grid);
+      height: 100%;
+    }
+
+    .scroll-btn-tactile {
+      flex: 1;
+      background-color: var(--surface-container);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-small);
+      color: var(--on-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 0 #0e0e10;
+      transition: transform 0.1s, box-shadow 0.1s;
+      height: calc(50% - 4px);
+      touch-action: none;
+    }
+
+    .scroll-btn-tactile:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #0e0e10;
+    }
+
+    .scroll-btn-tactile svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+      display: block;
+    }
+
+    .mouse-click-btn {
+      background-color: var(--surface-container);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-cards);
+      color: var(--on-surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #0e0e10;
+      transition: transform 0.1s, box-shadow 0.1s;
+      height: 100%;
+    }
+
+    .mouse-click-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #0e0e10;
+    }
+
+    .click-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+    }
+
+    /* ── TAB 3: PRESENT PANEL ── */
+    #tab-present {
+      overflow: hidden;
+    }
+
+    .present-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .present-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .present-header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .present-launch-btn {
+      width: 100%;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: var(--gap-grid);
+      border-radius: var(--radius-buttons);
+      border: 1px solid rgba(192, 193, 255, 0.4);
+      background: linear-gradient(135deg, rgba(128, 131, 255, 0.35), rgba(192, 131, 255, 0.2));
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .present-launch-btn:active {
+      transform: scale(0.97);
+    }
+
+    .present-launch-btn.active {
+      background: rgba(244, 63, 94, 0.25);
+      border-color: rgba(244, 63, 94, 0.6);
+      color: var(--danger);
+    }
+
+    .present-launch-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .laser-pad {
+      flex: 1;
+      background: rgba(24, 24, 27, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-cards);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+
+    .laser-corner {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-color: rgba(192, 193, 255, 0.3);
+      border-style: solid;
+      pointer-events: none;
+    }
+
+    .laser-corner.top-left {
+      top: 12px;
+      left: 12px;
+      border-width: 2px 0 0 2px;
+    }
+
+    .laser-corner.top-right {
+      top: 12px;
+      right: 12px;
+      border-width: 2px 2px 0 0;
+    }
+
+    .laser-corner.bottom-left {
+      bottom: 12px;
+      left: 12px;
+      border-width: 0 0 2px 2px;
+    }
+
+    .laser-corner.bottom-right {
+      bottom: 12px;
+      right: 12px;
+      border-width: 0 2px 2px 0;
+    }
+
+    .laser-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .laser-hint svg {
+      width: 32px;
+      height: 32px;
+      color: var(--danger);
+      opacity: 0.6;
+    }
+
+    .laser-dot {
+      width: 12px;
+      height: 12px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      box-shadow: 0 0 12px #ef4444, 0 0 24px rgba(239, 68, 68, 0.6);
+      position: absolute;
+      display: none;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .slide-controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap-grid);
+      height: 160px;
+      flex-shrink: 0;
+    }
+
+    .slide-ctrl-btn {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-cards);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      cursor: pointer;
+      color: var(--secondary);
+      transition: transform 0.15s, box-shadow 0.15s;
+      padding: 16px;
+    }
+
+    .slide-ctrl-btn:active {
+      transform: scale(0.95);
+    }
+
+    .slide-ctrl-btn svg {
+      width: 28px;
+      height: 28px;
+      color: var(--primary);
+    }
+
+    .slide-ctrl-btn.next {
+      background-color: rgba(128, 131, 255, 0.2);
+      border: 1px solid rgba(192, 193, 255, 0.4);
+      box-shadow: 0 0 15px rgba(192, 193, 255, 0.15);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .slide-ctrl-btn.next svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .present-bottom-row {
+      display: flex;
+      gap: var(--gap-grid);
+      align-items: center;
+      height: 56px;
+      flex-shrink: 0;
+    }
+
+    .timer-card {
+      flex: 1;
+      background-color: var(--surface-container-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-buttons);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 100%;
+    }
+
+    .timer-card svg {
+      width: 20px;
+      height: 20px;
+      color: var(--tertiary);
+    }
+
+    .timer-card-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .decorative-glass-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-buttons);
+      background: rgba(24, 24, 27, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--secondary);
+      transition: transform 0.15s, background-color 0.15s;
+    }
+
+    .decorative-glass-btn:active {
+      transform: scale(0.95);
+      background-color: var(--surface-hover);
+    }
+
+    .decorative-glass-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--on-surface-variant);
+    }
+
+    .decorative-glass-btn.active {
+      background: rgba(244, 63, 94, 0.22);
+      border-color: rgba(244, 63, 94, 0.6);
+    }
+
+    .decorative-glass-btn.active svg {
+      color: var(--danger);
+    }
+
+    /* ── BOTTOM NAV NAVIGATION ── */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background-color: rgba(32, 31, 34, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 16px env(safe-area-inset-bottom, 0px);
+      z-index: 90;
+    }
+
+    .nav-item {
+      flex: 1;
+      height: 54px;
+      max-width: 100px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--secondary);
+      border-radius: var(--radius-buttons);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-item.active {
+      background-color: rgba(128, 131, 255, 0.2);
+      border: 1px solid rgba(192, 193, 255, 0.3);
+      color: var(--primary);
+      box-shadow: 0 0 15px rgba(192, 193, 255, 0.15);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.15s ease;
+    }
+
+    .nav-item:active svg {
+      transform: scale(0.9);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 96px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-buttons);
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+      z-index: 150;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      color: var(--on-surface);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── PIN PAIRING OVERLAY ── */
+    .pin-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--background);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(16px);
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pin-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .pin-overlay > * {
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .pin-title {
+      margin-bottom: 8px;
+      color: var(--foreground);
+    }
+
+    .pin-subtitle {
+      color: var(--foreground-muted);
+      margin-bottom: 24px;
+    }
+
+    .pin-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .pin-box {
+      width: 44px;
+      height: 52px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background-color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      transition: all 0.15s ease;
+    }
+
+    .pin-box.filled {
+      border-color: var(--primary);
+      background-color: rgba(192, 193, 255, 0.05);
+      box-shadow: 0 0 10px rgba(192, 193, 255, 0.1);
+    }
+
+    .pin-input-hidden {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      font-size: 24px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: transparent;
+    }
+
+    .pin-error {
+      color: var(--danger);
+      height: 16px;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .pin-error.visible {
+      opacity: 1;
+      animation: pinErrorShake 0.3s ease;
+    }
+
+    @keyframes pinErrorShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* ── RESPONSIVE VIEWPORT STYLES ── */
+    @media (max-height: 680px) {
+      header {
+        padding: 8px 16px;
+      }
+      .tab-panel {
+        padding: 6px 16px 16px;
+        gap: 8px;
+      }
+      .card {
+        padding: 10px;
+        gap: 8px;
+      }
+      .play-btn-circle {
+        width: 80px;
+        height: 80px;
+      }
+      .skip-btn-circle {
+        width: 48px;
+        height: 48px;
+      }
+      .playback-card {
+        padding: 20px;
+        gap: 20px;
+      }
+      .slide-controls-grid {
+        height: 120px;
+      }
+    }
+
+    @media (max-height: 560px) {
+      header {
+        display: none;
+      }
+      .tab-panel {
+        padding-top: 10px;
+        gap: 6px;
+      }
+      .media-scroll-container {
+        gap: 8px;
+      }
+      .card {
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Bar Header -->
+  <header>
+    <div class="header-left">
+      <!-- settings_input_component (circuit) -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="8" height="8" rx="1.5"></rect>
+        <rect x="14" y="2" width="8" height="8" rx="1.5"></rect>
+        <rect x="2" y="14" width="8" height="8" rx="1.5"></rect>
+        <rect x="14" y="14" width="8" height="8" rx="1.5"></rect>
+        <path d="M6 10v4M18 10v4M10 6h4M10 18h4"></path>
+      </svg>
+      <span class="header-title heading-caps">Remote Deck</span>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label nav-caps" id="statusLabel">Offline</span>
+        <!-- wifi_tethering (wifi waves) -->
+        <span class="status-wifi-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12a10 10 0 0 1 14 0"></path>
+            <path d="M8.5 15.5a5 5 0 0 1 7 0"></path>
+            <circle cx="12" cy="19" r="1" fill="currentColor"></circle>
+          </svg>
+        </span>
+      </div>
+      <span class="battery-chip nav-caps" id="batteryPct" style="display:none"></span>
+    </div>
+  </header>
+
+  <!-- Banner (offline warning) -->
+  <div class="banner" id="connBanner">
+    <span>⚠️ No connection — check same WiFi</span>
+    <button onclick="checkConnection()">
+      <!-- refresh / wifi retry -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+      </svg>
+      <span>Retry</span>
+    </button>
+  </div>
+
+  <!-- Tab Panels Main Container -->
+  <main>
+    
+    <!-- TAB 1 — MEDIA -->
+    <div class="tab-panel active" id="tab-media">
+      <div class="media-scroll-container">
+        
+        <!-- Preset Selector -->
+        <div class="section-preset">
+          <span class="section-label metadata-caps">Player Profile</span>
+          <div class="preset-pill-row">
+            <button class="preset-btn nav-caps active" id="preset-btn-universal" onclick="setPreset('universal')">Universal</button>
+            <button class="preset-btn nav-caps" id="preset-btn-youtube_hotstar" onclick="setPreset('youtube_hotstar')">YouTube / Hotstar</button>
+            <button class="preset-btn nav-caps" id="preset-btn-vlc" onclick="setPreset('vlc')">VLC</button>
+          </div>
+        </div>
+
+        <!-- Playback Hub Card -->
+        <div class="playback-hub-container">
+          <div class="playback-glow"></div>
+          <div class="playback-card">
+            
+            <!-- Progress Bar row -->
+            <div class="progress-bar-row">
+              <div class="progress-track">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="progress-timestamps">
+                <span class="metadata-caps">01:45</span>
+                <span class="metadata-caps">-03:20</span>
+              </div>
+            </div>
+
+            <!-- Main Controls row -->
+            <div class="main-controls-row">
+              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_back')">
+                <!-- skip_previous -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 19 2 12 11 5 11 19" fill="currentColor"></polygon>
+                  <polygon points="22 19 13 12 22 5 22 19" fill="currentColor"></polygon>
+                </svg>
+              </button>
+              <button class="control-btn-circle play-btn-circle" onclick="send('play_pause')">
+                <!-- play/pause combined -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="4 4 13 12 4 20 4 4" fill="currentColor" stroke="none"></polygon>
+                  <rect x="16" y="4" width="3" height="16" rx="1" fill="currentColor" stroke="none"></rect>
+                  <rect x="21" y="4" width="3" height="16" rx="1" fill="currentColor" stroke="none"></rect>
+                </svg>
+              </button>
+              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_forward')">
+                <!-- skip_next -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 19 22 12 13 5 13 19" fill="currentColor"></polygon>
+                  <polygon points="2 19 11 12 2 5 2 19" fill="currentColor"></polygon>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Secondary controls row -->
+            <div class="secondary-controls-row">
+              <button class="control-pill ui-action" onclick="send('back')">
+                <!-- arrow_back -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Back</span>
+              </button>
+              <button class="control-pill ui-action" onclick="send('skip_back')">
+                <!-- replay_10 -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <polyline points="3 3 3 8 8 8"></polyline>
+                  <text x="12" y="15" font-size="7" font-weight="bold" font-family="-apple-system, sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text>
+                </svg>
+                <span>10s</span>
+              </button>
+              <button class="control-pill ui-action" onclick="send('skip_forward_30')">
+                <!-- forward_30 -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <polyline points="21 3 21 8 16 8"></polyline>
+                  <text x="12" y="15" font-size="7" font-weight="bold" font-family="-apple-system, sans-serif" text-anchor="middle" fill="currentColor" stroke="none">30</text>
+                </svg>
+                <span>30s</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Volume & System Controls Card -->
+        <div class="card volume-system-card">
+          <!-- Volume section -->
+          <div class="volume-section">
+            <div class="volume-header-row">
+              <div class="volume-title-left ui-action">
+                <!-- volume_up -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <span>Volume</span>
+              </div>
+              <span class="numeric-display volume-value-right" id="volumePct">50%</span>
+            </div>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+          </div>
+
+          <!-- Quick toggles grid -->
+          <div class="quick-toggles-grid">
+            <button class="toggle-btn ui-action" onclick="send('mute')">
+              <!-- volume_off -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <line x1="22" y1="9" x2="16" y2="15"></line>
+                <line x1="16" y1="9" x2="22" y2="15"></line>
+              </svg>
+              <span>Mute</span>
+            </button>
+            <button class="toggle-btn ui-action" onclick="send('subtitles')">
+              <!-- subtitles -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
+                <line x1="7" y1="10" x2="17" y2="10"></line>
+                <line x1="7" y1="14" x2="13" y2="14"></line>
+              </svg>
+              <span>Subs</span>
+            </button>
+            <button class="toggle-btn ui-action" onclick="send('fullscreen')">
+              <!-- fullscreen -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+              <span>Full</span>
+            </button>
+          </div>
+          <!-- Forget This Device Button -->
+          <button class="forget-device-btn ui-action" onclick="forgetDevice()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Forget This Device</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2 — MOUSE -->
+    <div class="tab-panel" id="tab-mouse" style="overflow:hidden;">
+      
+      <!-- Sensitivity Section -->
+      <div class="card sensitivity-card">
+        <div class="sensitivity-header-row">
+          <span class="heading-caps" style="color: var(--on-surface-variant);">Pointer Sensitivity</span>
+          <span class="numeric-display" id="sensitivityLabel" style="color: var(--primary);">1.0x</span>
+        </div>
+        <input type="range" class="sensitivity-slider" id="sensitivitySlider" min="0.5" max="2.5" step="0.1" value="1.0">
+      </div>
+
+      <!-- Trackpad Area -->
+      <div class="trackpad-panel" id="trackpad">
+        <div class="trackpad-hint">
+          <!-- new_window / trackpad SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+            <path d="M12 12v4"></path>
+            <circle cx="12" cy="10" r="1.5" fill="currentColor"></circle>
+          </svg>
+          <span class="ui-action" style="letter-spacing: 0.12em; text-transform: uppercase;">Move pointer</span>
+        </div>
+        <!-- Touch Ghost Cursor Indicator -->
+        <div class="cursor-ghost" id="cursorGhost"></div>
+        
+        <!-- Scroll Track Overlay Indicator -->
+        <div class="scroll-indicator" id="scrollIndicator">
+          <div class="scroll-dots"><i></i><i></i><i></i></div>
+          <span>SCROLL</span>
+        </div>
+      </div>
+
+      <!-- Click Buttons with Scroll wheel columns -->
+      <div class="mouse-buttons-grid">
+        <button class="mouse-click-btn metadata-caps" onclick="click_btn('left')">
+          <span>LEFT</span>
+          <span class="click-dot"></span>
+        </button>
+        <div class="scroll-buttons-col">
+          <button class="scroll-btn-tactile" 
+                  onpointerdown="startContinuousScroll(event, 'up')" 
+                  onpointerup="stopContinuousScroll(event)" 
+                  onpointerleave="stopContinuousScroll(event)"
+                  onpointercancel="stopContinuousScroll(event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button class="scroll-btn-tactile" 
+                  onpointerdown="startContinuousScroll(event, 'down')" 
+                  onpointerup="stopContinuousScroll(event)" 
+                  onpointerleave="stopContinuousScroll(event)"
+                  onpointercancel="stopContinuousScroll(event)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+        <button class="mouse-click-btn metadata-caps" onclick="click_btn('right')">
+          <span>RIGHT</span>
+          <span class="click-dot"></span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- TAB 3 — PRESENT -->
+    <div class="tab-panel" id="tab-present" style="overflow:hidden;">
+      
+      <!-- Header row -->
+      <div class="present-header-row">
+        <div class="present-header-left">
+          <span class="micro-label" style="color: var(--on-surface-variant);">Current Deck</span>
+          <span class="headline-lg">Presentation Mode</span>
+        </div>
+        <div class="present-header-right">
+          <span class="numeric-display" id="slideCounter" style="color: var(--primary);">1</span>
+          <span class="micro-label" style="color: var(--on-surface-variant);">Slide</span>
+        </div>
+      </div>
+
+      <!-- Presentation start / exit -->
+      <button class="present-launch-btn" id="presentLaunchBtn" onclick="togglePresentation()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+        <span>Start Presentation</span>
+      </button>
+
+      <!-- Laser Pad -->
+      <div class="laser-pad" id="presentPad">
+        <!-- Decorative corner accent lines -->
+        <div class="laser-corner top-left"></div>
+        <div class="laser-corner top-right"></div>
+        <div class="laser-corner bottom-left"></div>
+        <div class="laser-corner bottom-right"></div>
+
+        <div class="laser-hint">
+          <!-- blur_on SVG (danger color) -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6" stroke-dasharray="3 3"></circle>
+            <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+          </svg>
+          <span class="heading-caps" style="color: var(--danger); margin-top: 8px;">Laser Pointer</span>
+          <span class="subheading" style="color: var(--on-surface-variant);">Touch and hold to point</span>
+        </div>
+        
+        <!-- Laser Red Dot -->
+        <div class="laser-dot" id="laserDot"></div>
+      </div>
+
+      <!-- Slide Controls Grid -->
+      <div class="slide-controls-grid">
+        <button class="slide-ctrl-btn heading-caps" onclick="slideCtrl('prev_slide')">
+          <!-- arrow_back -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span style="margin-top: 4px;">Previous</span>
+        </button>
+        <button class="slide-ctrl-btn next heading-caps" onclick="slideCtrl('next_slide')">
+          <!-- arrow_forward -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+          <span style="margin-top: 4px;">Next Slide</span>
+        </button>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="present-bottom-row">
+        <div class="timer-card">
+          <!-- timer SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <div class="timer-card-content">
+            <span class="micro-label" style="color: var(--on-surface-variant);">Elapsed</span>
+            <span class="numeric-display" id="elapsedTimer" style="color: var(--tertiary);">00:00</span>
+          </div>
+        </div>
+        
+        <button class="decorative-glass-btn" id="restartBtn" onclick="resetPresentation()" aria-label="Restart presentation">
+          <!-- restart_alt -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5V2L7 6l5 4V7c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"></path>
+          </svg>
+        </button>
+        <button class="decorative-glass-btn" id="blackoutBtn" onclick="toggleBlackout()" aria-label="Toggle blank screen">
+          <!-- tv_off -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 21h10"></path>
+            <path d="M12 21v-4"></path>
+            <path d="m2 2 20 20"></path>
+            <path d="M21 17V5a2 2 0 0 0-2-2H9"></path>
+            <path d="M5 5v12a2 2 0 0 0 2 2h9"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Sticky Bottom Navigation Bar -->
+  <nav>
+    <button class="nav-item active" id="tab-btn-media" onclick="switchTab('media')">
+      <!-- play_circle (nav) -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
+      </svg>
+      <span class="nav-caps">Media</span>
+    </button>
+    <button class="nav-item" id="tab-btn-mouse" onclick="switchTab('mouse')">
+      <!-- new_window / trackpad -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+        <path d="M12 12v4"></path>
+        <circle cx="12" cy="10" r="1.5" fill="currentColor"></circle>
+      </svg>
+      <span class="nav-caps">Mouse</span>
+    </button>
+    <button class="nav-item" id="tab-btn-present" onclick="switchTab('present')">
+      <!-- slideshow -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+        <path d="M12 17v4"></path>
+        <path d="M9 21h6"></path>
+        <polygon points="10 8 15 11 10 14 10 8" fill="currentColor"></polygon>
+      </svg>
+      <span class="nav-caps">Present</span>
+    </button>
+  </nav>
+
+  <!-- Interactive Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- PIN Pairing Overlay screen -->
+  <div class="pin-overlay" id="pinOverlay">
+    <h2 class="pin-title headline-lg">Enter Pairing PIN</h2>
+    <p class="pin-subtitle body-text">Check the terminal window on your laptop for the 6-digit pairing PIN.</p>
+    
+    <div class="pin-boxes">
+      <div class="pin-box"></div>
+      <div class="pin-box"></div>
+      <div class="pin-box"></div>
+      <div class="pin-box"></div>
+      <div class="pin-box"></div>
+      <div class="pin-box"></div>
+      <input type="text" pattern="[0-9]*" inputmode="numeric" class="pin-input-hidden" id="pinInputHidden" autocomplete="off">
+    </div>
+
+    <div class="pin-error ui-action" id="pinError">Invalid pairing PIN</div>
+  </div>
+
+  <!-- JavaScript Logic Implementation -->
+  <script>
+    // ─────────────────────────────────────────────────────────────────
+    //  STATE
+    // ─────────────────────────────────────────────────────────────────
+    let currentTab = 'media';
+    let currentPreset = localStorage.getItem('player_preset') || 'universal';
+    let mouseSensitivity = parseFloat(localStorage.getItem('mouse_sensitivity')) || 1.0;
+    let screenW = 1920, screenH = 1080;
+    let volumeLevel = parseInt(localStorage.getItem('volume_level')) || 50;
+
+    // ─────────────────────────────────────────────────────────────────
+    //  PRESETS HANDLING
+    // ─────────────────────────────────────────────────────────────────
+    function setPreset(name, isAuto = false) {
+      currentPreset = name;
+      localStorage.setItem('player_preset', name);
+      if (!isAuto) vibrate(15);
+      
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'preset-btn-' + name);
+      });
+
+      if (!isAuto) {
+        let displayName = 'Universal / Netflix';
+        if (name === 'youtube_hotstar') displayName = 'YouTube / Hotstar';
+        if (name === 'vlc') displayName = 'VLC Player';
+        showToast('Preset: ' + displayName);
+      }
+    }
+
+    // Initialize preset UI state on load
+    setPreset(currentPreset, true);
+
+    // ─────────────────────────────────────────────────────────────────
+    //  HAPTICS
+    // ─────────────────────────────────────────────────────────────────
+    function vibrate(ms = 20) {
+      if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  WAKE LOCK
+    // ─────────────────────────────────────────────────────────────────
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (_) {}
+    }
+    requestWakeLock();
+    document.addEventListener('visibilitychange', () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────────
+    //  TAB SWITCHING
+    // ─────────────────────────────────────────────────────────────────
+    function switchTab(name) {
+      if (currentTab === name) return;
+      currentTab = name;
+      vibrate(15);
+
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'tab-btn-' + name);
+      });
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === 'tab-' + name);
+      });
+    }
+
+    // Swipe Left/Right Gesture Support
+    function getTabOrder() {
+      const tabs = ['media', 'mouse'];
+      const presentBtn = document.getElementById('tab-btn-present');
+      if (presentBtn && presentBtn.style.display !== 'none') {
+        tabs.push('present');
+      }
+      return tabs;
+    }
+
+    function swipeTab(direction) {
+      const tabs = getTabOrder();
+      const index = tabs.indexOf(currentTab);
+      if (index === -1) return;
+      
+      if (direction === 'left' && index < tabs.length - 1) {
+        switchTab(tabs[index + 1]);
+      } else if (direction === 'right' && index > 0) {
+        switchTab(tabs[index - 1]);
+      }
+    }
+
+    let swiperStartX = 0, swiperStartY = 0, swiperValid = false;
+
+    document.addEventListener('touchstart', e => {
+      // Disable swiping if starting inside interactive controls, panels or buttons
+      if (e.touches.length > 1 || 
+          e.target.closest('#trackpad') || 
+          e.target.closest('#presentPad') || 
+          e.target.closest('.control-btn-circle') || 
+          e.target.closest('.control-pill') || 
+          e.target.closest('.preset-btn') || 
+          e.target.closest('.toggle-btn') || 
+          e.target.closest('.mouse-click-btn') || 
+          e.target.closest('.slide-ctrl-btn') || 
+          e.target.closest('.volume-slider') || 
+          e.target.closest('.sensitivity-slider') || 
+          e.target.closest('.nav-item') || 
+          e.target.closest('.pin-overlay')) {
+        swiperValid = false;
+        return;
+      }
+      swiperValid = true;
+      swiperStartX = e.touches[0].clientX;
+      swiperStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+      if (e.touches.length > 1) swiperValid = false;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      if (!swiperValid) return;
+      const dx = e.changedTouches[0].clientX - swiperStartX;
+      const dy = e.changedTouches[0].clientY - swiperStartY;
+      if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) {
+        swipeTab(dx > 0 ? 'right' : 'left');
+      }
+    }, { passive: true });
+
+    // ─────────────────────────────────────────────────────────────────
+    //  TOAST
+    // ─────────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  API CORE FETCH
+    // ─────────────────────────────────────────────────────────────────
+    async function post(url, body = {}) {
+      const token = localStorage.getItem('session_token') || '';
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      try {
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+        if (r.status === 401) {
+          showPinOverlay();
+          return false;
+        }
+        return r.ok;
+      } catch (e) {
+        setStatus('offline');
+        showToast('⚠️ Connection lost');
+        return false;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // ── WebSocket transport (falls back to HTTP) ──
+    const HTTP_MAP = {
+      mouse_move:   '/mouse/move',
+      mouse_stop:   '/mouse/stop',
+      mouse_scroll: '/mouse/scroll',
+      mouse_click:  '/mouse/click',
+      key:          '/key',
+      pointer_on:   '/pointer/on',
+      pointer_move: '/pointer/move',
+      pointer_off:  '/pointer/off',
+      blackout:     '/screen/blackout'
+    };
+
+    let socket = null;
+
+    function setStatus(s) {
+      if (s === 'active') {
+        dot.style.cssText = 'background: #4edea3; box-shadow: 0 0 12px #4edea3';
+        statusLabel.textContent = 'Active';
+        banner.classList.remove('visible');
+      } else if (s === 'pairing') {
+        dot.style.cssText = 'background: #e05cff; box-shadow: 0 0 12px #e05cff';
+        statusLabel.textContent = 'Pairing';
+        banner.classList.remove('visible');
+      } else {
+        dot.style.cssText = 'background: #ef4444; box-shadow: 0 0 12px #ef4444';
+        statusLabel.textContent = 'Offline';
+        banner.classList.add('visible');
+      }
+    }
+
+    function updateBattery(pct) {
+      const el = document.getElementById('batteryPct');
+      if (!el) return;
+      if (pct === null || pct === undefined) {
+        el.style.display = 'none';
+      } else {
+        el.style.display = '';
+        el.textContent = '🔋 ' + pct + '%';
+      }
+    }
+
+    function presetDisplayName(p) {
+      if (p === 'vlc') return 'VLC Player';
+      if (p === 'youtube_hotstar') return 'YT / Hotstar';
+      return 'Universal / Netflix';
+    }
+
+    function connectSocket(token) {
+      if (socket) { socket.disconnect(); socket = null; }
+      if (typeof io === 'undefined') return;  // vendor lib missing -> pure HTTP mode
+      socket = io({ auth: { token }, reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 8000 });
+      socket.on('connect', () => {});
+      socket.on('state', onServerState);
+      socket.on('preset_changed', d => {
+        if (d && d.preset && d.preset !== currentPreset) {
+          setPreset(d.preset, true);
+          showToast('🎯 Auto-preset: ' + presetDisplayName(d.preset));
+        }
+      });
+      socket.on('disconnect', () => setStatus('offline'));
+      socket.on('connect_error', () => setStatus('offline'));
+    }
+
+    function onServerState(data) {
+      if (data.authorized) {
+        setStatus('active');
+        hidePinOverlay();
+        if (data.screen_w) screenW = data.screen_w;
+        if (data.screen_h) screenH = data.screen_h;
+
+        // Handle present tab visibility based on server availability
+        const tabBtnPresent = document.getElementById('tab-btn-present');
+        if (tabBtnPresent) {
+          if (data.overlay_available) {
+            tabBtnPresent.style.display = 'flex';
+          } else {
+            tabBtnPresent.style.display = 'none';
+            if (currentTab === 'present') switchTab('media');
+          }
+        }
+
+        // Sync detected preset from active foreground window on host
+        if (data.detected_preset && data.detected_preset !== currentPreset) {
+          setPreset(data.detected_preset, true);
+          showToast('🎯 Auto-preset: ' + presetDisplayName(data.detected_preset));
+        }
+        updateBattery(data.battery);
+        // Sync blank-screen state so a refreshed phone matches the host
+        blackoutActive = !!data.blackout;
+        const bb = document.getElementById('blackoutBtn');
+        if (bb) bb.classList.toggle('active', blackoutActive);
+      } else {
+        setStatus('pairing');
+        showPinOverlay();
+        updateBattery(null);
+      }
+    }
+
+    // Primary transport: WebSocket when connected, HTTP otherwise.
+    async function socketSend(type, payload) {
+      if (socket && socket.connected) {
+        socket.emit(type, payload);
+        return true;
+      }
+      const url = HTTP_MAP[type];
+      return url ? post(url, payload || {}) : false;
+    }
+
+    const labels = {
+      play_pause: '⏯ Play / Pause', 
+      skip_forward: '⏩ +10 sec', 
+      skip_back: '⏪ −10 sec',
+      skip_forward_30: '⏭ +30 sec', 
+      fullscreen: '⛶ Fullscreen',
+      mute: '🔇 Mute', 
+      vol_up: '🔊 Volume +', 
+      vol_down: '🔉 Volume −', 
+      subtitles: '💬 Subtitles',
+      back: '🔙 Go Back',
+      next: '⏭ Next Slide',
+      next_slide: '⏭ Next Slide',
+      prev_slide: '⏪ Previous Slide',
+      present_start: '▶ Presentation started',
+      present_exit: '⏹ Presentation exited'
+    };
+
+    async function send(action) {
+      vibrate(25);
+      const ok = await socketSend('key', { action, preset: currentPreset });
+      if (ok) showToast(labels[action] || action);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  VOLUME SLIDER LOCAL STATE LOGIC
+    // ─────────────────────────────────────────────────────────────────
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumePctText = document.getElementById('volumePct');
+    
+    // Set initial UI value
+    volumeSlider.value = volumeLevel;
+    volumePctText.textContent = volumeLevel + '%';
+    
+    let lastVolumeValue = volumeLevel;
+
+    let volQueue = [];
+    let volSending = false;
+
+    async function processVolQueue() {
+      if (volQueue.length === 0) {
+        volSending = false;
+        return;
+      }
+      volSending = true;
+      
+      // Consolidate/truncate the queue if it builds up too much
+      if (volQueue.length > 6) {
+        volQueue = volQueue.slice(-6);
+      }
+      
+      const action = volQueue.shift();
+      vibrate(10);
+      await socketSend('key', { action, preset: currentPreset });
+
+      // Delay briefly to allow operating system volume level updates
+      setTimeout(processVolQueue, 50);
+    }
+
+    function queueVolumePress(action) {
+      volQueue.push(action);
+      if (!volSending) {
+        processVolQueue();
+      }
+    }
+
+    volumeSlider.addEventListener('input', e => {
+      const val = parseInt(e.target.value);
+      const delta = val - lastVolumeValue;
+      const absDelta = Math.abs(delta);
+      const steps = Math.round(absDelta / 5);
+
+      if (steps > 0) {
+        const action = delta > 0 ? 'vol_up' : 'vol_down';
+        for (let i = 0; i < steps; i++) {
+          queueVolumePress(action);
+        }
+        lastVolumeValue = lastVolumeValue + (delta > 0 ? steps * 5 : -steps * 5);
+      }
+      
+      volumeLevel = val;
+      volumePctText.textContent = val + '%';
+      localStorage.setItem('volume_level', val);
+    });
+
+    // ─────────────────────────────────────────────────────────────────
+    //  MOUSE TAB & TRACKPAD TOUCH LOGIC
+    // ─────────────────────────────────────────────────────────────────
+    const sensSlider = document.getElementById('sensitivitySlider');
+    const sensLabel = document.getElementById('sensitivityLabel');
+
+    sensSlider.value = mouseSensitivity;
+    sensLabel.textContent = mouseSensitivity.toFixed(1) + 'x';
+
+    sensSlider.addEventListener('input', e => {
+      mouseSensitivity = parseFloat(e.target.value);
+      sensLabel.textContent = mouseSensitivity.toFixed(1) + 'x';
+      localStorage.setItem('mouse_sensitivity', mouseSensitivity);
+    });
+
+    async function click_btn(btn) {
+      vibrate(30);
+      await socketSend('mouse_click', { button: btn });
+      showToast(btn === 'left' ? '🖱 Left click' : '🖱 Right click');
+    }
+
+    let scrollInterval = null;
+    let scrollTimeout = null;
+
+    function startContinuousScroll(e, dir) {
+      if (e) {
+        if (e.cancelable) e.preventDefault();
+      }
+      stopContinuousScroll();
+      
+      const dy = dir === 'up' ? 12 : -12;
+      vibrate(15);
+      scroll(dy);
+      
+      // Wait 250ms before initiating continuous loop
+      scrollTimeout = setTimeout(() => {
+        scrollInterval = setInterval(() => {
+          vibrate(8);
+          scroll(dy);
+        }, 80);
+      }, 250);
+    }
+
+    function stopContinuousScroll(e) {
+      if (e) {
+        if (e.cancelable) e.preventDefault();
+      }
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = null;
+      }
+      if (scrollInterval) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+      }
+    }
+
+    async function forgetDevice() {
+      if (!confirm("Are you sure you want to forget this device? This will revoke all session tokens and require re-pairing with a new PIN.")) return;
+      vibrate(30);
+      await post('/revoke');
+      localStorage.removeItem('session_token');
+      showPinOverlay();
+      showToast("🔒 Device forgotten");
+      connectSocket('');
+    }
+
+    async function scroll(dy) {
+      await socketSend('mouse_scroll', { dy });
+    }
+
+    const pad = document.getElementById('trackpad');
+    const ghost = document.getElementById('cursorGhost');
+    const scrollIndicator = document.getElementById('scrollIndicator');
+
+    let lastTouches  = [];
+    let maxFingers   = 0;
+    let moveSent     = false;
+    let scrollSent   = false;
+    let totalMovement = 0;
+    let bufferedDx   = 0;
+    let bufferedDy   = 0;
+
+    let pendingDx = 0, pendingDy = 0;
+    let pendingScrollDy = 0;
+    let moveThrottle   = null;
+    let scrollThrottle = null;
+    
+    let lastScrollVelocity = 0;
+    let scrollInertiaId    = null;
+    let hasVibratedScroll  = false;
+
+    const SCROLL_SENSITIVITY = Math.min(2.5, Math.max(1.0, (window.devicePixelRatio || 1) * 1.2));
+    const MOVE_THRESHOLD_PX  = 8;
+    const INERTIA_DECAY      = 0.82;
+    const INERTIA_MIN        = 0.8;
+
+    async function flushMove() {
+      if (pendingDx === 0 && pendingDy === 0) {
+        moveThrottle = null;
+        return;
+      }
+
+      const dx = pendingDx;
+      const dy = pendingDy;
+      pendingDx = 0;
+      pendingDy = 0;
+
+      const ok = await socketSend('mouse_move', { dx, dy, sens: mouseSensitivity });
+      if (!ok) { moveThrottle = null; return; }  // drop on failure, avoid hammering
+      if (pendingDx !== 0 || pendingDy !== 0) {
+        flushMove();
+      } else {
+        moveThrottle = null;
+      }
+    }
+
+    async function flushScroll() {
+      if (pendingScrollDy === 0) {
+        scrollThrottle = null;
+        return;
+      }
+
+      const dy = Math.max(-20, Math.min(20, pendingScrollDy));
+      pendingScrollDy = 0;
+      lastScrollVelocity = dy;
+
+      const ok = await socketSend('mouse_scroll', { dy });
+      if (!ok) { scrollThrottle = null; return; }  // drop on failure, avoid hammering
+      if (pendingScrollDy !== 0) {
+        flushScroll();
+      } else {
+        scrollThrottle = null;
+      }
+    }
+
+    function runInertia() {
+      lastScrollVelocity *= INERTIA_DECAY;
+      if (Math.abs(lastScrollVelocity) < INERTIA_MIN) {
+        cancelAnimationFrame(scrollInertiaId);
+        scrollInertiaId = null;
+        return;
+      }
+      
+      pendingScrollDy += lastScrollVelocity;
+      if (!scrollThrottle) {
+        scrollThrottle = setTimeout(flushScroll, 16);
+      }
+      
+      scrollInertiaId = requestAnimationFrame(runInertia);
+    }
+
+    pad.addEventListener('touchstart', e => {
+      e.preventDefault();
+
+      if (scrollInertiaId) {
+        cancelAnimationFrame(scrollInertiaId);
+        scrollInertiaId = null;
+        lastScrollVelocity = 0;
+      }
+
+      maxFingers    = e.touches.length;
+      moveSent      = false;
+      scrollSent    = false;
+      totalMovement = 0;
+      bufferedDx    = 0;
+      bufferedDy    = 0;
+      hasVibratedScroll = false;
+      
+      const rect = pad.getBoundingClientRect();
+      lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+
+      // Position visual cursor ghost
+      if (e.touches.length === 1) {
+        const x = e.touches[0].clientX - rect.left;
+        const y = e.touches[0].clientY - rect.top;
+        ghost.style.left = `${x}px`;
+        ghost.style.top = `${y}px`;
+        ghost.classList.add('visible');
+      }
+
+      pad.classList.add('active');
+      scrollIndicator.classList.remove('show');
+    }, { passive: false });
+
+    pad.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!lastTouches.length) return;
+
+      maxFingers = Math.max(maxFingers, e.touches.length);
+      const rect = pad.getBoundingClientRect();
+
+      if (e.touches.length === 2) {
+        // ── 2-Finger Scroll ──
+        const t0 = e.touches[0], t1 = e.touches[1];
+
+        if (lastTouches.length < 2) {
+          lastTouches = [{ x: t0.clientX, y: t0.clientY }, { x: t1.clientX, y: t1.clientY }];
+          return;
+        }
+
+        const curYAvg  = (t0.clientY + t1.clientY) / 2;
+        const lastYAvg = (lastTouches[0].y + lastTouches[1].y) / 2;
+        const dy = curYAvg - lastYAvg;
+
+        if (!hasVibratedScroll && Math.abs(dy) > 5) {
+          vibrate(8);
+          hasVibratedScroll = true;
+        }
+
+        const scrollUnit = dy * SCROLL_SENSITIVITY * 1.5;
+        pendingScrollDy += scrollUnit;
+        scrollSent = true;
+
+        lastTouches = [{ x: t0.clientX, y: t0.clientY }, { x: t1.clientX, y: t1.clientY }];
+        scrollIndicator.classList.add('show');
+
+        if (!scrollThrottle) scrollThrottle = setTimeout(flushScroll, 20);
+
+      } else if (e.touches.length === 1) {
+        // ── 1-Finger Move ──
+        const t = e.touches[0];
+        const dx = (t.clientX - lastTouches[0].x);
+        const dy = (t.clientY - lastTouches[0].y);
+
+        bufferedDx += dx;
+        bufferedDy += dy;
+        totalMovement += Math.sqrt(dx * dx + dy * dy);
+
+        // Track cursor ghost position
+        const x = t.clientX - rect.left;
+        const y = t.clientY - rect.top;
+        ghost.style.left = `${x}px`;
+        ghost.style.top = `${y}px`;
+        ghost.classList.add('visible');
+
+        if (totalMovement > MOVE_THRESHOLD_PX) {
+          pendingDx += bufferedDx;
+          pendingDy += bufferedDy;
+          bufferedDx = 0;
+          bufferedDy = 0;
+          moveSent = true;
+        }
+
+        lastTouches = [{ x: t.clientX, y: t.clientY }];
+        if (!moveThrottle) moveThrottle = setTimeout(flushMove, 16);
+      }
+    }, { passive: false });
+
+    pad.addEventListener('touchend', e => {
+      e.preventDefault();
+
+      if (moveThrottle)   { clearTimeout(moveThrottle);   flushMove(); }
+      if (scrollThrottle) { clearTimeout(scrollThrottle); flushScroll(); }
+
+      socketSend('mouse_stop');
+
+      if (maxFingers === 1 && !moveSent) {
+        click_btn('left');
+      }
+
+      if (scrollSent && Math.abs(lastScrollVelocity) >= INERTIA_MIN) {
+        scrollInertiaId = requestAnimationFrame(runInertia);
+      }
+
+      if (e.touches.length === 0) {
+        lastTouches  = [];
+        moveSent     = false;
+        scrollSent   = false;
+        maxFingers   = 0;
+        bufferedDx   = 0;
+        bufferedDy   = 0;
+        pad.classList.remove('active');
+        ghost.classList.remove('visible');
+        scrollIndicator.classList.remove('show');
+      } else {
+        lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+      }
+    }, { passive: false });
+
+    // ─────────────────────────────────────────────────────────────────
+    //  PIN PAIRING INTERACTION
+    // ─────────────────────────────────────────────────────────────────
+    const pinOverlay = document.getElementById('pinOverlay');
+    const hiddenInput = document.getElementById('pinInputHidden');
+    const pinBoxes = document.querySelectorAll('.pin-box');
+    const pinError = document.getElementById('pinError');
+
+    function showPinOverlay() {
+      pinOverlay.classList.add('visible');
+      hiddenInput.focus();
+    }
+
+    function hidePinOverlay() {
+      pinOverlay.classList.remove('visible');
+      hiddenInput.blur();
+    }
+
+    pinOverlay.addEventListener('click', () => {
+      hiddenInput.focus();
+    });
+
+    hiddenInput.addEventListener('input', async e => {
+      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+      e.target.value = val;
+      
+      pinBoxes.forEach((box, idx) => {
+        box.textContent = val[idx] || '';
+        box.classList.toggle('filled', !!val[idx]);
+      });
+      
+      pinError.classList.remove('visible');
+      
+      if (val.length === 6) {
+        hiddenInput.blur();
+        vibrate(20);
+        const res = await submitPin(val);
+        if (!res.ok) {
+          pinError.textContent = res.error;
+          pinError.classList.add('visible');
+          vibrate([40, 40, 40]);
+          setTimeout(() => {
+            hiddenInput.value = '';
+            pinBoxes.forEach(box => {
+              box.textContent = '';
+              box.classList.remove('filled');
+            });
+            if (res.error.indexOf('locked') === -1) {
+              hiddenInput.focus();
+            }
+          }, 500);
+        }
+      }
+    });
+
+    async function submitPin(pin) {
+      try {
+        const r = await fetch('/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        const data = await r.json();
+        if (r.ok) {
+          localStorage.setItem('session_token', data.token);
+          hidePinOverlay();
+          showToast('🔑 Successfully paired!');
+          connectSocket(data.token);
+          return { ok: true };
+        }
+        return { ok: false, error: data.error || 'Invalid Pairing PIN' };
+      } catch (e) {
+        return { ok: false, error: 'Connection failed' };
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  CONNECTION HEALTH MONITORING (/ping)
+    // ─────────────────────────────────────────────────────────────────
+    const dot = document.getElementById('statusDot');
+    const banner = document.getElementById('connBanner');
+    const statusLabel = document.getElementById('statusLabel');
+
+    // Fallback health probe: used by the banner's Retry button and by the
+    // HTTP-only heartbeat. The primary status signal is the WebSocket.
+    async function checkConnection() {
+      connectSocket(localStorage.getItem('session_token') || '');
+      const token = localStorage.getItem('session_token') || '';
+      try {
+        const r = await fetch('/ping', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (data.authorized) setStatus('active');
+          else setStatus('pairing');
+        } else {
+          throw new Error();
+        }
+      } catch (e) {
+        setStatus('offline');
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  PRESENTATION MODE TIMER
+    // ─────────────────────────────────────────────────────────────────
+    let elapsedSeconds = 0;
+    let timerInterval = null;
+    let timerStarted = false;
+
+    function startPresentationTimer() {
+      if (timerStarted) return;
+      timerStarted = true;
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+        const ss = String(elapsedSeconds % 60).padStart(2, '0');
+        document.getElementById('elapsedTimer').textContent = `${mm}:${ss}`;
+      }, 1000);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  SLIDE COUNTER + PRESENTATION CONTROLS
+    // ─────────────────────────────────────────────────────────────────
+    let slideIndex = 1;
+
+    function updateSlideCounter() {
+      const el = document.getElementById('slideCounter');
+      if (el) el.textContent = String(slideIndex);
+    }
+
+    function slideCtrl(action) {
+      send(action);
+      if (action === 'next_slide') slideIndex += 1;
+      else if (action === 'prev_slide') slideIndex = Math.max(1, slideIndex - 1);
+      updateSlideCounter();
+    }
+
+    function resetPresentation() {
+      slideIndex = 1;
+      updateSlideCounter();
+      elapsedSeconds = 0;
+      const t = document.getElementById('elapsedTimer');
+      if (t) t.textContent = '00:00';
+      vibrate(15);
+    }
+
+    let blackoutActive = false;
+
+    function toggleBlackout() {
+      blackoutActive = !blackoutActive;
+      const btn = document.getElementById('blackoutBtn');
+      if (btn) btn.classList.toggle('active', blackoutActive);
+      socketSend('blackout', { on: blackoutActive });
+      vibrate(15);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  PRESENTATION START / EXIT
+    // ─────────────────────────────────────────────────────────────────
+    const PRESENT_ON_HTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19 8 5"/></svg>' +
+      '<span>Start Presentation</span>';
+    const PRESENT_OFF_HTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>' +
+      '<span>Exit Presentation</span>';
+
+    let presenting = false;
+
+    function togglePresentation() {
+      presenting = !presenting;
+      const btn = document.getElementById('presentLaunchBtn');
+      if (presenting) {
+        send('present_start');
+        if (btn) { btn.classList.add('active'); btn.innerHTML = PRESENT_OFF_HTML; }
+      } else {
+        send('present_exit');
+        if (btn) { btn.classList.remove('active'); btn.innerHTML = PRESENT_ON_HTML; }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  LASER POINTER MOVEMENT & ACCENT INDICATION
+    // ─────────────────────────────────────────────────────────────────
+    const presentPad = document.getElementById('presentPad');
+    const laserDot = document.getElementById('laserDot');
+
+    function updateLaserDot(e) {
+      const rect = presentPad.getBoundingClientRect();
+      const touch = e.touches[0];
+      if (touch) {
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        laserDot.style.left = `${x}px`;
+        laserDot.style.top = `${y}px`;
+      }
+    }
+
+    let pendingPointer = null;
+    let pointerThrottle = null;
+
+    function queuePointerMove(e) {
+      if (e.touches.length === 0) return;
+      const rect = presentPad.getBoundingClientRect();
+      const t = e.touches[0];
+      const xPct = Math.max(0, Math.min(1, (t.clientX - rect.left) / rect.width));
+      const yPct = Math.max(0, Math.min(1, (t.clientY - rect.top) / rect.height));
+      pendingPointer = { x: xPct * screenW, y: yPct * screenH };
+      if (!pointerThrottle) pointerThrottle = setTimeout(flushPointer, 20);
+    }
+
+    function flushPointer() {
+      pointerThrottle = null;
+      if (pendingPointer) {
+        const p = pendingPointer;
+        pendingPointer = null;
+        socketSend('pointer_move', p);
+      }
+    }
+
+    presentPad.addEventListener('touchstart', e => {
+      e.preventDefault();
+      vibrate(15);
+      startPresentationTimer();
+      laserDot.style.display = 'block';
+      updateLaserDot(e);
+      socketSend('pointer_on');
+      queuePointerMove(e);
+    }, { passive: false });
+
+    presentPad.addEventListener('touchmove', e => {
+      e.preventDefault();
+      updateLaserDot(e);
+      queuePointerMove(e);
+    }, { passive: false });
+
+    presentPad.addEventListener('touchend', e => {
+      e.preventDefault();
+      if (pointerThrottle) { clearTimeout(pointerThrottle); flushPointer(); }
+      if (e.touches.length === 0) {
+        laserDot.style.display = 'none';
+        socketSend('pointer_off');
+      }
+    }, { passive: false });
+
+    // Primary transport: WebSocket (instant status via push events).
+    // Legacy HTTP heartbeat only if the socket.io client failed to load.
+    connectSocket(localStorage.getItem('session_token') || '');
+    if (typeof io === 'undefined') setInterval(checkConnection, 15000);
+
+    // PWA: progressive enhancement — only registers on secure origins (e.g. localhost).
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

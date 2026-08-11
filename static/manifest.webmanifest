@@ -1,0 +1,16 @@
+{
+  "name": "Remote Deck",
+  "short_name": "Remote",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#131315",
+  "theme_color": "#131315",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
