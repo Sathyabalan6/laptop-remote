@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>REMOTE DECK</title>
-  <script src="/static/socket.io.min.js"></script>
   <meta name="theme-color" content="#131315">
   <link rel="manifest" href="/static/manifest.webmanifest">
   <style>
@@ -50,32 +49,48 @@
       --radius-buttons: 12px;
       --radius-small: 8px;
       --radius-pills: 9999px;
+
+      /* Z-Index Hierarchy */
+      --z-base: 1;
+      --z-sticky: 10;
+      --z-banner: 20;
+      --z-header: 30;
+      --z-nav: 40;
+      --z-toast: 50;
+      --z-modal: 100;
+
+      /* Typography */
+      --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     }
 
     /* ── TYPOGRAPHY TOKENS ── */
     .heading-caps {
+      font-family: var(--font-display);
       font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .metadata-caps {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .nav-caps {
-      font-size: 10px;
-      font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .ui-action {
+    .metadata-caps {
       font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav-caps {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .ui-action {
+      font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.02em;
     }
@@ -83,28 +98,30 @@
     .numeric-display {
       font-size: 20px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
 
     .subheading {
-      font-size: 9px;
+      font-size: 12px;
       font-weight: 500;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.02em;
     }
 
     .micro-label {
-      font-size: 7px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
     }
 
     .body-text {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 400;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .headline-lg {
+      font-family: var(--font-display);
       font-size: 18px;
       font-weight: 700;
       letter-spacing: -0.01em;
@@ -123,7 +140,7 @@
     body {
       background-color: var(--background);
       color: var(--on-surface);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font-system);
       height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -139,7 +156,7 @@
       height: 56px;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: var(--z-header);
       background-color: var(--background);
       border-bottom: 1px solid var(--border);
       display: flex;
@@ -165,6 +182,33 @@
       color: var(--foreground);
     }
 
+        /* ── ACCESSIBILITY & FOCUS MANAGEMENT ── */
+    button:focus-visible,
+    input:focus-visible,
+    .nav-item:focus-visible,
+    .preset-btn:focus-visible,
+    .control-pill:focus-visible,
+    .control-btn-circle:focus-visible,
+    .toggle-btn:focus-visible,
+    .slide-ctrl-btn:focus-visible,
+    .mouse-click-btn:focus-visible,
+    .scroll-btn-tactile:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .status-dot {
+        animation: none !important;
+      }
+    }
+
     .status-pill {
       display: flex;
       align-items: center;
@@ -180,8 +224,24 @@
       height: 8px;
       border-radius: 50%;
       background: var(--danger);
-      box-shadow: 0 0 10px var(--danger);
-      animation: statusPulse 2s infinite ease-in-out;
+      box-shadow: 0 1px 4px rgba(239, 68, 68, 0.4);
+      transition: background-color 0.2s ease, box-shadow 0.2s ease;
+      animation: statusPulse 2.5s infinite ease-in-out;
+    }
+
+    .status-dot.active {
+      background: var(--tertiary);
+      box-shadow: 0 1px 4px rgba(78, 222, 163, 0.4);
+    }
+
+    .status-dot.pairing {
+      background: var(--primary);
+      box-shadow: 0 1px 4px rgba(192, 193, 255, 0.4);
+    }
+
+    .status-dot.offline {
+      background: var(--danger);
+      box-shadow: 0 1px 4px rgba(239, 68, 68, 0.4);
     }
 
     @keyframes statusPulse {
@@ -190,8 +250,8 @@
         transform: scale(1);
       }
       50% {
-        opacity: 0.5;
-        transform: scale(1.2);
+        opacity: 0.6;
+        transform: scale(1.15);
       }
     }
 
@@ -214,6 +274,7 @@
       padding: 6px 10px;
       font-size: 11px;
       white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
     /* ── CONNECTION BANNER ── */
@@ -222,20 +283,16 @@
       color: #ffffff;
       font-size: 11px;
       font-weight: 600;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: space-between;
-      padding: 0 var(--container-padding);
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 99;
+      padding: 12px var(--container-padding);
+      z-index: var(--z-banner);
       flex-shrink: 0;
     }
 
     .banner.visible {
-      max-height: 48px;
-      padding: 12px var(--container-padding);
+      display: flex;
     }
 
     .banner button {
@@ -344,13 +401,13 @@
       border-radius: var(--radius-pills);
       cursor: pointer;
       text-align: center;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .preset-btn.active {
       background-color: var(--primary-container);
       color: var(--on-primary-container);
-      box-shadow: 0 0 15px rgba(192, 193, 255, 0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
     .preset-btn:hover:not(.active) {
@@ -363,65 +420,16 @@
       width: 100%;
     }
 
-    .playback-glow {
-      position: absolute;
-      top: -6px;
-      left: -6px;
-      right: -6px;
-      bottom: -6px;
-      background: linear-gradient(135deg, rgba(192, 193, 255, 0.2) 0%, rgba(78, 222, 163, 0.2) 100%);
-      filter: blur(20px);
-      border-radius: 30px;
-      opacity: 0.25;
-      z-index: 1;
-      pointer-events: none;
-      transition: opacity 1s ease;
-    }
-
-    .playback-hub-container:hover .playback-glow {
-      opacity: 0.40;
-    }
-
     .playback-card {
       position: relative;
       background-color: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 32px;
+      border-radius: var(--radius-cards);
+      padding: 24px 20px;
       display: flex;
       flex-direction: column;
-      gap: 32px;
-      z-index: 2;
-    }
-
-    .progress-bar-row {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 4px;
-      background-color: var(--surface-container-high);
-      border-radius: var(--radius-pills);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      width: 33.333%;
-      height: 100%;
-      background-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
-      border-radius: var(--radius-pills);
-    }
-
-    .progress-timestamps {
-      display: flex;
-      justify-content: space-between;
-      color: var(--on-surface-variant);
+      gap: 20px;
+      z-index: var(--z-base);
     }
 
     .main-controls-row {
@@ -460,7 +468,7 @@
       border: none;
       background-color: var(--primary-container);
       color: var(--on-primary-container);
-      box-shadow: 0 0 30px rgba(128, 131, 255, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
 
     .play-btn-circle:active {
@@ -550,7 +558,7 @@
       height: 18px;
       border-radius: 50%;
       background-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       border: none;
       transition: transform 0.1s ease;
@@ -565,7 +573,7 @@
       height: 18px;
       border-radius: 50%;
       background-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       border: none;
       transition: transform 0.1s ease;
@@ -619,13 +627,20 @@
       justify-content: center;
       gap: var(--gap-icon);
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
       margin-top: var(--gap-standard);
+    }
+
+    .forget-device-btn.confirming {
+      background-color: rgba(239, 68, 68, 0.18);
+      border-color: var(--danger);
+      color: #ff8888;
+      font-weight: 700;
     }
 
     .forget-device-btn:active {
       transform: scale(0.98);
-      background-color: rgba(239, 68, 68, 0.1);
+      background-color: rgba(239, 68, 68, 0.25);
       border-color: var(--danger);
     }
 
@@ -670,7 +685,7 @@
       height: 18px;
       border-radius: 50%;
       background-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       border: none;
     }
@@ -680,7 +695,7 @@
       height: 18px;
       border-radius: 50%;
       background-color: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       border: none;
     }
@@ -698,12 +713,12 @@
       overflow: hidden;
       cursor: pointer;
       touch-action: none;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .trackpad-panel.active {
       border-color: var(--primary);
-      box-shadow: inset 0 0 20px rgba(192, 193, 255, 0.05), 0 0 15px rgba(192, 193, 255, 0.1);
+      box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.4);
     }
 
     .trackpad-hint {
@@ -860,7 +875,371 @@
       height: 6px;
       border-radius: 50%;
       background-color: var(--primary);
-      box-shadow: 0 0 6px var(--primary);
+    }
+
+    /* ── TAB: KEYPAD & SEARCH SUITE ── */
+    #tab-keyboard {
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 24px;
+    }
+
+    #tab-keyboard.active {
+      display: flex;
+    }
+
+    .keyboard-scroll-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .search-card {
+      background-color: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: var(--surface-container-highest);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-buttons);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .search-input-wrapper:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(192, 193, 255, 0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--on-surface-variant);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 40px 0 38px;
+      background: transparent;
+      border: none;
+      color: var(--on-surface);
+      font-family: var(--font-system);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: var(--on-surface-variant);
+      opacity: 0.6;
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      border-radius: 50%;
+      color: var(--on-surface-variant);
+      cursor: pointer;
+    }
+
+    .search-clear-btn.visible {
+      display: flex;
+    }
+
+    .search-actions-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .focus-pill {
+      flex: 1;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--surface-container-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pills);
+      color: var(--on-surface);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .focus-pill:active {
+      transform: scale(0.96);
+      background: var(--surface-container-highest);
+    }
+
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      background: rgba(192, 193, 255, 0.12);
+      border: 1px solid rgba(192, 193, 255, 0.25);
+      border-radius: 4px;
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .send-search-btn {
+      height: 36px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(135deg, rgba(128, 131, 255, 0.35), rgba(192, 131, 255, 0.2));
+      border: 1px solid rgba(192, 193, 255, 0.4);
+      border-radius: var(--radius-pills);
+      color: var(--primary);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease;
+    }
+
+    .send-search-btn:active {
+      transform: scale(0.95);
+      background: rgba(128, 131, 255, 0.45);
+    }
+
+    /* ── D-PAD & NAVIGATION ── */
+    .dpad-card {
+      background-color: var(--surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 12px;
+    }
+
+    .dpad-container {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      margin: 4px auto;
+    }
+
+    .dpad-btn {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-container-highest);
+      border: 1px solid var(--border);
+      color: var(--on-surface);
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease, border-color 0.12s ease;
+      touch-action: manipulation;
+    }
+
+    .dpad-btn:active {
+      background: rgba(192, 193, 255, 0.2);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .dpad-up {
+      top: 0;
+      left: 65px;
+      width: 60px;
+      height: 56px;
+      border-radius: 14px 14px 4px 4px;
+    }
+    .dpad-down {
+      bottom: 0;
+      left: 65px;
+      width: 60px;
+      height: 56px;
+      border-radius: 4px 4px 14px 14px;
+    }
+    .dpad-left {
+      top: 65px;
+      left: 0;
+      width: 56px;
+      height: 60px;
+      border-radius: 14px 4px 4px 14px;
+    }
+    .dpad-right {
+      top: 65px;
+      right: 0;
+      width: 56px;
+      height: 60px;
+      border-radius: 4px 14px 14px 4px;
+    }
+    .dpad-center {
+      top: 62px;
+      left: 62px;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(128, 131, 255, 0.25), rgba(192, 131, 255, 0.15));
+      border: 1.5px solid rgba(192, 193, 255, 0.4);
+      color: var(--primary);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      z-index: 2;
+    }
+    .dpad-center:active {
+      transform: scale(0.92);
+      background: rgba(128, 131, 255, 0.4);
+    }
+
+    .nav-keys-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .nav-key-btn {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-container-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-buttons);
+      color: var(--on-surface);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.1s ease;
+    }
+
+    .nav-key-btn:active {
+      transform: scale(0.95);
+      background: var(--surface-container-highest);
+    }
+
+    .nav-key-btn.danger-accent:active {
+      background: rgba(244, 63, 94, 0.2);
+      color: var(--danger);
+    }
+
+    /* ── STREAMING SHORTCUTS GRID ── */
+    .shortcuts-card {
+      background-color: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .shortcut-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 6px;
+      background: var(--surface-container-low);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-buttons);
+      color: var(--on-surface);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .shortcut-tile:active {
+      transform: scale(0.95);
+      background: rgba(192, 193, 255, 0.12);
+      border-color: var(--primary);
+    }
+
+    .tile-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .tile-title {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--on-surface);
+      text-align: center;
+    }
+
+    .tile-sub {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--on-surface-variant);
+      opacity: 0.7;
+    }
+
+    /* Quick search button in Media Tab */
+    .media-search-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      background: linear-gradient(135deg, rgba(128, 131, 255, 0.15), rgba(24, 24, 27, 0.6));
+      border: 1px solid rgba(192, 193, 255, 0.25);
+      border-radius: var(--radius-cards);
+      color: var(--on-surface);
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+      margin-bottom: 2px;
+    }
+
+    .media-search-pill:active {
+      transform: scale(0.98);
+      border-color: var(--primary);
+      background: rgba(128, 131, 255, 0.25);
+    }
+
+    .media-search-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--on-surface);
+    }
+
+    .media-search-left svg {
+      color: var(--primary);
     }
 
     /* ── TAB 3: PRESENT PANEL ── */
@@ -1032,7 +1411,7 @@
     .slide-ctrl-btn.next {
       background-color: rgba(128, 131, 255, 0.2);
       border: 1px solid rgba(192, 193, 255, 0.4);
-      box-shadow: 0 0 15px rgba(192, 193, 255, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
       color: var(--primary);
       font-weight: 700;
     }
@@ -1127,7 +1506,7 @@
       justify-content: space-around;
       align-items: center;
       padding: 0 16px env(safe-area-inset-bottom, 0px);
-      z-index: 90;
+      z-index: var(--z-nav);
     }
 
     .nav-item {
@@ -1144,14 +1523,14 @@
       justify-content: center;
       gap: 4px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
     }
 
     .nav-item.active {
       background-color: rgba(128, 131, 255, 0.2);
       border: 1px solid rgba(192, 193, 255, 0.3);
       color: var(--primary);
-      box-shadow: 0 0 15px rgba(192, 193, 255, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     }
 
     .nav-item svg {
@@ -1178,8 +1557,8 @@
       font-weight: 600;
       white-space: nowrap;
       opacity: 0;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
-      z-index: 150;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      z-index: var(--z-toast);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       color: var(--on-surface);
       pointer-events: none;
@@ -1198,7 +1577,7 @@
       right: 0;
       bottom: 0;
       background-color: var(--background);
-      z-index: 1000;
+      z-index: var(--z-modal);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1252,13 +1631,13 @@
       font-size: 20px;
       font-weight: 700;
       color: var(--primary);
-      transition: all 0.15s ease;
+      transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .pin-box.filled {
       border-color: var(--primary);
       background-color: rgba(192, 193, 255, 0.05);
-      box-shadow: 0 0 10px rgba(192, 193, 255, 0.1);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
     }
 
     .pin-input-hidden {
@@ -1389,45 +1768,41 @@
   <main>
     
     <!-- TAB 1 — MEDIA -->
-    <div class="tab-panel active" id="tab-media">
+    <div class="tab-panel active" id="tab-media" role="tabpanel" aria-labelledby="tab-btn-media">
       <div class="media-scroll-container">
         
+        <!-- Quick Search Trigger -->
+        <button class="media-search-pill" onclick="quickJumpSearch()" aria-label="Open search and keyboard">
+          <div class="media-search-left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Search Movie / Video</span>
+          </div>
+          <span class="key-badge">/</span>
+        </button>
+
         <!-- Preset Selector -->
         <div class="section-preset">
-          <span class="section-label metadata-caps">Player Profile</span>
-          <div class="preset-pill-row">
-            <button class="preset-btn nav-caps active" id="preset-btn-universal" onclick="setPreset('universal')">Universal</button>
-            <button class="preset-btn nav-caps" id="preset-btn-youtube_hotstar" onclick="setPreset('youtube_hotstar')">YouTube / Hotstar</button>
-            <button class="preset-btn nav-caps" id="preset-btn-vlc" onclick="setPreset('vlc')">VLC</button>
+          <span class="section-label metadata-caps" id="presetGroupLabel">Player Profile</span>
+          <div class="preset-pill-row" role="radiogroup" aria-labelledby="presetGroupLabel">
+            <button class="preset-btn nav-caps active" id="preset-btn-universal" role="radio" aria-checked="true" onclick="setPreset('universal')">Universal</button>
+            <button class="preset-btn nav-caps" id="preset-btn-youtube_hotstar" role="radio" aria-checked="false" onclick="setPreset('youtube_hotstar')">YouTube / Hotstar</button>
+            <button class="preset-btn nav-caps" id="preset-btn-vlc" role="radio" aria-checked="false" onclick="setPreset('vlc')">VLC</button>
           </div>
         </div>
 
         <!-- Playback Hub Card -->
-        <div class="playback-hub-container">
-          <div class="playback-glow"></div>
-          <div class="playback-card">
-            
-            <!-- Progress Bar row -->
-            <div class="progress-bar-row">
-              <div class="progress-track">
-                <div class="progress-fill"></div>
-              </div>
-              <div class="progress-timestamps">
-                <span class="metadata-caps">01:45</span>
-                <span class="metadata-caps">-03:20</span>
-              </div>
-            </div>
-
-            <!-- Main Controls row -->
+        <div class="playback-card">
+          
+          <!-- Main Controls row -->
             <div class="main-controls-row">
-              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_back')">
+              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_back')" aria-label="Skip backward 10 seconds">
                 <!-- skip_previous -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="11 19 2 12 11 5 11 19" fill="currentColor"></polygon>
                   <polygon points="22 19 13 12 22 5 22 19" fill="currentColor"></polygon>
                 </svg>
               </button>
-              <button class="control-btn-circle play-btn-circle" onclick="send('play_pause')">
+              <button class="control-btn-circle play-btn-circle" onclick="send('play_pause')" aria-label="Play or pause playback">
                 <!-- play/pause combined -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="4 4 13 12 4 20 4 4" fill="currentColor" stroke="none"></polygon>
@@ -1435,7 +1810,7 @@
                   <rect x="21" y="4" width="3" height="16" rx="1" fill="currentColor" stroke="none"></rect>
                 </svg>
               </button>
-              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_forward')">
+              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_forward')" aria-label="Skip forward 10 seconds">
                 <!-- skip_next -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="13 19 22 12 13 5 13 19" fill="currentColor"></polygon>
@@ -1446,7 +1821,7 @@
 
             <!-- Secondary controls row -->
             <div class="secondary-controls-row">
-              <button class="control-pill ui-action" onclick="send('back')">
+              <button class="control-pill ui-action" onclick="send('back')" aria-label="Go back in browser">
                 <!-- arrow_back -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -1454,7 +1829,7 @@
                 </svg>
                 <span>Back</span>
               </button>
-              <button class="control-pill ui-action" onclick="send('skip_back')">
+              <button class="control-pill ui-action" onclick="send('skip_back')" aria-label="Replay 10 seconds">
                 <!-- replay_10 -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -1463,7 +1838,7 @@
                 </svg>
                 <span>10s</span>
               </button>
-              <button class="control-pill ui-action" onclick="send('skip_forward_30')">
+              <button class="control-pill ui-action" onclick="send('skip_forward_30')" aria-label="Skip forward 30 seconds">
                 <!-- forward_30 -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
@@ -1475,14 +1850,13 @@
             </div>
 
           </div>
-        </div>
 
         <!-- Volume & System Controls Card -->
         <div class="card volume-system-card">
           <!-- Volume section -->
           <div class="volume-section">
             <div class="volume-header-row">
-              <div class="volume-title-left ui-action">
+              <div class="volume-title-left ui-action" id="volumeLabel">
                 <!-- volume_up -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
@@ -1493,12 +1867,12 @@
               </div>
               <span class="numeric-display volume-value-right" id="volumePct">50%</span>
             </div>
-            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50" aria-labelledby="volumeLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
           </div>
 
           <!-- Quick toggles grid -->
           <div class="quick-toggles-grid">
-            <button class="toggle-btn ui-action" onclick="send('mute')">
+            <button class="toggle-btn ui-action" onclick="send('mute')" aria-label="Mute or unmute audio">
               <!-- volume_off -->
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
@@ -1507,7 +1881,7 @@
               </svg>
               <span>Mute</span>
             </button>
-            <button class="toggle-btn ui-action" onclick="send('subtitles')">
+            <button class="toggle-btn ui-action" onclick="send('subtitles')" aria-label="Toggle closed captions / subtitles">
               <!-- subtitles -->
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
@@ -1516,7 +1890,7 @@
               </svg>
               <span>Subs</span>
             </button>
-            <button class="toggle-btn ui-action" onclick="send('fullscreen')">
+            <button class="toggle-btn ui-action" onclick="send('fullscreen')" aria-label="Toggle fullscreen mode">
               <!-- fullscreen -->
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
@@ -1525,7 +1899,7 @@
             </button>
           </div>
           <!-- Forget This Device Button -->
-          <button class="forget-device-btn ui-action" onclick="forgetDevice()">
+          <button class="forget-device-btn ui-action" onclick="forgetDevice()" aria-label="Forget this device and revoke session">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
@@ -1539,20 +1913,20 @@
     </div>
 
     <!-- TAB 2 — MOUSE -->
-    <div class="tab-panel" id="tab-mouse" style="overflow:hidden;">
+    <div class="tab-panel" id="tab-mouse" role="tabpanel" aria-labelledby="tab-btn-mouse" style="overflow:hidden;">
       
       <!-- Sensitivity Section -->
       <div class="card sensitivity-card">
         <div class="sensitivity-header-row">
-          <span class="heading-caps" style="color: var(--on-surface-variant);">Pointer Sensitivity</span>
+          <span class="heading-caps" id="sensitivityHeaderLabel" style="color: var(--on-surface-variant);">Pointer Sensitivity</span>
           <span class="numeric-display" id="sensitivityLabel" style="color: var(--primary);">1.0x</span>
         </div>
-        <input type="range" class="sensitivity-slider" id="sensitivitySlider" min="0.5" max="2.5" step="0.1" value="1.0">
+        <input type="range" class="sensitivity-slider" id="sensitivitySlider" min="0.5" max="4.0" step="0.1" value="1.0" aria-labelledby="sensitivityHeaderLabel" aria-valuemin="0.5" aria-valuemax="4.0" aria-valuenow="1.0">
       </div>
 
       <!-- Trackpad Area -->
-      <div class="trackpad-panel" id="trackpad">
-        <div class="trackpad-hint">
+      <div class="trackpad-panel" id="trackpad" role="application" aria-label="Touch trackpad pointer area">
+        <div class="trackpad-hint" aria-hidden="true">
           <!-- new_window / trackpad SVG -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="4" width="16" height="16" rx="2"></rect>
@@ -1562,10 +1936,10 @@
           <span class="ui-action" style="letter-spacing: 0.12em; text-transform: uppercase;">Move pointer</span>
         </div>
         <!-- Touch Ghost Cursor Indicator -->
-        <div class="cursor-ghost" id="cursorGhost"></div>
+        <div class="cursor-ghost" id="cursorGhost" aria-hidden="true"></div>
         
         <!-- Scroll Track Overlay Indicator -->
-        <div class="scroll-indicator" id="scrollIndicator">
+        <div class="scroll-indicator" id="scrollIndicator" aria-hidden="true">
           <div class="scroll-dots"><i></i><i></i><i></i></div>
           <span>SCROLL</span>
         </div>
@@ -1573,7 +1947,7 @@
 
       <!-- Click Buttons with Scroll wheel columns -->
       <div class="mouse-buttons-grid">
-        <button class="mouse-click-btn metadata-caps" onclick="click_btn('left')">
+        <button class="mouse-click-btn metadata-caps" onclick="click_btn('left')" aria-label="Left mouse click">
           <span>LEFT</span>
           <span class="click-dot"></span>
         </button>
@@ -1582,7 +1956,8 @@
                   onpointerdown="startContinuousScroll(event, 'up')" 
                   onpointerup="stopContinuousScroll(event)" 
                   onpointerleave="stopContinuousScroll(event)"
-                  onpointercancel="stopContinuousScroll(event)">
+                  onpointercancel="stopContinuousScroll(event)"
+                  aria-label="Scroll up">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="18 15 12 9 6 15"></polyline>
             </svg>
@@ -1591,13 +1966,14 @@
                   onpointerdown="startContinuousScroll(event, 'down')" 
                   onpointerup="stopContinuousScroll(event)" 
                   onpointerleave="stopContinuousScroll(event)"
-                  onpointercancel="stopContinuousScroll(event)">
+                  onpointercancel="stopContinuousScroll(event)"
+                  aria-label="Scroll down">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </button>
         </div>
-        <button class="mouse-click-btn metadata-caps" onclick="click_btn('right')">
+        <button class="mouse-click-btn metadata-caps" onclick="click_btn('right')" aria-label="Right mouse click">
           <span>RIGHT</span>
           <span class="click-dot"></span>
         </button>
@@ -1605,8 +1981,147 @@
 
     </div>
 
-    <!-- TAB 3 — PRESENT -->
-    <div class="tab-panel" id="tab-present" style="overflow:hidden;">
+    <!-- TAB 3 — KEYPAD & SEARCH -->
+    <div class="tab-panel" id="tab-keyboard" role="tabpanel" aria-labelledby="tab-btn-keyboard">
+      <div class="keyboard-scroll-container">
+        
+        <!-- Live Search & Voice Input Card -->
+        <div class="card search-card">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Type movie, video, or URL..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
+            <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()" aria-label="Clear input">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="search-actions-row">
+            <button class="focus-pill" onclick="focusSearchSite()" aria-label="Focus in-page video search">
+              <span class="key-badge">/</span> Focus Search
+            </button>
+            <button class="focus-pill" onclick="focusAddressBar()" aria-label="Focus browser URL bar">
+              <span class="key-badge">Ctrl+L</span> URL Bar
+            </button>
+            <button class="send-search-btn" onclick="submitSearch(true)" aria-label="Send and submit search">
+              <span>Search</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- D-Pad & Web Navigation Card -->
+        <div class="card dpad-card">
+          <div class="card-header-row" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span class="heading-caps" style="color: var(--on-surface-variant);">Navigation &amp; D-Pad</span>
+            <span class="micro-label" style="color: var(--primary);">ARROW KEYS + OK</span>
+          </div>
+          <div class="dpad-container">
+            <button class="dpad-btn dpad-up" onclick="send_raw_key('up')" aria-label="Up arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </button>
+            <button class="dpad-btn dpad-left" onclick="send_raw_key('left')" aria-label="Left arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="dpad-btn dpad-center" onclick="send_raw_key('enter')" aria-label="OK / Enter">
+              <span>OK</span>
+            </button>
+            <button class="dpad-btn dpad-right" onclick="send_raw_key('right')" aria-label="Right arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button class="dpad-btn dpad-down" onclick="send_raw_key('down')" aria-label="Down arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+          <div class="nav-keys-row">
+            <button class="nav-key-btn" onclick="send_raw_key('escape')" aria-label="Escape key">
+              <span class="key-label">ESC</span>
+            </button>
+            <button class="nav-key-btn" onclick="send_raw_key('tab')" aria-label="Tab key">
+              <span class="key-label">TAB</span>
+            </button>
+            <button class="nav-key-btn" onclick="send_raw_key('shift_tab')" aria-label="Shift + Tab">
+              <span class="key-label">⇧ TAB</span>
+            </button>
+            <button class="nav-key-btn danger-accent" onclick="send_raw_key('backspace')" aria-label="Backspace">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Streaming & Settings Shortcuts Grid -->
+        <div class="card shortcuts-card">
+          <div class="card-header-row" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span class="heading-caps" style="color: var(--on-surface-variant);">Streaming &amp; Shortcuts</span>
+            <span class="micro-label" style="color: var(--secondary);">HOTKEYS</span>
+          </div>
+          <div class="shortcuts-grid">
+            <button class="shortcut-tile" onclick="send_key_action('skip_intro')" aria-label="Skip intro or recap">
+              <span class="tile-icon">⏭</span>
+              <span class="tile-title">Skip Intro</span>
+              <span class="tile-sub">S</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('theater_mode')" aria-label="Toggle theater mode">
+              <span class="tile-icon">⛶</span>
+              <span class="tile-title">Theater</span>
+              <span class="tile-sub">T</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('miniplayer')" aria-label="Toggle miniplayer / PiP">
+              <span class="tile-icon">🗗</span>
+              <span class="tile-title">Miniplayer</span>
+              <span class="tile-sub">I</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('audio_track_cycle')" aria-label="Cycle audio language stream">
+              <span class="tile-icon">🌐</span>
+              <span class="tile-title">Audio Dub</span>
+              <span class="tile-sub">A / B</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('speed_up')" aria-label="Speed up playback">
+              <span class="tile-icon">⚡</span>
+              <span class="tile-title">Speed +</span>
+              <span class="tile-sub">⇧ &gt; / ]</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('speed_down')" aria-label="Slow down playback">
+              <span class="tile-icon">🐢</span>
+              <span class="tile-title">Speed -</span>
+              <span class="tile-sub">⇧ &lt; / [</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_sync_advance')" aria-label="Advance subtitle sync">
+              <span class="tile-icon">💬</span>
+              <span class="tile-title">Sub Sync -</span>
+              <span class="tile-sub">G / Z</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_sync_delay')" aria-label="Delay subtitle sync">
+              <span class="tile-icon">💬</span>
+              <span class="tile-title">Sub Sync +</span>
+              <span class="tile-sub">H / ⇧Z</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('browser_tab_next')" aria-label="Next browser tab">
+              <span class="tile-icon">📑</span>
+              <span class="tile-title">Next Tab</span>
+              <span class="tile-sub">Ctrl+Tab</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('browser_reload')" aria-label="Reload page">
+              <span class="tile-icon">🔄</span>
+              <span class="tile-title">Reload</span>
+              <span class="tile-sub">F5</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_size_up')" aria-label="Subtitle size up">
+              <span class="tile-icon">🗚</span>
+              <span class="tile-title">Sub Size +</span>
+              <span class="tile-sub">+</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_size_down')" aria-label="Subtitle size down">
+              <span class="tile-icon">🗛</span>
+              <span class="tile-title">Sub Size -</span>
+              <span class="tile-sub">-</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 4 — PRESENT -->
+    <div class="tab-panel" id="tab-present" role="tabpanel" aria-labelledby="tab-btn-present" style="overflow:hidden;">
       
       <!-- Header row -->
       <div class="present-header-row">
@@ -1621,20 +2136,20 @@
       </div>
 
       <!-- Presentation start / exit -->
-      <button class="present-launch-btn" id="presentLaunchBtn" onclick="togglePresentation()">
+      <button class="present-launch-btn" id="presentLaunchBtn" onclick="togglePresentation()" aria-label="Start presentation">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19 8 5"/></svg>
         <span>Start Presentation</span>
       </button>
 
       <!-- Laser Pad -->
-      <div class="laser-pad" id="presentPad">
+      <div class="laser-pad" id="presentPad" role="application" aria-label="Laser pointer touch area">
         <!-- Decorative corner accent lines -->
         <div class="laser-corner top-left"></div>
         <div class="laser-corner top-right"></div>
         <div class="laser-corner bottom-left"></div>
         <div class="laser-corner bottom-right"></div>
 
-        <div class="laser-hint">
+        <div class="laser-hint" aria-hidden="true">
           <!-- blur_on SVG (danger color) -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
@@ -1646,12 +2161,12 @@
         </div>
         
         <!-- Laser Red Dot -->
-        <div class="laser-dot" id="laserDot"></div>
+        <div class="laser-dot" id="laserDot" aria-hidden="true"></div>
       </div>
 
       <!-- Slide Controls Grid -->
       <div class="slide-controls-grid">
-        <button class="slide-ctrl-btn heading-caps" onclick="slideCtrl('prev_slide')">
+        <button class="slide-ctrl-btn heading-caps" onclick="slideCtrl('prev_slide')" aria-label="Previous slide">
           <!-- arrow_back -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -1659,7 +2174,7 @@
           </svg>
           <span style="margin-top: 4px;">Previous</span>
         </button>
-        <button class="slide-ctrl-btn next heading-caps" onclick="slideCtrl('next_slide')">
+        <button class="slide-ctrl-btn next heading-caps" onclick="slideCtrl('next_slide')" aria-label="Next slide">
           <!-- arrow_forward -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -1689,7 +2204,7 @@
             <path d="M12 5V2L7 6l5 4V7c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"></path>
           </svg>
         </button>
-        <button class="decorative-glass-btn" id="blackoutBtn" onclick="toggleBlackout()" aria-label="Toggle blank screen">
+        <button class="decorative-glass-btn" id="blackoutBtn" onclick="toggleBlackout()" aria-label="Toggle blank screen" aria-pressed="false">
           <!-- tv_off -->
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M7 21h10"></path>
@@ -1706,8 +2221,8 @@
   </main>
 
   <!-- Sticky Bottom Navigation Bar -->
-  <nav>
-    <button class="nav-item active" id="tab-btn-media" onclick="switchTab('media')">
+  <nav role="tablist" aria-label="Main Navigation">
+    <button class="nav-item active" id="tab-btn-media" role="tab" aria-selected="true" aria-controls="tab-media" onclick="switchTab('media')">
       <!-- play_circle (nav) -->
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -1715,7 +2230,7 @@
       </svg>
       <span class="nav-caps">Media</span>
     </button>
-    <button class="nav-item" id="tab-btn-mouse" onclick="switchTab('mouse')">
+    <button class="nav-item" id="tab-btn-mouse" role="tab" aria-selected="false" aria-controls="tab-mouse" onclick="switchTab('mouse')">
       <!-- new_window / trackpad -->
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="4" y="4" width="16" height="16" rx="2"></rect>
@@ -1724,7 +2239,23 @@
       </svg>
       <span class="nav-caps">Mouse</span>
     </button>
-    <button class="nav-item" id="tab-btn-present" onclick="switchTab('present')">
+    <button class="nav-item" id="tab-btn-keyboard" role="tab" aria-selected="false" aria-controls="tab-keyboard" onclick="switchTab('keyboard')">
+      <!-- keyboard / dialpad icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+        <line x1="6" y1="8" x2="6.01" y2="8"></line>
+        <line x1="10" y1="8" x2="10.01" y2="8"></line>
+        <line x1="14" y1="8" x2="14.01" y2="8"></line>
+        <line x1="18" y1="8" x2="18.01" y2="8"></line>
+        <line x1="6" y1="12" x2="6.01" y2="12"></line>
+        <line x1="10" y1="12" x2="10.01" y2="12"></line>
+        <line x1="14" y1="12" x2="14.01" y2="12"></line>
+        <line x1="18" y1="12" x2="18.01" y2="12"></line>
+        <line x1="7" y1="16" x2="17" y2="16"></line>
+      </svg>
+      <span class="nav-caps">Keypad</span>
+    </button>
+    <button class="nav-item" id="tab-btn-present" role="tab" aria-selected="false" aria-controls="tab-present" onclick="switchTab('present')">
       <!-- slideshow -->
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="4" width="18" height="13" rx="2"></rect>
@@ -1737,27 +2268,28 @@
   </nav>
 
   <!-- Interactive Toast Notification -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <!-- PIN Pairing Overlay screen -->
-  <div class="pin-overlay" id="pinOverlay">
-    <h2 class="pin-title headline-lg">Enter Pairing PIN</h2>
-    <p class="pin-subtitle body-text">Check the terminal window on your laptop for the 6-digit pairing PIN.</p>
+  <div class="pin-overlay" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinTitle" aria-describedby="pinSubtitle">
+    <h2 class="pin-title headline-lg" id="pinTitle">Enter Pairing PIN</h2>
+    <p class="pin-subtitle body-text" id="pinSubtitle">Check the terminal window on your laptop for the 6-digit pairing PIN.</p>
     
     <div class="pin-boxes">
-      <div class="pin-box"></div>
-      <div class="pin-box"></div>
-      <div class="pin-box"></div>
-      <div class="pin-box"></div>
-      <div class="pin-box"></div>
-      <div class="pin-box"></div>
-      <input type="text" pattern="[0-9]*" inputmode="numeric" class="pin-input-hidden" id="pinInputHidden" autocomplete="off">
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <input type="text" pattern="[0-9]*" inputmode="numeric" class="pin-input-hidden" id="pinInputHidden" autocomplete="off" aria-label="6-digit pairing PIN" aria-describedby="pinSubtitle">
     </div>
 
-    <div class="pin-error ui-action" id="pinError">Invalid pairing PIN</div>
+    <div class="pin-error ui-action" id="pinError" role="alert">Invalid pairing PIN</div>
   </div>
 
   <!-- JavaScript Logic Implementation -->
+  <script src="/static/socket.io.min.js"></script>
   <script>
     // ─────────────────────────────────────────────────────────────────
     //  STATE
@@ -1777,7 +2309,9 @@
       if (!isAuto) vibrate(15);
       
       document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.id === 'preset-btn-' + name);
+        const isActive = btn.id === 'preset-btn-' + name;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
       });
 
       if (!isAuto) {
@@ -1825,7 +2359,9 @@
       vibrate(15);
 
       document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.toggle('active', btn.id === 'tab-btn-' + name);
+        const isActive = btn.id === 'tab-btn-' + name;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
       document.querySelectorAll('.tab-panel').forEach(panel => {
         panel.classList.toggle('active', panel.id === 'tab-' + name);
@@ -1834,7 +2370,7 @@
 
     // Swipe Left/Right Gesture Support
     function getTabOrder() {
-      const tabs = ['media', 'mouse'];
+      const tabs = ['media', 'mouse', 'keyboard'];
       const presentBtn = document.getElementById('tab-btn-present');
       if (presentBtn && presentBtn.style.display !== 'none') {
         tabs.push('present');
@@ -1861,6 +2397,7 @@
       if (e.touches.length > 1 || 
           e.target.closest('#trackpad') || 
           e.target.closest('#presentPad') || 
+          e.target.closest('#tab-keyboard') || 
           e.target.closest('.control-btn-circle') || 
           e.target.closest('.control-pill') || 
           e.target.closest('.preset-btn') || 
@@ -1942,6 +2479,7 @@
       mouse_scroll: '/mouse/scroll',
       mouse_click:  '/mouse/click',
       key:          '/key',
+      text:         '/text',
       pointer_on:   '/pointer/on',
       pointer_move: '/pointer/move',
       pointer_off:  '/pointer/off',
@@ -1951,16 +2489,14 @@
     let socket = null;
 
     function setStatus(s) {
+      dot.className = 'status-dot ' + (s === 'active' ? 'active' : (s === 'pairing' ? 'pairing' : 'offline'));
       if (s === 'active') {
-        dot.style.cssText = 'background: #4edea3; box-shadow: 0 0 12px #4edea3';
         statusLabel.textContent = 'Active';
         banner.classList.remove('visible');
       } else if (s === 'pairing') {
-        dot.style.cssText = 'background: #e05cff; box-shadow: 0 0 12px #e05cff';
         statusLabel.textContent = 'Pairing';
         banner.classList.remove('visible');
       } else {
-        dot.style.cssText = 'background: #ef4444; box-shadow: 0 0 12px #ef4444';
         statusLabel.textContent = 'Offline';
         banner.classList.add('visible');
       }
@@ -2064,8 +2600,76 @@
 
     async function send(action) {
       vibrate(25);
-      const ok = await socketSend('key', { action, preset: currentPreset });
-      if (ok) showToast(labels[action] || action);
+      await socketSend('key', { action, preset: currentPreset });
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  KEYPAD & SEARCH SUITE LOGIC
+    // ─────────────────────────────────────────────────────────────────
+    async function send_text(text, press_enter = false) {
+      if (!text && !press_enter) return;
+      vibrate(10);
+      return socketSend('text', { text, press_enter });
+    }
+
+    async function send_raw_key(keyName) {
+      vibrate(12);
+      return socketSend('key', { action: keyName, preset: currentPreset });
+    }
+
+    async function send_key_action(actionName) {
+      vibrate(15);
+      return socketSend('key', { action: actionName, preset: currentPreset });
+    }
+
+    function quickJumpSearch() {
+      switchTab('keyboard');
+      setTimeout(() => {
+        focusSearchSite();
+      }, 150);
+    }
+
+    function focusSearchSite() {
+      vibrate(15);
+      send_key_action('search_focus');
+      const input = document.getElementById('searchInput');
+      if (input) {
+        input.focus();
+      }
+      showToast('Focused in-page search (/)');
+    }
+
+    function focusAddressBar() {
+      vibrate(15);
+      send_key_action('search_url');
+      const input = document.getElementById('searchInput');
+      if (input) {
+        input.focus();
+      }
+      showToast('Focused URL address bar (Ctrl+L)');
+    }
+
+    function submitSearch(pressEnter = true) {
+      const input = document.getElementById('searchInput');
+      if (!input) return;
+      const text = input.value.trim();
+      if (text) {
+        send_text(text, pressEnter);
+        showToast('Sent: ' + text);
+        input.blur();
+      } else if (pressEnter) {
+        send_raw_key('enter');
+      }
+    }
+
+    function clearSearchInput() {
+      const input = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      if (clearBtn) clearBtn.classList.remove('visible');
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -2147,7 +2751,6 @@
     async function click_btn(btn) {
       vibrate(30);
       await socketSend('mouse_click', { button: btn });
-      showToast(btn === 'left' ? '🖱 Left click' : '🖱 Right click');
     }
 
     let scrollInterval = null;
@@ -2186,13 +2789,32 @@
       }
     }
 
+    let forgetTimeout = null;
     async function forgetDevice() {
-      if (!confirm("Are you sure you want to forget this device? This will revoke all session tokens and require re-pairing with a new PIN.")) return;
+      const btn = document.querySelector('.forget-device-btn');
+      if (btn && !btn.classList.contains('confirming')) {
+        btn.classList.add('confirming');
+        const span = btn.querySelector('span');
+        if (span) span.textContent = 'Tap again to revoke';
+        vibrate(20);
+        clearTimeout(forgetTimeout);
+        forgetTimeout = setTimeout(() => {
+          btn.classList.remove('confirming');
+          if (span) span.textContent = 'Forget This Device';
+        }, 3500);
+        return;
+      }
+      if (btn) {
+        btn.classList.remove('confirming');
+        const span = btn.querySelector('span');
+        if (span) span.textContent = 'Forget This Device';
+      }
+      clearTimeout(forgetTimeout);
       vibrate(30);
       await post('/revoke');
       localStorage.removeItem('session_token');
       showPinOverlay();
-      showToast("🔒 Device forgotten");
+      showToast('🔒 Device forgotten');
       connectSocket('');
     }
 
@@ -2222,7 +2844,7 @@
     let hasVibratedScroll  = false;
 
     const SCROLL_SENSITIVITY = Math.min(2.5, Math.max(1.0, (window.devicePixelRatio || 1) * 1.2));
-    const MOVE_THRESHOLD_PX  = 8;
+    const MOVE_THRESHOLD_PX  = 2;
     const INERTIA_DECAY      = 0.82;
     const INERTIA_MIN        = 0.8;
 
@@ -2240,7 +2862,7 @@
       const ok = await socketSend('mouse_move', { dx, dy, sens: mouseSensitivity });
       if (!ok) { moveThrottle = null; return; }  // drop on failure, avoid hammering
       if (pendingDx !== 0 || pendingDy !== 0) {
-        flushMove();
+        moveThrottle = requestAnimationFrame(flushMove);
       } else {
         moveThrottle = null;
       }
@@ -2259,7 +2881,7 @@
       const ok = await socketSend('mouse_scroll', { dy });
       if (!ok) { scrollThrottle = null; return; }  // drop on failure, avoid hammering
       if (pendingScrollDy !== 0) {
-        flushScroll();
+        scrollThrottle = setTimeout(flushScroll, 16);
       } else {
         scrollThrottle = null;
       }
@@ -2346,7 +2968,7 @@
         lastTouches = [{ x: t0.clientX, y: t0.clientY }, { x: t1.clientX, y: t1.clientY }];
         scrollIndicator.classList.add('show');
 
-        if (!scrollThrottle) scrollThrottle = setTimeout(flushScroll, 20);
+        if (!scrollThrottle) scrollThrottle = setTimeout(flushScroll, 16);
 
       } else if (e.touches.length === 1) {
         // ── 1-Finger Move ──
@@ -2371,18 +2993,20 @@
           bufferedDx = 0;
           bufferedDy = 0;
           moveSent = true;
+          if (!moveThrottle) {
+            moveThrottle = requestAnimationFrame(flushMove);
+          }
         }
 
         lastTouches = [{ x: t.clientX, y: t.clientY }];
-        if (!moveThrottle) moveThrottle = setTimeout(flushMove, 16);
       }
     }, { passive: false });
 
     pad.addEventListener('touchend', e => {
       e.preventDefault();
 
-      if (moveThrottle)   { clearTimeout(moveThrottle);   flushMove(); }
-      if (scrollThrottle) { clearTimeout(scrollThrottle); flushScroll(); }
+      if (moveThrottle)   { cancelAnimationFrame(moveThrottle); moveThrottle = null; flushMove(); }
+      if (scrollThrottle) { clearTimeout(scrollThrottle); scrollThrottle = null; flushScroll(); }
 
       socketSend('mouse_stop');
 
@@ -2656,6 +3280,25 @@
         socketSend('pointer_off');
       }
     }, { passive: false });
+
+    // ─────────────────────────────────────────────────────────────────
+    //  SEARCH INPUT EVENT WIRING
+    // ─────────────────────────────────────────────────────────────────
+    const searchInput = document.getElementById('searchInput');
+    const searchClearBtn = document.getElementById('searchClearBtn');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        if (searchClearBtn) {
+          searchClearBtn.classList.toggle('visible', searchInput.value.length > 0);
+        }
+      });
+      searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitSearch(true);
+        }
+      });
+    }
 
     // Primary transport: WebSocket (instant status via push events).
     // Legacy HTTP heartbeat only if the socket.io client failed to load.

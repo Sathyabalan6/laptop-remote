@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Remote Deck · Server Companion</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#12131a",
+            "surface-container": "#1e1f26",
+            "surface-container-low": "#1a1b22",
+            "surface-container-lowest": "#0c0e14",
+            "surface-variant": "#33343c",
+            "surface-bright": "#383940",
+            "on-surface": "#e2e1eb",
+            "on-surface-variant": "#c7c5d6",
+            "primary": "#c1c1ff",
+            "primary-container": "#8083ff",
+            "on-primary-container": "#0e0195",
+            "outline-variant": "#464553",
+            "error": "#ffb4ab",
+            "tertiary": "#ffb955"
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .glass-panel {
+      background: rgba(30, 30, 35, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-active {
+      box-shadow: 0 0 20px rgba(128, 131, 255, 0.35);
+    }
+    .mono-box {
+      background: #0e0e11;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.2s ease;
+    }
+    .mono-box:hover, .mono-box:active {
+      border-color: #8083ff;
+      box-shadow: 0 0 15px rgba(128, 131, 255, 0.3) inset;
+    }
+    #toast {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      transform: translateY(20px);
+      z-index: 50;
+    }
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-[#0e0e11] text-[#e2e1eb] font-display h-screen w-screen flex items-center justify-center overflow-hidden relative selection:bg-primary/20">
+
+  <!-- Subtle Animated Canvas Background -->
+  <div class="absolute inset-0 w-full h-full opacity-35 pointer-events-none">
+    <canvas id="ambient-canvas" class="w-full h-full block"></canvas>
+  </div>
+
+  <!-- Main Companion Window App Card -->
+  <div class="relative w-[440px] h-[640px] bg-surface-container rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-outline-variant z-10">
+    
+    <!-- Titlebar -->
+    <div class="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center w-full px-4 h-12 flex-shrink-0 cursor-default select-none">
+      <div class="flex items-center gap-2">
+        <span class="text-primary material-symbols-outlined text-lg">bolt</span>
+        <span class="text-[14px] font-bold text-on-surface">Remote Deck · Companion</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Status Badge -->
+        <div class="flex items-center gap-1.5 bg-surface-variant px-2.5 py-1 rounded-full border border-outline-variant">
+          <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+          <span class="text-[11px] font-medium text-on-surface-variant leading-none" id="statusText">Active · Port 5000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <div class="flex-1 overflow-y-auto overflow-x-hidden p-5 flex flex-col gap-4">
+      
+      <!-- Hero QR Section -->
+      <div class="flex flex-col items-center justify-center gap-2 pt-1">
+        <div class="w-[190px] h-[190px] rounded-xl border border-primary glow-active overflow-hidden flex items-center justify-center bg-[#0c0e14] p-2">
+          <img id="qrImage" alt="QR Code" class="w-full h-full object-contain rounded-lg" src="/qr.png"/>
+        </div>
+        <p class="text-xs text-on-surface-variant text-center font-medium mt-1">Scan with phone camera to connect instantly</p>
+      </div>
+
+      <!-- PIN Section -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-on-surface-variant text-[15px]">lock</span>
+            <span class="text-[11px] uppercase tracking-wider text-on-surface-variant font-bold">Pairing PIN</span>
+          </div>
+          <span class="text-[10px] text-primary cursor-pointer hover:underline" onclick="copyPin()">Click PIN to copy</span>
+        </div>
+        <div class="flex justify-between items-center w-full gap-2" id="pinContainer">
+          <div class="mono-box flex-1 aspect-square rounded-lg flex items-center justify-center cursor-pointer" onclick="copyPin()"><span class="font-mono text-primary text-xl font-bold" id="pin-0">-</span></div>
+          <div class="mono-box flex-1 aspect-square rounded-lg flex items-center justify-center cursor-pointer" onclick="copyPin()"><span class="font-mono text-primary text-xl font-bold" id="pin-1">-</span></div>
+          <div class="mono-box flex-1 aspect-square rounded-lg flex items-center justify-center cursor-pointer" onclick="copyPin()"><span class="font-mono text-primary text-xl font-bold" id="pin-2">-</span></div>
+          <div class="mono-box flex-1 aspect-square rounded-lg flex items-center justify-center cursor-pointer" onclick="copyPin()"><span class="font-mono text-primary text-xl font-bold" id="pin-3">-</span></div>
+          <div class="mono-box flex-1 aspect-square rounded-lg flex items-center justify-center cursor-pointer" onclick="copyPin()"><span class="font-mono text-primary text-xl font-bold" id="pin-4">-</span></div>
+          <div class="mono-box flex-1 aspect-square rounded-lg flex items-center justify-center cursor-pointer" onclick="copyPin()"><span class="font-mono text-primary text-xl font-bold" id="pin-5">-</span></div>
+        </div>
+      </div>
+
+      <!-- Diagnostics & Status Grid -->
+      <div class="grid grid-cols-1 gap-2.5">
+        <!-- Direct URLs -->
+        <div class="glass-panel rounded-xl p-3 flex flex-col gap-2">
+          <div class="flex justify-between items-center group cursor-pointer" onclick="copyUrl(serverUrl)">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="material-symbols-outlined text-on-surface-variant text-[16px] flex-shrink-0">lan</span>
+              <span class="font-mono text-on-surface truncate text-xs font-semibold" id="lanUrlLabel">Loading...</span>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-[16px]">content_copy</span>
+          </div>
+          <div class="h-[1px] w-full bg-outline-variant opacity-40"></div>
+          <div class="flex justify-between items-center group cursor-pointer" onclick="copyUrl('http://remotedeck.local:5000')">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="material-symbols-outlined text-on-surface-variant text-[16px] flex-shrink-0">public</span>
+              <span class="font-mono text-on-surface truncate text-xs font-semibold">http://remotedeck.local:5000</span>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-[16px]">content_copy</span>
+          </div>
+        </div>
+
+        <!-- Status Cards Row -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="glass-panel rounded-xl p-2.5 flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-tertiary text-xl">smartphone</span>
+            <div class="flex flex-col">
+              <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Connected</span>
+              <span class="font-semibold text-on-surface text-xs" id="connectedCountLabel">0 Devices</span>
+            </div>
+          </div>
+          <div class="glass-panel rounded-xl p-2.5 flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-primary text-xl">play_circle</span>
+            <div class="flex flex-col overflow-hidden">
+              <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Active Profile</span>
+              <span class="font-semibold text-on-surface text-xs truncate w-full" id="activeProfileLabel">Universal</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="p-3.5 border-t border-outline-variant bg-surface-container flex flex-col gap-2 flex-shrink-0">
+      <button class="w-full bg-primary-container text-[#0c0e14] hover:bg-primary font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] shadow-md" onclick="copyUrl(serverUrl)">
+        <span class="material-symbols-outlined text-[16px]">link</span>
+        Copy Connection URL
+      </button>
+      <div class="flex gap-2">
+        <button class="flex-1 bg-surface-variant text-on-surface hover:bg-surface-bright border border-outline-variant py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-[0.98]" onclick="regeneratePin()">
+          <span class="material-symbols-outlined text-[15px]" id="refreshIcon">autorenew</span>
+          Regenerate PIN
+        </button>
+        <button class="flex-1 bg-surface-variant text-on-surface hover:bg-surface-bright border border-outline-variant py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-[0.98]" onclick="openInBrowser()">
+          <span class="material-symbols-outlined text-[15px]">open_in_browser</span>
+          Open Web Deck
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-[#e2e1eb] text-[#12131a] px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 border border-outline-variant text-xs font-bold" id="toast">
+    <span class="material-symbols-outlined text-[16px] text-indigo-600">check_circle</span>
+    <span id="toastMessage">Copied to clipboard</span>
+  </div>
+
+  <!-- Real-time Client Script -->
+  <script src="/static/socket.io.min.js"></script>
+  <script>
+    let serverUrl = window.location.origin;
+    let currentPin = "------";
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      if (toastMsg) toastMsg.textContent = msg;
+      if (toast) {
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+    }
+
+    function copyUrl(url) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('URL copied to clipboard!'));
+      } else {
+        showToast('URL: ' + url);
+      }
+    }
+
+    function copyPin() {
+      if (navigator.clipboard && currentPin) {
+        navigator.clipboard.writeText(currentPin).then(() => showToast(`PIN (${currentPin}) copied!`));
+      }
+    }
+
+    function openInBrowser() {
+      window.open('/', '_blank');
+    }
+
+    function updatePinDisplay(pin) {
+      currentPin = String(pin || "000000");
+      for (let i = 0; i < 6; i++) {
+        const el = document.getElementById(`pin-${i}`);
+        if (el) el.textContent = currentPin[i] || '-';
+      }
+    }
+
+    async function fetchServerState() {
+      try {
+        const r = await fetch('/companion/state');
+        if (r.ok) {
+          const d = await r.json();
+          serverUrl = d.url || serverUrl;
+          document.getElementById('lanUrlLabel').textContent = serverUrl;
+          document.getElementById('connectedCountLabel').textContent = `${d.connected_clients || 0} Device${d.connected_clients === 1 ? '' : 's'}`;
+          document.getElementById('activeProfileLabel').textContent = d.active_profile || 'Universal';
+          updatePinDisplay(d.pin);
+          
+          const qrImg = document.getElementById('qrImage');
+          if (qrImg) qrImg.src = `/qr.png?t=${Date.now()}`;
+        }
+      } catch (_) {}
+    }
+
+    async function regeneratePin() {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('animate-spin');
+      try {
+        const r = await fetch('/revoke', { method: 'POST' });
+        if (r.ok) {
+          showToast('New PIN generated!');
+          await fetchServerState();
+        }
+      } catch (_) {}
+      setTimeout(() => {
+        if (icon) icon.classList.remove('animate-spin');
+      }, 500);
+    }
+
+    // Socket.io live updates
+    if (typeof io !== 'undefined') {
+      const socket = io();
+      socket.on('state', (d) => {
+        if (d.pin) updatePinDisplay(d.pin);
+      });
+      socket.on('preset_changed', (d) => {
+        if (d.preset) document.getElementById('activeProfileLabel').textContent = d.preset;
+      });
+    }
+
+    // Polling backup
+    fetchServerState();
+    setInterval(fetchServerState, 3000);
+
+    // Canvas Plasma Shader
+    (function() {
+      const canvas = document.getElementById('ambient-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w, h, t = 0;
+      function resize() {
+        w = canvas.width = canvas.clientWidth || window.innerWidth;
+        h = canvas.height = canvas.clientHeight || window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      function draw() {
+        t += 0.01;
+        ctx.clearRect(0, 0, w, h);
+        const grad = ctx.createRadialGradient(w * 0.5, h * 0.4, 20, w * 0.5, h * 0.5, w * 0.8);
+        grad.addColorStop(0, 'rgba(128, 131, 255, 0.15)');
+        grad.addColorStop(0.5, 'rgba(14, 14, 17, 0.4)');
+        grad.addColorStop(1, 'rgba(14, 14, 17, 0.95)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+</body>
+</html>
