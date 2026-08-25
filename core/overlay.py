@@ -24,6 +24,7 @@ class LaserOverlay:
         self.visible = False
         self.blackout = False
         self.last_activity = time.time()
+        self._ready = threading.Event()   # signals that root is fully initialized
 
     def init_with_parent(self, parent_root):
         if not (HAS_TKINTER and IS_WINDOWS and parent_root):
@@ -39,19 +40,23 @@ class LaserOverlay:
             self.canvas.pack(fill='both', expand=True)
             self.dot = self.canvas.create_oval(-50, -50, -30, -30, fill='red', outline='')
             self.root.withdraw()
+            self._ready.set()
             threading.Thread(target=self._watchdog_loop, daemon=True).start()
         except Exception as e:
             print(f"⚠️ Failed to attach laser overlay to parent: {e}")
             self.root = None
 
     def start(self):
+        """Start the overlay Tk window in a background thread and wait until it's ready."""
         if not (HAS_TKINTER and IS_WINDOWS):
             return
+        self._ready.clear()
         threading.Thread(target=self._run, daemon=True).start()
-        for _ in range(20):
-            if self.root is not None:
-                break
-            time.sleep(0.05)
+        # Wait up to 5 seconds for the Tk root to be ready before returning.
+        # This ensures pointer/blackout calls from Flask threads always work.
+        ready = self._ready.wait(timeout=5.0)
+        if not ready:
+            print("⚠️ Laser overlay took too long to initialize — pointer may be unavailable.")
         threading.Thread(target=self._watchdog_loop, daemon=True).start()
 
     def _watchdog_loop(self):
@@ -72,10 +77,13 @@ class LaserOverlay:
             self.canvas.pack(fill='both', expand=True)
             self.dot = self.canvas.create_oval(-50, -50, -30, -30, fill='red', outline='')
             self.root.withdraw()
+            self._ready.set()   # signal: root is ready, Flask can now serve pointer requests
             self.root.mainloop()
         except Exception as e:
             print(f"⚠️ Failed to initialize laser overlay: {e}")
             self.root = None
+            self._ready.set()   # unblock start() even on failure
+
 
     def show(self):
         self.last_activity = time.time()

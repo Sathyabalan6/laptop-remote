@@ -1,3 +1,4 @@
+import os
 import secrets
 import threading
 import time
@@ -8,9 +9,19 @@ auth_lock = threading.Lock()
 VALID_TOKENS = set()
 
 def generate_pairing_pin():
+    """Always generates a fresh random 6-digit PIN (used for rotation after pairing)."""
     return f"{secrets.randbelow(900000) + 100000}"
 
-PAIRING_PIN = generate_pairing_pin()
+# At startup only: honour LAPTOP_REMOTE_PIN env var for a fixed/custom PIN.
+_env_pin = os.environ.get('LAPTOP_REMOTE_PIN', '').strip()
+PAIRING_PIN = _env_pin if _env_pin else generate_pairing_pin()
+
+def set_pairing_pin(pin):
+    """Override the pairing PIN (called once at startup for --pin CLI arg)."""
+    global PAIRING_PIN
+    with auth_lock:
+        PAIRING_PIN = str(pin).strip()
+
 
 failed_attempts_by_ip = {}
 ip_rate_lock = threading.Lock()

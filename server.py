@@ -26,9 +26,10 @@ except ImportError:
 
 # Import modular components from core package
 from core.config import load_presets, PRESETS_PATH
+import core.auth as _auth                      # import module, not variables, so PAIRING_PIN is always live
 from core.auth import (
-    PAIRING_PIN, VALID_TOKENS, auth_lock,
-    generate_pairing_pin, require_auth, socket_require_auth,
+    VALID_TOKENS, auth_lock,
+    generate_pairing_pin, set_pairing_pin, require_auth, socket_require_auth,
     failed_attempts_by_ip, check_and_record_failed_ip, clear_failed_ip
 )
 from core.network import get_local_ip
@@ -39,6 +40,7 @@ from core.input import (
     InputBackend, handle_mouse_move, handle_mouse_click,
     handle_mouse_scroll, handle_text_input, handle_key, IS_WINDOWS
 )
+
 
 pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0
@@ -95,8 +97,6 @@ def ping():
 
 @app.route('/pair', methods=['POST'])
 def pair():
-    global PAIRING_PIN
-    
     client_ip = request.remote_addr or 'unknown'
     now = time.time()
     with auth_lock:
@@ -107,19 +107,19 @@ def pair():
 
     data = request.get_json(silent=True) or {}
     pin = data.get('pin')
-    
+
     with auth_lock:
-        current_pin = PAIRING_PIN
+        current_pin = _auth.PAIRING_PIN
 
     if pin and secrets.compare_digest(str(pin).strip(), current_pin):
         clear_failed_ip(client_ip)
         with auth_lock:
-            old_pin = PAIRING_PIN
-            PAIRING_PIN = generate_pairing_pin()
-            new_pin = PAIRING_PIN
+            old_pin = _auth.PAIRING_PIN
+            _auth.PAIRING_PIN = generate_pairing_pin()
+            new_pin = _auth.PAIRING_PIN
             client_token = secrets.token_hex(24)
             VALID_TOKENS.add(client_token)
-        
+
         print(f"\n========================================")
         print(f"✅ Successful pairing! Old PIN {old_pin} expired.")
         print(f"   New Pairing PIN (for next device): {new_pin}")
@@ -137,19 +137,18 @@ def revoke():
     token = request.headers.get('Authorization')
     if token and token.startswith('Bearer '):
         token = token[7:]
-    
+
     is_localhost = request.remote_addr in ('127.0.0.1', '::1')
     with auth_lock:
         is_auth = bool(token and token in VALID_TOKENS)
-    
+
     if not (is_localhost or is_auth):
         return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
-        
-    global PAIRING_PIN
+
     with auth_lock:
         VALID_TOKENS.clear()
-        PAIRING_PIN = generate_pairing_pin()
-        new_pin = PAIRING_PIN
+        _auth.PAIRING_PIN = generate_pairing_pin()
+        new_pin = _auth.PAIRING_PIN
         sids_to_notify = list(active_authorized_sids)
         active_authorized_sids.clear()
 
@@ -186,7 +185,7 @@ def companion_state():
     ip = get_local_ip()
     with auth_lock:
         clients_count = len(active_authorized_sids)
-        pin = PAIRING_PIN
+        pin = _auth.PAIRING_PIN
     return jsonify({
         'url': f"http://{ip}:5000",
         'mdns_url': 'http://remotedeck.local:5000',
@@ -390,7 +389,16 @@ def _preset_monitor():
 
 # ── Main Entry Point ──────────────────────────────────────────────────────────
 
-if __name__ == '__main__':
+def main(no_gui=False, custom_pin=None):
+    """Start the Laptop Remote server.
+
+    Args:
+        no_gui: If True, skip Tkinter companion window and run terminal-only.
+        custom_pin: Optional PIN/password to set at startup (overrides env var).
+    """
+    if custom_pin:
+        set_pairing_pin(custom_pin)
+
     try:
         import qrcode
     except ImportError:
@@ -399,19 +407,26 @@ if __name__ == '__main__':
     ip = get_local_ip()
     url = f"http://{ip}:5000"
 
-    print(f"\n========================================")
-    print(f"✅ Laptop Remote running!")
-    print(f"   URL: {url}")
-    print(f"   mDNS: http://remotedeck.local:5000")
-    print(f"   Pairing PIN: {PAIRING_PIN}")
-    print(f"========================================\n")
+    print("\n" + "=" * 52)
+    if no_gui:
+        print("  ⚡ LAPTOP REMOTE · TERMINAL EDITION")
+    else:
+        print("  ⚡ LAPTOP REMOTE · SERVER ACTIVE")
+    print("=" * 52)
+    print(f"  🌐 Local URL     : {url}")
+    print(f"  📢 mDNS Discovery : http://remotedeck.local:5000")
+    print(f"  🔒 Pairing PIN   : {_auth.PAIRING_PIN}")
+    print("=" * 52 + "\n")
 
     if qrcode:
-        qr = qrcode.QRCode(version=1, box_size=1, border=4)
-        qr.add_data(url)
-        qr.make(fit=True)
-        qr.print_ascii(invert=True)
-        print("\n   Scan the QR code above to connect your phone!\n")
+        try:
+            qr = qrcode.QRCode(version=1, box_size=1, border=2)
+            qr.add_data(url)
+            qr.make(fit=True)
+            qr.print_ascii(invert=True)
+            print("\n  👉 Scan the QR code above with your phone to connect!\n")
+        except Exception:
+            pass
 
     # Start Zeroconf mDNS registration
     zeroconf_instance = None
@@ -438,7 +453,7 @@ if __name__ == '__main__':
     def get_companion_state():
         with auth_lock:
             clients_count = len(active_authorized_sids)
-            current_pin = PAIRING_PIN
+            current_pin = _auth.PAIRING_PIN
         return {
             'url': url,
             'pin': current_pin,
@@ -447,18 +462,16 @@ if __name__ == '__main__':
         }
 
     def regenerate_pin_action():
-        global PAIRING_PIN
         with auth_lock:
             VALID_TOKENS.clear()
-            PAIRING_PIN = generate_pairing_pin()
-            new_pin = PAIRING_PIN
+            _auth.PAIRING_PIN = generate_pairing_pin()
+            new_pin = _auth.PAIRING_PIN
             sids_to_notify = list(active_authorized_sids)
             active_authorized_sids.clear()
         for sid in sids_to_notify:
             socketio.emit('revoke', {'message': 'Tokens revoked'}, to=sid)
         return new_pin
 
-    no_gui = '--no-gui' in sys.argv
     try:
         if not no_gui and HAS_TKINTER:
             try:
@@ -466,7 +479,7 @@ if __name__ == '__main__':
                 threading.Thread(target=lambda: socketio.run(app, host='0.0.0.0', port=5000, debug=False), daemon=True).start()
                 companion = CompanionApp(get_state_callback=get_companion_state, regenerate_pin_callback=regenerate_pin_action)
                 overlay.init_with_parent(companion.root)
-                companion.update_data(url, PAIRING_PIN, 0, detect_active_preset() or 'Universal')
+                companion.update_data(url, _auth.PAIRING_PIN, 0, detect_active_preset() or 'Universal')
                 companion.run()
             except Exception as e:
                 print(f"⚠️ GUI could not be opened ({e}), running in terminal mode.")
@@ -483,3 +496,12 @@ if __name__ == '__main__':
                 zeroconf_instance.close()
             except Exception:
                 pass
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Laptop Remote Server')
+    parser.add_argument('--no-gui', action='store_true', help='Run in terminal-only mode (no Tkinter companion window)')
+    parser.add_argument('--pin', default=None, help='Set a custom pairing PIN/password at startup')
+    args, _ = parser.parse_known_args()
+    main(no_gui=args.no_gui, custom_pin=args.pin)
+
