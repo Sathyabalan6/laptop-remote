@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>REMOTE DECK</title>
+  <meta name="theme-color" content="#000000">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+</head>
+<body>
+
+  <!-- Sticky Top Bar Header -->
+  <header>
+    <div class="header-left">
+      <!-- settings_input_component (circuit) -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="8" height="8" rx="1.5"></rect>
+        <rect x="14" y="2" width="8" height="8" rx="1.5"></rect>
+        <rect x="2" y="14" width="8" height="8" rx="1.5"></rect>
+        <rect x="14" y="14" width="8" height="8" rx="1.5"></rect>
+        <path d="M6 10v4M18 10v4M10 6h4M10 18h4"></path>
+      </svg>
+      <span class="header-title heading-caps">Remote Deck</span>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label nav-caps" id="statusLabel">Offline</span>
+        <!-- wifi_tethering (wifi waves) -->
+        <span class="status-wifi-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12a10 10 0 0 1 14 0"></path>
+            <path d="M8.5 15.5a5 5 0 0 1 7 0"></path>
+            <circle cx="12" cy="19" r="1" fill="currentColor"></circle>
+          </svg>
+        </span>
+      </div>
+      <span class="battery-chip nav-caps" id="batteryPct" style="display:none"></span>
+    </div>
+  </header>
+
+  <!-- Banner (offline warning) -->
+  <div class="banner" id="connBanner">
+    <span>⚠️ No connection — check same WiFi</span>
+    <button onclick="checkConnection()">
+      <!-- refresh / wifi retry -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+      </svg>
+      <span>Retry</span>
+    </button>
+  </div>
+
+  <!-- Tab Panels Main Container -->
+  <main>
+    
+    <!-- TAB 1 — MEDIA -->
+    <div class="tab-panel active" id="tab-media" role="tabpanel" aria-labelledby="tab-btn-media">
+      <div class="media-scroll-container">
+        
+        <!-- Quick Search Trigger -->
+        <button class="media-search-pill" onclick="quickJumpSearch()" aria-label="Open search and keyboard">
+          <div class="media-search-left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Search Movie / Video</span>
+          </div>
+          <span class="key-badge">/</span>
+        </button>
+
+        <!-- Preset Selector -->
+        <div class="section-preset">
+          <span class="section-label metadata-caps" id="presetGroupLabel">Player Profile</span>
+          <div class="preset-pill-row" role="radiogroup" aria-labelledby="presetGroupLabel">
+            <button class="preset-btn nav-caps active" id="preset-btn-universal" role="radio" aria-checked="true" onclick="setPreset('universal')">Universal</button>
+            <button class="preset-btn nav-caps" id="preset-btn-youtube_hotstar" role="radio" aria-checked="false" onclick="setPreset('youtube_hotstar')">YouTube / Hotstar</button>
+            <button class="preset-btn nav-caps" id="preset-btn-vlc" role="radio" aria-checked="false" onclick="setPreset('vlc')">VLC</button>
+          </div>
+        </div>
+
+        <!-- Playback Hub Card -->
+        <div class="playback-card">
+          
+          <!-- Main Controls row -->
+            <div class="main-controls-row">
+              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_back')" aria-label="Skip backward 10 seconds">
+                <!-- skip_previous -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 19 2 12 11 5 11 19" fill="currentColor"></polygon>
+                  <polygon points="22 19 13 12 22 5 22 19" fill="currentColor"></polygon>
+                </svg>
+              </button>
+              <button class="control-btn-circle play-btn-circle" onclick="send('play_pause')" aria-label="Play or pause playback">
+                <!-- play/pause combined -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="4 4 13 12 4 20 4 4" fill="currentColor" stroke="none"></polygon>
+                  <rect x="16" y="4" width="3" height="16" rx="1" fill="currentColor" stroke="none"></rect>
+                  <rect x="21" y="4" width="3" height="16" rx="1" fill="currentColor" stroke="none"></rect>
+                </svg>
+              </button>
+              <button class="control-btn-circle skip-btn-circle" onclick="send('skip_forward')" aria-label="Skip forward 10 seconds">
+                <!-- skip_next -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 19 22 12 13 5 13 19" fill="currentColor"></polygon>
+                  <polygon points="2 19 11 12 2 5 2 19" fill="currentColor"></polygon>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Secondary controls row -->
+            <div class="secondary-controls-row">
+              <button class="control-pill ui-action" onclick="send('back')" aria-label="Go back in browser">
+                <!-- arrow_back -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Back</span>
+              </button>
+              <button class="control-pill ui-action" onclick="send('skip_back')" aria-label="Replay 10 seconds">
+                <!-- replay_10 -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <polyline points="3 3 3 8 8 8"></polyline>
+                  <text x="12" y="15" font-size="7" font-weight="bold" font-family="-apple-system, sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text>
+                </svg>
+                <span>10s</span>
+              </button>
+              <button class="control-pill ui-action" onclick="send('skip_forward_30')" aria-label="Skip forward 30 seconds">
+                <!-- forward_30 -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <polyline points="21 3 21 8 16 8"></polyline>
+                  <text x="12" y="15" font-size="7" font-weight="bold" font-family="-apple-system, sans-serif" text-anchor="middle" fill="currentColor" stroke="none">30</text>
+                </svg>
+                <span>30s</span>
+              </button>
+            </div>
+
+          </div>
+
+        <!-- Volume & System Controls Card -->
+        <div class="card volume-system-card">
+          <!-- Volume section -->
+          <div class="volume-section">
+            <div class="volume-header-row">
+              <div class="volume-title-left ui-action" id="volumeLabel">
+                <!-- volume_up -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <span>Volume</span>
+              </div>
+              <span class="numeric-display volume-value-right" id="volumePct">50%</span>
+            </div>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50" aria-labelledby="volumeLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          </div>
+
+          <!-- Quick toggles grid -->
+          <div class="quick-toggles-grid">
+            <button class="toggle-btn ui-action" onclick="send('mute')" aria-label="Mute or unmute audio">
+              <!-- volume_off -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <line x1="22" y1="9" x2="16" y2="15"></line>
+                <line x1="16" y1="9" x2="22" y2="15"></line>
+              </svg>
+              <span>Mute</span>
+            </button>
+            <button class="toggle-btn ui-action" onclick="send('subtitles')" aria-label="Toggle closed captions / subtitles">
+              <!-- subtitles -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
+                <line x1="7" y1="10" x2="17" y2="10"></line>
+                <line x1="7" y1="14" x2="13" y2="14"></line>
+              </svg>
+              <span>Subs</span>
+            </button>
+            <button class="toggle-btn ui-action" onclick="send('fullscreen')" aria-label="Toggle fullscreen mode">
+              <!-- fullscreen -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+              <span>Full</span>
+            </button>
+          </div>
+          <!-- Forget This Device Button -->
+          <button class="forget-device-btn ui-action" onclick="forgetDevice()" aria-label="Forget this device and revoke session">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Forget This Device</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2 — MOUSE -->
+    <div class="tab-panel" id="tab-mouse" role="tabpanel" aria-labelledby="tab-btn-mouse" style="overflow:hidden;">
+      
+      <!-- Sensitivity Section -->
+      <div class="card sensitivity-card">
+        <div class="sensitivity-header-row">
+          <span class="heading-caps" id="sensitivityHeaderLabel" style="color: var(--on-surface-variant);">Pointer Sensitivity</span>
+          <span class="numeric-display" id="sensitivityLabel" style="color: var(--primary);">1.0x</span>
+        </div>
+        <input type="range" class="sensitivity-slider" id="sensitivitySlider" min="0.5" max="4.0" step="0.1" value="1.0" aria-labelledby="sensitivityHeaderLabel" aria-valuemin="0.5" aria-valuemax="4.0" aria-valuenow="1.0">
+      </div>
+
+      <!-- Trackpad Area -->
+      <div class="trackpad-panel" id="trackpad" role="application" aria-label="Touch trackpad pointer area">
+        <div class="trackpad-hint" aria-hidden="true">
+          <!-- new_window / trackpad SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+            <path d="M12 12v4"></path>
+            <circle cx="12" cy="10" r="1.5" fill="currentColor"></circle>
+          </svg>
+          <span class="ui-action" style="letter-spacing: 0.12em; text-transform: uppercase;">Move pointer</span>
+        </div>
+        <!-- Touch Ghost Cursor Indicator -->
+        <div class="cursor-ghost" id="cursorGhost" aria-hidden="true"></div>
+        
+        <!-- Scroll Track Overlay Indicator -->
+        <div class="scroll-indicator" id="scrollIndicator" aria-hidden="true">
+          <div class="scroll-dots"><i></i><i></i><i></i></div>
+          <span>SCROLL</span>
+        </div>
+      </div>
+
+      <!-- Click Buttons with Scroll wheel columns -->
+      <div class="mouse-buttons-grid">
+        <button class="mouse-click-btn metadata-caps" onclick="click_btn('left')" aria-label="Left mouse click">
+          <span>LEFT</span>
+          <span class="click-dot"></span>
+        </button>
+        <div class="scroll-buttons-col">
+          <button class="scroll-btn-tactile" 
+                  onpointerdown="startContinuousScroll(event, 'up')" 
+                  onpointerup="stopContinuousScroll(event)" 
+                  onpointerleave="stopContinuousScroll(event)"
+                  onpointercancel="stopContinuousScroll(event)"
+                  aria-label="Scroll up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button class="scroll-btn-tactile" 
+                  onpointerdown="startContinuousScroll(event, 'down')" 
+                  onpointerup="stopContinuousScroll(event)" 
+                  onpointerleave="stopContinuousScroll(event)"
+                  onpointercancel="stopContinuousScroll(event)"
+                  aria-label="Scroll down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+        <button class="mouse-click-btn metadata-caps" onclick="click_btn('right')" aria-label="Right mouse click">
+          <span>RIGHT</span>
+          <span class="click-dot"></span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- TAB 3 — KEYPAD & SEARCH -->
+    <div class="tab-panel" id="tab-keyboard" role="tabpanel" aria-labelledby="tab-btn-keyboard">
+      <div class="keyboard-scroll-container">
+        
+        <!-- Live Search & Voice Input Card -->
+        <div class="card search-card">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Type movie, video, or URL..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text">
+            <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()" aria-label="Clear input">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div class="search-actions-row">
+            <button class="focus-pill" onclick="focusSearchSite()" aria-label="Focus in-page video search">
+              <span class="key-badge">/</span> Focus Search
+            </button>
+            <button class="focus-pill" onclick="focusAddressBar()" aria-label="Focus browser URL bar">
+              <span class="key-badge">Ctrl+L</span> URL Bar
+            </button>
+            <button class="send-search-btn" onclick="submitSearch(true)" aria-label="Send and submit search">
+              <span>Search</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- D-Pad & Web Navigation Card -->
+        <div class="card dpad-card">
+          <div class="card-header-row" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span class="heading-caps" style="color: var(--on-surface-variant);">Navigation &amp; D-Pad</span>
+            <span class="micro-label" style="color: var(--primary);">ARROW KEYS + OK</span>
+          </div>
+          <div class="dpad-container">
+            <button class="dpad-btn dpad-up" onclick="send_raw_key('up')" aria-label="Up arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            </button>
+            <button class="dpad-btn dpad-left" onclick="send_raw_key('left')" aria-label="Left arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="dpad-btn dpad-center" onclick="send_raw_key('enter')" aria-label="OK / Enter">
+              <span>OK</span>
+            </button>
+            <button class="dpad-btn dpad-right" onclick="send_raw_key('right')" aria-label="Right arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button class="dpad-btn dpad-down" onclick="send_raw_key('down')" aria-label="Down arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+          <div class="nav-keys-row">
+            <button class="nav-key-btn" onclick="send_raw_key('escape')" aria-label="Escape key">
+              <span class="key-label">ESC</span>
+            </button>
+            <button class="nav-key-btn" onclick="send_raw_key('tab')" aria-label="Tab key">
+              <span class="key-label">TAB</span>
+            </button>
+            <button class="nav-key-btn" onclick="send_raw_key('shift_tab')" aria-label="Shift + Tab">
+              <span class="key-label">⇧ TAB</span>
+            </button>
+            <button class="nav-key-btn danger-accent" onclick="send_raw_key('backspace')" aria-label="Backspace">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Streaming & Settings Shortcuts Grid -->
+        <div class="card shortcuts-card">
+          <div class="card-header-row" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span class="heading-caps" style="color: var(--on-surface-variant);">Streaming &amp; Shortcuts</span>
+            <span class="micro-label" style="color: var(--secondary);">HOTKEYS</span>
+          </div>
+          <div class="shortcuts-grid">
+            <button class="shortcut-tile" onclick="send_key_action('skip_intro')" aria-label="Skip intro or recap">
+              <span class="tile-icon">⏭</span>
+              <span class="tile-title">Skip Intro</span>
+              <span class="tile-sub">S</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('theater_mode')" aria-label="Toggle theater mode">
+              <span class="tile-icon">⛶</span>
+              <span class="tile-title">Theater</span>
+              <span class="tile-sub">T</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('miniplayer')" aria-label="Toggle miniplayer / PiP">
+              <span class="tile-icon">🗗</span>
+              <span class="tile-title">Miniplayer</span>
+              <span class="tile-sub">I</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('audio_track_cycle')" aria-label="Cycle audio language stream">
+              <span class="tile-icon">🌐</span>
+              <span class="tile-title">Audio Dub</span>
+              <span class="tile-sub">A / B</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('speed_up')" aria-label="Speed up playback">
+              <span class="tile-icon">⚡</span>
+              <span class="tile-title">Speed +</span>
+              <span class="tile-sub">⇧ &gt; / ]</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('speed_down')" aria-label="Slow down playback">
+              <span class="tile-icon">🐢</span>
+              <span class="tile-title">Speed -</span>
+              <span class="tile-sub">⇧ &lt; / [</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_sync_advance')" aria-label="Advance subtitle sync">
+              <span class="tile-icon">💬</span>
+              <span class="tile-title">Sub Sync -</span>
+              <span class="tile-sub">G / Z</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_sync_delay')" aria-label="Delay subtitle sync">
+              <span class="tile-icon">💬</span>
+              <span class="tile-title">Sub Sync +</span>
+              <span class="tile-sub">H / ⇧Z</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('browser_tab_next')" aria-label="Next browser tab">
+              <span class="tile-icon">📑</span>
+              <span class="tile-title">Next Tab</span>
+              <span class="tile-sub">Ctrl+Tab</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('browser_reload')" aria-label="Reload page">
+              <span class="tile-icon">🔄</span>
+              <span class="tile-title">Reload</span>
+              <span class="tile-sub">F5</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_size_up')" aria-label="Subtitle size up">
+              <span class="tile-icon">🗚</span>
+              <span class="tile-title">Sub Size +</span>
+              <span class="tile-sub">+</span>
+            </button>
+            <button class="shortcut-tile" onclick="send_key_action('subtitles_size_down')" aria-label="Subtitle size down">
+              <span class="tile-icon">🗛</span>
+              <span class="tile-title">Sub Size -</span>
+              <span class="tile-sub">-</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 4 — PRESENT -->
+    <div class="tab-panel" id="tab-present" role="tabpanel" aria-labelledby="tab-btn-present" style="overflow:hidden;">
+      
+      <!-- Header row -->
+      <div class="present-header-row">
+        <div class="present-header-left">
+          <span class="micro-label" style="color: var(--on-surface-variant);">Current Deck</span>
+          <span class="headline-lg">Presentation Mode</span>
+        </div>
+        <div class="present-header-right">
+          <span class="numeric-display" id="slideCounter" style="color: var(--primary);">1</span>
+          <span class="micro-label" style="color: var(--on-surface-variant);">Slide</span>
+        </div>
+      </div>
+
+      <!-- Presentation start / exit -->
+      <button class="present-launch-btn" id="presentLaunchBtn" onclick="togglePresentation()" aria-label="Start presentation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+        <span>Start Presentation</span>
+      </button>
+
+      <!-- Laser Pad -->
+      <div class="laser-pad" id="presentPad" role="application" aria-label="Laser pointer touch area">
+        <!-- Decorative corner accent lines -->
+        <div class="laser-corner top-left"></div>
+        <div class="laser-corner top-right"></div>
+        <div class="laser-corner bottom-left"></div>
+        <div class="laser-corner bottom-right"></div>
+
+        <div class="laser-hint" aria-hidden="true">
+          <!-- blur_on SVG (danger color) -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6" stroke-dasharray="3 3"></circle>
+            <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+          </svg>
+          <span class="heading-caps" style="color: var(--danger); margin-top: 8px;">Laser Pointer</span>
+          <span class="subheading" style="color: var(--on-surface-variant);">Touch and hold to point</span>
+        </div>
+        
+        <!-- Laser Red Dot -->
+        <div class="laser-dot" id="laserDot" aria-hidden="true"></div>
+      </div>
+
+      <!-- Slide Controls Grid -->
+      <div class="slide-controls-grid">
+        <button class="slide-ctrl-btn heading-caps" onclick="slideCtrl('prev_slide')" aria-label="Previous slide">
+          <!-- arrow_back -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span style="margin-top: 4px;">Previous</span>
+        </button>
+        <button class="slide-ctrl-btn next heading-caps" onclick="slideCtrl('next_slide')" aria-label="Next slide">
+          <!-- arrow_forward -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+          <span style="margin-top: 4px;">Next Slide</span>
+        </button>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="present-bottom-row">
+        <div class="timer-card">
+          <!-- timer SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <div class="timer-card-content">
+            <span class="micro-label" style="color: var(--on-surface-variant);">Elapsed</span>
+            <span class="numeric-display" id="elapsedTimer" style="color: var(--tertiary);">00:00</span>
+          </div>
+        </div>
+        
+        <button class="decorative-glass-btn" id="restartBtn" onclick="resetPresentation()" aria-label="Restart presentation">
+          <!-- restart_alt -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5V2L7 6l5 4V7c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6H4c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8z"></path>
+          </svg>
+        </button>
+        <button class="decorative-glass-btn" id="blackoutBtn" onclick="toggleBlackout()" aria-label="Toggle blank screen" aria-pressed="false">
+          <!-- tv_off -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 21h10"></path>
+            <path d="M12 21v-4"></path>
+            <path d="m2 2 20 20"></path>
+            <path d="M21 17V5a2 2 0 0 0-2-2H9"></path>
+            <path d="M5 5v12a2 2 0 0 0 2 2h9"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Sticky Bottom Navigation Bar -->
+  <nav role="tablist" aria-label="Main Navigation">
+    <button class="nav-item active" id="tab-btn-media" role="tab" aria-selected="true" aria-controls="tab-media" onclick="switchTab('media')">
+      <!-- play_circle (nav) -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
+      </svg>
+      <span class="nav-caps">Media</span>
+    </button>
+    <button class="nav-item" id="tab-btn-mouse" role="tab" aria-selected="false" aria-controls="tab-mouse" onclick="switchTab('mouse')">
+      <!-- new_window / trackpad -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+        <path d="M12 12v4"></path>
+        <circle cx="12" cy="10" r="1.5" fill="currentColor"></circle>
+      </svg>
+      <span class="nav-caps">Mouse</span>
+    </button>
+    <button class="nav-item" id="tab-btn-keyboard" role="tab" aria-selected="false" aria-controls="tab-keyboard" onclick="switchTab('keyboard')">
+      <!-- keyboard / dialpad icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+        <line x1="6" y1="8" x2="6.01" y2="8"></line>
+        <line x1="10" y1="8" x2="10.01" y2="8"></line>
+        <line x1="14" y1="8" x2="14.01" y2="8"></line>
+        <line x1="18" y1="8" x2="18.01" y2="8"></line>
+        <line x1="6" y1="12" x2="6.01" y2="12"></line>
+        <line x1="10" y1="12" x2="10.01" y2="12"></line>
+        <line x1="14" y1="12" x2="14.01" y2="12"></line>
+        <line x1="18" y1="12" x2="18.01" y2="12"></line>
+        <line x1="7" y1="16" x2="17" y2="16"></line>
+      </svg>
+      <span class="nav-caps">Keypad</span>
+    </button>
+    <button class="nav-item" id="tab-btn-present" role="tab" aria-selected="false" aria-controls="tab-present" onclick="switchTab('present')">
+      <!-- slideshow -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+        <path d="M12 17v4"></path>
+        <path d="M9 21h6"></path>
+        <polygon points="10 8 15 11 10 14 10 8" fill="currentColor"></polygon>
+      </svg>
+      <span class="nav-caps">Present</span>
+    </button>
+  </nav>
+
+  <!-- Interactive Toast Notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- PIN Pairing Overlay screen -->
+  <div class="pin-overlay" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinTitle" aria-describedby="pinSubtitle">
+    <h2 class="pin-title headline-lg" id="pinTitle">Enter Pairing PIN</h2>
+    <p class="pin-subtitle body-text" id="pinSubtitle">Check the terminal window on your laptop for the 6-digit pairing PIN.</p>
+    
+    <div class="pin-boxes">
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <div class="pin-box" aria-hidden="true"></div>
+      <input type="text" pattern="[0-9]*" inputmode="numeric" class="pin-input-hidden" id="pinInputHidden" autocomplete="off" aria-label="6-digit pairing PIN" aria-describedby="pinSubtitle">
+    </div>
+
+    <div class="pin-error ui-action" id="pinError" role="alert">Invalid pairing PIN</div>
+
+    <details class="pin-diag-details">
+      <summary class="pin-diag-summary ui-action">❓ Connection Troubleshooting</summary>
+      <div class="pin-diag-content body-text">
+        <p>• Ensure phone &amp; laptop are connected to the same Wi-Fi.</p>
+        <p>• Public / Campus Wi-Fi blocks direct connections (AP Isolation). Use <strong>Mobile Hotspot</strong> instead.</p>
+        <p>• Verify OS firewall allows TCP Port 5000 (<code>sudo ufw allow 5000/tcp</code>).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- JavaScript Logic Modules -->
+  <script src="/static/socket.io.min.js"></script>
+  <script src="/static/js/state.js"></script>
+  <script src="/static/js/transport.js"></script>
+  <script src="/static/js/media.js"></script>
+  <script src="/static/js/trackpad.js"></script>
+  <script src="/static/js/presentation.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

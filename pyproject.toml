@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "laptop-remote"
+version = "1.0.0"
+description = "Control your laptop from a phone over local Wi-Fi — mouse, keyboard, media, and presentation laser pointer."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Laptop Remote Contributors" }]
+keywords = ["remote", "trackpad", "mouse", "keyboard", "media", "presentation", "laser", "wi-fi"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking",
+]
+
+# Runtime dependencies (cross-platform). Some are optional per-OS:
+#   - pyautogui + python3-xlib are only needed on Linux/X11 fallback.
+#   - pywin32 is Windows-only (see [project.optional-dependencies]).
+dependencies = [
+    "Flask>=3.0",
+    "Flask-SocketIO>=5.3",
+    "simple-websocket>=1.0",
+    "qrcode>=7.4",
+    "Pillow>=10.0",
+    "pyperclip>=1.8",
+    "pyautogui>=0.9.54",
+    "python3-xlib>=0.15; sys_platform == 'linux'",
+    "zeroconf>=0.130; sys_platform != 'win32'",
+    "ifaddr>=0.2",
+]
+
+[project.optional-dependencies]
+windows = ["pywin32>=306"]
+tray = ["pystray>=0.19"]
+build = ["pyinstaller>=6.0"]
+
+[project.scripts]
+laptop-remote = "laptop_remote.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/your-org/laptop-remote"
+Documentation = "https://github.com/your-org/laptop-remote#readme"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+packages = ["laptop_remote", "laptop_remote.core"]
+
+[tool.setuptools.package-data]
+"laptop_remote" = ["static/**/*", "presets.json"]
+
+[tool.setuptools.data-files]
+"share/laptop-remote" = ["presets.json"]

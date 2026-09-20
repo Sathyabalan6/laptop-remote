@@ -4,13 +4,25 @@ import time
 import io
 import threading
 import webbrowser
-import tkinter as tk
-from tkinter import messagebox
+try:
+    import tkinter as tk
+    from tkinter import messagebox
+    from PIL import ImageTk
+    HAS_TKINTER = True
+except ImportError:
+    tk = None
+    messagebox = None
+    ImageTk = None
+    HAS_TKINTER = False
+
 import qrcode
-from PIL import Image, ImageTk
+from PIL import Image
+from .core.tray import SystemTrayManager, HAS_PYSTRAY
 
 class CompanionApp:
     def __init__(self, get_state_callback=None, regenerate_pin_callback=None):
+        if not HAS_TKINTER:
+            raise RuntimeError("Tkinter is not installed on this Python environment.")
         self.get_state = get_state_callback
         self.regenerate_pin_cb = regenerate_pin_callback
         
@@ -26,9 +38,48 @@ class CompanionApp:
         self.active_profile = "Universal"
         self.qr_photo = None
 
+        self.tray = SystemTrayManager(
+            get_state_cb=lambda: {
+                "url": self.server_url,
+                "pin": self.pin,
+                "connected_count": self.connected_count,
+                "active_profile": self.active_profile
+            },
+            on_show_gui_cb=self.show_window,
+            regenerate_pin_cb=self.on_regenerate_pin,
+            quit_cb=self.quit_app
+        )
+        if HAS_PYSTRAY:
+            self.tray.start()
+            self.root.protocol("WM_DELETE_WINDOW", self.hide_to_tray)
+
         self._build_ui()
         self.update_data(self.server_url, self.pin, 0, "Universal")
         self._update_loop()
+
+    def show_window(self):
+        """Restores and focuses Tkinter window from system tray."""
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+
+    def hide_to_tray(self):
+        """Hides Tkinter window to system tray instead of closing app."""
+        if HAS_PYSTRAY and self.tray.is_running:
+            self.root.withdraw()
+            self._flash_toast("Minimized to system tray")
+        else:
+            self.quit_app()
+
+    def quit_app(self):
+        """Clean shutdown of tray icon and window."""
+        if self.tray:
+            self.tray.stop()
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
+        sys.exit(0)
 
     def _build_ui(self):
         # Header bar

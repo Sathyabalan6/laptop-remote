@@ -3,10 +3,26 @@ import sys
 import json
 
 def get_executable_dir():
+    """Return the directory that holds user-editable data (presets.json).
+
+    For a frozen (PyInstaller) build this is next to the executable; for a
+    source checkout this is the repository root (where pyproject.toml lives).
+    """
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
-    # Return repo root (one level up from core/)
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    # core/config.py -> .../src/laptop_remote/core/config.py
+    # Walk up until we find the project root (which contains pyproject.toml).
+    current = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(5):
+        if os.path.exists(os.path.join(current, 'pyproject.toml')) or \
+           os.path.exists(os.path.join(current, 'presets.json')):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            break
+        current = parent
+    # Fallback: repo root is three levels up from core/ (src/laptop_remote/core).
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 PRESETS_PATH = os.path.join(get_executable_dir(), 'presets.json')
 

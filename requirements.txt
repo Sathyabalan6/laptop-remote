@@ -1,0 +1,20 @@
+# Laptop Remote — runtime dependencies (cross-platform)
+# Install with: pip install -r requirements.txt
+
+Flask>=3.0
+Flask-SocketIO>=5.3
+simple-websocket>=1.0
+wsproto>=1.2
+qrcode>=7.4
+Pillow>=10.0
+pyperclip>=1.8
+pyautogui>=0.9.54
+python3-xlib>=0.15; sys_platform == 'linux'
+zeroconf>=0.130; sys_platform != 'win32'
+ifaddr>=0.2
+
+# Windows-only (real mouse/keyboard input). Ignored on other platforms.
+pywin32>=306; sys_platform == 'win32'
+
+# Optional: system tray icon support
+# pystray>=0.19

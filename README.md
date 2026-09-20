@@ -138,14 +138,14 @@ Key mappings are defined in [`presets.json`](file:///E:/laptop-remote/presets.js
 
 ### Running from Source
 ```bash
-# Install required Python dependencies
-pip install flask pyautogui pywin32 qrcode pyinstaller pillow flask-socketio simple-websocket zeroconf ifaddr
+# Install the package in editable mode (pulls in all dependencies)
+pip install -e .
+
+# Run the Terminal-only / CLI mode server
+python -m laptop_remote
 
 # Run GUI Companion App
-python server.py
-
-# Run in Terminal-only / CLI mode
-python cli.py
+python -m laptop_remote.server
 ```
 
 ### Compiling Executables (`.exe`)
@@ -163,27 +163,46 @@ Use the included automated build batch scripts:
 
 ```
 laptop-remote/
-├── core/
-│   ├── auth.py          # PIN generation, bearer token management, rate limiting
-│   ├── config.py        # Presets JSON loader and path resolver
-│   ├── input.py         # Mouse/keyboard drivers (win32api / Quartz / PyAutoGUI)
-│   ├── network.py       # Local IP resolution utility
-│   ├── overlay.py       # Fullscreen transparent Tkinter laser pointer & blackout overlay
-│   ├── power.py         # Battery status monitor
-│   └── window.py        # Foreground window title detection & auto-preset matching
-├── static/
-│   ├── index.html       # Mobile web remote interface (Media, Mouse, Keypad, Present)
-│   ├── companion.html   # Web companion overview page
-│   ├── socket.io.min.js # Bundled offline WebSocket client
-│   ├── manifest.webmanifest # PWA metadata configuration
-│   └── sw.js            # Service worker for offline caching
-├── gui.py               # Tkinter desktop companion window (Dark UI, PIN display, QR preview)
-├── cli.py               # Headless terminal entry point
-├── server.py            # Main Flask + Flask-SocketIO backend & mDNS server
-├── presets.json         # Keyboard shortcut profiles (Universal, YouTube, VLC, etc.)
-├── build.bat            # Automated PyInstaller build script (GUI & CLI)
-├── build_cli.bat        # PyInstaller build script for CLI edition
-└── README.md            # Project documentation
+├── pyproject.toml              # Packaging metadata & dependencies
+├── requirements.txt            # Runtime dependencies
+├── run.sh / build.sh           # Linux launcher / builder
+├── build.bat / build_cli.bat   # Windows builders
+├── setup_linux.sh              # One-time Wayland (ydotool) setup on Linux
+├── presets.json                # Keyboard shortcut profiles (user-editable)
+├── logo.ico                    # App icon
+├── src/
+│   └── laptop_remote/          # Main application package
+│       ├── __init__.py
+│       ├── __main__.py         # python -m laptop_remote
+│       ├── server/             # Flask + SocketIO server package
+│       │   ├── __init__.py     # public API (app, socketio, main)
+│       │   ├── _app.py         # app construction & shared runtime state
+│       │   ├── state.py        # build_state()
+│       │   ├── routes_auth.py  # pairing, revoke, companion, QR
+│       │   ├── routes_input.py # mouse/key/text/pointer/volume
+│       │   ├── websocket.py    # Socket.IO handlers
+│       │   ├── discovery.py    # mDNS + preset monitor
+│       │   └── main.py         # main() entry point
+│       ├── cli.py              # Terminal/headless entry point
+│       ├── gui.py              # Tkinter desktop companion window
+│       ├── core/               # Platform backends & utilities
+│       │   ├── input.py        # Mouse/keyboard drivers (Windows/macOS/X11/Wayland)
+│       │   ├── keys.py         # Key-name → Linux input-event keycode mapping
+│       │   ├── auth.py         # PIN generation, bearer tokens, rate limiting
+│       │   ├── config.py       # Presets JSON loader & path resolver
+│       │   ├── network.py      # Local IP resolution & SSL certificate setup
+│       │   ├── overlay.py      # Laser pointer & blackout Tk overlay
+│       │   ├── power.py        # Battery status monitor
+│       │   ├── window.py       # Foreground window detection & auto-preset
+│       │   ├── audio.py        # Cross-platform volume control
+│       │   └── tray.py         # System tray icon manager
+│       └── static/             # Web frontend (served as the remote UI)
+│           ├── index.html
+│           ├── companion.html
+│           ├── css/            # tokens.css, base.css, components.css
+│           └── js/             # app.js, transport.js, trackpad.js, ...
+├── docs/                       # Design notes & research
+└── README.md
 ```
 
 ---

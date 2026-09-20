@@ -1,7 +1,6 @@
 # PyInstaller build artifacts
 build/
 dist*/
-*.spec
 
 # Python cache and bytecode
 __pycache__/
@@ -9,9 +8,19 @@ __pycache__/
 *.pyo
 *.pyd
 
+# Packaging artifacts
+*.egg-info/
+.eggs/
+*.dist-info/
+
 # Environments
 .env
 .venv
 venv/
 ENV/
 env/
+
+# Certificates and keys
+.certs/
+*.pem
+*.key

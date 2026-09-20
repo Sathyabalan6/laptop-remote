@@ -15,7 +15,7 @@ if errorlevel 1 (
 
 :: Install dependencies
 echo [1/3] Checking dependencies...
-pip install flask pyautogui pywin32 qrcode pyinstaller pillow flask-socketio simple-websocket zeroconf ifaddr --quiet
+pip install -e . pyinstaller --quiet
 if errorlevel 1 (
     echo [ERROR] pip install failed.
     pause

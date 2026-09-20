@@ -1,0 +1,119 @@
+/* ── DESIGN SYSTEM & TOKENS ── */
+:root {
+  /* Colors - Emerald OLED Theme */
+  --background: #000000;
+  --surface: #0b120d;
+  --surface-dim: #070c09;
+  --surface-container-lowest: #040805;
+  --surface-container-low: #101b13;
+  --surface-container: #17261b;
+  --surface-container-high: #203325;
+  --surface-container-highest: #28402e;
+  --surface-hover: #294230;
+  --surface-bright: #33523c;
+  --on-surface: #e8f5e9;
+  --on-surface-variant: #a5d6a7;
+  --primary: #69f0ae;
+  --primary-container: #00e676;
+  --on-primary-container: #00371a;
+  --secondary: #b9f6ca;
+  --secondary-container: #1b3d26;
+  --on-secondary-container: #a5d6a7;
+  --tertiary: #10b981;
+  --border: #1a2f20;
+  --danger: #ef4444;
+  --foreground: #f1f8f3;
+  --foreground-muted: #81c784;
+  --outline: #4caf50;
+  --outline-variant: #1b3823;
+
+  /* Spacing */
+  --container-padding: 20px;
+  --container-padding-mobile: 16px;
+  --card-padding: 14px;
+  --gap-standard: 12px;
+  --gap-grid: 8px;
+  --gap-icon: 6px;
+
+  /* Border Radius */
+  --radius-cards: 16px;
+  --radius-buttons: 12px;
+  --radius-small: 8px;
+  --radius-pills: 9999px;
+
+  /* Z-Index Hierarchy */
+  --z-base: 1;
+  --z-sticky: 10;
+  --z-banner: 20;
+  --z-header: 30;
+  --z-nav: 40;
+  --z-toast: 50;
+  --z-modal: 100;
+
+  /* Typography */
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ── TYPOGRAPHY TOKENS ── */
+.heading-caps {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metadata-caps {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-caps {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ui-action {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.numeric-display {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.subheading {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.micro-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.body-text {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.headline-lg {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
