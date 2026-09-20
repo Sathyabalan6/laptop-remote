@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (searchClearBtn) {
         searchClearBtn.classList.toggle('visible', searchInput.value.length > 0);
       }
+      handleLiveTyping(searchInput);
     });
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {

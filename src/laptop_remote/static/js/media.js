@@ -47,14 +47,36 @@ function focusAddressBar() {
 function submitSearch(pressEnter = true) {
   const input = document.getElementById('searchInput');
   if (!input) return;
-  const text = input.value.trim();
-  if (text) {
-    send_text(text, pressEnter);
-    showToast('Sent: ' + text);
-    input.blur();
-  } else if (pressEnter) {
-    send_raw_key('enter');
-  }
+  // Text is already mirrored live as the user types; here we only submit.
+  if (pressEnter) send_raw_key('enter');
+  input.blur();
+}
+
+// ── Live typing mirror ────────────────────────────────────────────────
+// Send keystrokes to the laptop as the user types, so the laptop screen
+// mirrors the phone's search box in real time (including backspace).
+let lastSearchValue = '';
+
+function handleLiveTyping(input) {
+  const newVal = input.value;
+  const oldVal = lastSearchValue;
+  if (newVal === oldVal) return;
+
+  // Longest common prefix determines what was deleted vs. appended.
+  let i = 0;
+  while (i < newVal.length && i < oldVal.length && newVal[i] === oldVal[i]) i++;
+
+  const removedCount = oldVal.length - i;
+  const added = newVal.slice(i);
+
+  for (let k = 0; k < removedCount; k++) send_raw_key('backspace');
+  if (added) send_text(added, false);
+
+  lastSearchValue = newVal;
+}
+
+function resetLiveTyping() {
+  lastSearchValue = '';
 }
 
 function clearSearchInput() {
@@ -64,6 +86,7 @@ function clearSearchInput() {
     input.value = '';
     input.focus();
   }
+  resetLiveTyping();
   if (clearBtn) clearBtn.classList.remove('visible');
 }
 
