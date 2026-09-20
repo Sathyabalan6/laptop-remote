@@ -573,7 +573,21 @@ def presentation_start_key():
             pass
     return ['f5']
 
+def _log_action(msg):
+    """Print a concise line for user-initiated input actions (helps debugging).
+
+    Set LAPTOP_REMOTE_QUIET=1 to silence.
+    """
+    if os.environ.get('LAPTOP_REMOTE_QUIET'):
+        return
+    try:
+        print(f"[input] {msg}", flush=True)
+    except Exception:
+        pass
+
+
 def handle_text_input(text, press_enter=False):
+    _log_action(f"text={text!r} enter={press_enter}")
     with INPUT_LOCK:
         if not text:
             if press_enter:
@@ -610,6 +624,8 @@ def handle_text_input(text, press_enter=False):
             return {'ok': False, 'error': str(e)}
 
 def handle_key(action, preset='universal'):
+    _log_action(f"key={action!r} preset={preset!r}")
+
     def press(key):
         """Press a single named key through the active backend."""
         if IS_WAYLAND and WAYLAND_TOOL_PATH:
