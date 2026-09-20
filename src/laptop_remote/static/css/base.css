@@ -8,6 +8,17 @@
   -webkit-user-select: none;
 }
 
+/* Text-entry elements must remain selectable/editable — the global
+   user-select: none above otherwise prevents the mobile caret and
+   on-screen keyboard from appearing. */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 body {
   background-color: var(--background);
   color: var(--on-surface);

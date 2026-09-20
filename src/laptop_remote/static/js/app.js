@@ -95,6 +95,14 @@ document.addEventListener('DOMContentLoaded', () => {
         submitSearch(true);
       }
     });
+    // Tapping anywhere in the search box (padding / icon area) should focus the
+    // input so the on-screen keyboard opens reliably.
+    const searchWrapper = searchInput.closest('.search-input-wrapper');
+    if (searchWrapper) {
+      searchWrapper.addEventListener('click', () => {
+        if (document.activeElement !== searchInput) searchInput.focus();
+      });
+    }
   }
 
   // Initialize socket & preset UI state
