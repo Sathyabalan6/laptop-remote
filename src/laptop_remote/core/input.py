@@ -217,27 +217,61 @@ def _run_wayland_tool(args, timeout=1.0):
         return False
 
 
-def _wayland_key_code(code, down=True):
-    """Press (down=True) or release (down=False) a single Linux keycode."""
-    state = '1' if down else '0'
+def _run_wayland_tool_stdin(commands, timeout=2.0):
+    """Run the Wayland tool with newline-separated commands on stdin (dotool).
+
+    dotool reads a command stream from stdin, so a whole key sequence can be
+    delivered in one process — avoiding the daemon releasing keys between calls.
+    """
+    if not WAYLAND_TOOL_PATH:
+        return False
+    env = os.environ.copy()
+    if WAYLAND_TOOL == 'ydotool':
+        sock = _ydotoold_socket()
+        if sock:
+            env['YDOTOOL_SOCKET'] = sock
+    try:
+        result = subprocess.run(
+            [WAYLAND_TOOL_PATH],
+            input=("\n".join(commands) + "\n").encode(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=timeout,
+            env=env,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def _wayland_key_sequence(events):
+    """Send a sequence of (keycode, is_down) events in one tool invocation.
+
+    This is important for ydotool: ydotoold releases any keys still held when
+    the client disconnects, so sending keydown and keyup as two separate
+    processes cancels them out. Combining them into a single call works.
+    """
+    events = list(events)
+    if not events or not WAYLAND_TOOL_PATH:
+        return False
     if WAYLAND_TOOL == 'dotool':
-        # dotool: 'keydown <keycode>' / 'keyup <keycode>'
-        return _run_wayland_tool(['keydown' if down else 'keyup', str(code)])
-    # ydotool: 'key <code>:<state>'
-    return _run_wayland_tool(['key', f'{code}:{state}'])
+        commands = [f"{'keydown' if down else 'keyup'} {code}" for code, down in events]
+        return _run_wayland_tool_stdin(commands)
+    # ydotool: 'key 42:1 15:1 15:0 42:0'
+    args = ['key'] + [f"{code}:{1 if down else 0}" for code, down in events]
+    return _run_wayland_tool(args)
 
 
-def _wayland_press_key_code(code):
-    """Tap a key (press + release) by Linux keycode."""
-    _wayland_key_code(code, True)
-    _wayland_key_code(code, False)
+def _wayland_tap_keycode(code):
+    """Press and release a key by Linux keycode (single invocation)."""
+    return _wayland_key_sequence([(code, True), (code, False)])
 
 
 def _wayland_press_name(name):
     """Tap a named key (e.g. 'enter', 'f5') via the Wayland tool."""
     code = key_name_to_code(name)
     if code is not None:
-        _wayland_press_key_code(code)
+        _wayland_tap_keycode(code)
         return True
     return False
 
@@ -252,42 +286,35 @@ def _wayland_type_text(text):
         return True
     if WAYLAND_TOOL == 'ydotool':
         return _run_wayland_tool(['type', '--', text], timeout=5.0)
-    # dotool has no higher-level 'type'; inject char by char.
-    ok = True
+    # dotool has no higher-level 'type'; inject char by char in one stream.
+    events = []
     for ch in text:
         m = char_to_press(ch)
         if m is None:
-            # Non-mappable character (e.g. unicode emoji) — skip rather than crash.
             continue
         code, needs_shift = m
         if needs_shift:
-            ok = ok and _wayland_key_code(key_name_to_code('shift'), True)
-        ok = ok and _wayland_press_key_code(code)
+            events.append((key_name_to_code('shift'), True))
+        events.append((code, True))
+        events.append((code, False))
         if needs_shift:
-            ok = ok and _wayland_key_code(key_name_to_code('shift'), False)
-    return ok
+            events.append((key_name_to_code('shift'), False))
+    return _wayland_key_sequence(events)
 
 
 def _wayland_hotkey(modifiers, key):
-    """Press a modifier+key combo via the Wayland tool.
-
-    modifiers: list of modifier key names; key: the main key name.
-    """
-    mod_codes = []
-    for m in modifiers:
-        c = key_name_to_code(m)
-        if c is not None:
-            mod_codes.append(c)
+    """Press a modifier+key combo in a single tool invocation."""
+    mod_codes = [key_name_to_code(m) for m in modifiers]
+    mod_codes = [c for c in mod_codes if c is not None]
     key_code = key_name_to_code(key)
     if key_code is None:
         return False
 
-    for c in mod_codes:
-        _wayland_key_code(c, True)
-    _wayland_press_key_code(key_code)
-    for c in reversed(mod_codes):
-        _wayland_key_code(c, False)
-    return True
+    events = [(c, True) for c in mod_codes]
+    events.append((key_code, True))
+    events.append((key_code, False))
+    events.extend((c, False) for c in reversed(mod_codes))
+    return _wayland_key_sequence(events)
 
 
 def _wayland_send_keys(keys):
@@ -311,7 +338,7 @@ def _wayland_send_keys(keys):
         code = key_name_to_code(items[0][0])
         if code is not None:
             for _ in items:
-                _wayland_press_key_code(code)
+                _wayland_tap_keycode(code)
                 time.sleep(0.05)
             return
 

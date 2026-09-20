@@ -160,3 +160,52 @@ class TestWaylandButtonCodes:
         for args in calls:
             code = int(args[1], 16)
             assert code & 0xC0 == 0xC0, f"{args} is missing down+up bits"
+
+
+class TestWaylandKeySequences:
+    """Regression tests for ydotool key injection.
+
+    ydotoold releases keys still held when the client disconnects, so keydown
+    and keyup MUST be sent in a single ydotool invocation. Sending them as two
+    separate processes cancels the key (this was the 'keyboard does nothing' bug).
+    """
+
+    def _capture(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp, "WAYLAND_TOOL", "ydotool")
+        monkeypatch.setattr(inp, "WAYLAND_TOOL_PATH", "/usr/bin/ydotool")
+        monkeypatch.setattr(inp, "IS_WAYLAND", True)
+        monkeypatch.setattr(inp, "_run_wayland_tool", lambda args, timeout=1.0: calls.append(args) or True)
+        return calls
+
+    def test_single_key_is_one_invocation(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp._wayland_press_name("right")
+        # Exactly one call, containing both :1 (down) and :0 (up).
+        assert len(calls) == 1
+        assert calls[0] == ["key", "106:1", "106:0"]
+
+    def test_hotkey_is_one_invocation(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp._wayland_hotkey(["ctrl"], "l")
+        assert len(calls) == 1
+        assert calls[0] == ["key", "29:1", "38:1", "38:0", "29:0"]
+
+    def test_shift_tab_order(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.InputBackend.send_keys(["shift", "tab"])
+        assert calls == [["key", "42:1", "15:1", "15:0", "42:0"]]
+
+    def test_every_sequence_has_balanced_down_up(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.InputBackend.send_keys("f5")
+        inp.InputBackend.send_keys(["shift", "tab"])
+        for args in calls:
+            states = [a.split(":")[1] for a in args[1:]]
+            assert states.count("1") == states.count("0"), f"unbalanced: {args}"
+
+    def test_sequence_never_ends_with_key_held(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.InputBackend.send_keys(["ctrl", "shift", "tab"])
+        for args in calls:
+            assert args[-1].endswith(":0"), f"key left held: {args}"
