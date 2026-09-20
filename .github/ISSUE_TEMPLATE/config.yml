@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions & Discussions
+    url: https://github.com/Sathyabalan6/laptop-remote/discussions
+    about: Ask questions and share setups here instead of opening an issue.
+  - name: 📖 Documentation
+    url: https://github.com/Sathyabalan6/laptop-remote/blob/main/DOCUMENTATION.md
+    about: Read the architecture and usage documentation first.

@@ -1,6 +1,13 @@
 # 📱 Laptop Remote (Remote Deck)
 
+[![CI](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#-platform-support)
+
 > Turn your smartphone into a powerful, low-latency remote control for your laptop. Control media playback, stream a high-precision trackpad, navigate with a virtual D-Pad and keyboard, and present with a real-time screen laser pointer.
+
+> ⚠️ **LAN-only tool.** Designed for trusted local networks (home Wi-Fi / hotspot). Do **not** expose it to the public internet — see [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -202,10 +209,54 @@ laptop-remote/
 │           ├── css/            # tokens.css, base.css, components.css
 │           └── js/             # app.js, transport.js, trackpad.js, ...
 ├── docs/                       # Design notes & research
+├── tests/                      # pytest test suite
 └── README.md
 ```
 
 ---
 
+## 🖥️ Platform Support
+
+| Platform | Mouse / Keyboard | Notes |
+|---|---|---|
+| **Windows** | ✅ Native (`win32api`) | No extra setup |
+| **macOS** | ✅ Native (`Quartz`) | Requires Accessibility permission |
+| **Linux (X11)** | ✅ `pyautogui` / XTest | Works out of the box |
+| **Linux (Wayland)** | ✅ `ydotool` / `dotool` | One-time `bash setup_linux.sh` |
+
+---
+
+## 🧪 Running Tests
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+Tests run automatically on Linux, Windows, and macOS via GitHub Actions.
+
+---
+
+## 🤝 Contributing
+
+Contributions are very welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup
+instructions, coding guidelines, and platform testing notes. Please also read our
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+- 🐛 [Report a bug](https://github.com/Sathyabalan6/laptop-remote/issues/new?template=bug_report.yml)
+- ✨ [Request a feature](https://github.com/Sathyabalan6/laptop-remote/issues/new?template=feature_request.yml)
+- 💬 [Ask a question](https://github.com/Sathyabalan6/laptop-remote/discussions)
+
+---
+
+## 🔐 Security
+
+This is a **LAN-only** tool. Please read [SECURITY.md](SECURITY.md) before
+reporting vulnerabilities or deploying it.
+
+---
+
 ## 📄 License
-This project is open-source and free to use for personal and educational purposes.
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE).
+Free to use, modify, and distribute for personal and commercial purposes.

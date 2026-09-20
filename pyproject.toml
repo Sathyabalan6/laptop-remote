@@ -44,13 +44,16 @@ dependencies = [
 windows = ["pywin32>=306"]
 tray = ["pystray>=0.19"]
 build = ["pyinstaller>=6.0"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
 
 [project.scripts]
 laptop-remote = "laptop_remote.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/your-org/laptop-remote"
-Documentation = "https://github.com/your-org/laptop-remote#readme"
+Homepage = "https://github.com/Sathyabalan6/laptop-remote"
+Repository = "https://github.com/Sathyabalan6/laptop-remote"
+Issues = "https://github.com/Sathyabalan6/laptop-remote/issues"
+Documentation = "https://github.com/Sathyabalan6/laptop-remote#readme"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -61,3 +64,14 @@ packages = ["laptop_remote", "laptop_remote.core"]
 
 [tool.setuptools.data-files]
 "share/laptop-remote" = ["presets.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["laptop_remote"]
+omit = ["*/tests/*"]
