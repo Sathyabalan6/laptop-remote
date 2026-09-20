@@ -346,7 +346,10 @@ if IS_WAYLAND:
         if WAYLAND_TOOL == 'dotool':
             ok = _run_wayland_tool(['click', btn])
         else:  # ydotool
-            ok = _run_wayland_tool(['click', {'left': '0x40', 'middle': '0x41', 'right': '0x42'}.get(btn, '0x40')])
+            # ydotool button encoding is a bitmask: low nibble selects the button
+            # (0x00 left, 0x01 right, 0x02 middle) and 0xC0 = full click
+            # (0x40 down + 0x80 up). Using 0x40 alone leaves the button held down.
+            ok = _run_wayland_tool(['click', {'left': '0xC0', 'right': '0xC1', 'middle': '0xC2'}.get(btn, '0xC0')])
         if not ok and pyautogui:
             pyautogui.click(button=button)
 
@@ -519,13 +522,15 @@ def handle_mouse_scroll(dy):
     if clicks == 0:
         return
     if IS_WAYLAND and WAYLAND_TOOL_PATH:
-        # ydotool/dotool scroll via button 4/5 (or 'scroll' for dotool)
+        # ydotool/dotool scroll via wheel buttons 4 (up) / 5 (down).
         if WAYLAND_TOOL == 'dotool':
             _run_wayland_tool(['scroll', str(clicks)])
         else:
-            # ydotool: positive = up (button 4), negative = down (button 5)
+            # ydotool button bitmask: 0xC4 = wheel up (button 4) click,
+            # 0xC5 = wheel down (button 5) click. Positive dy scrolls up.
+            code = '0xC4' if clicks > 0 else '0xC5'
             for _ in range(abs(clicks)):
-                _run_wayland_tool(['click', '0x40' if clicks > 0 else '0x41'])
+                _run_wayland_tool(['click', code])
         return
     if pyautogui:
         pyautogui.scroll(clicks)

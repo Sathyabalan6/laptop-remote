@@ -107,3 +107,56 @@ class TestYdotoolSocketPaths:
         monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
         # Also ensure the /tmp fallback doesn't accidentally exist.
         assert inp._ydotoold_socket() in (None, "/tmp/.ydotool_socket")
+
+
+class TestWaylandButtonCodes:
+    """Regression tests for ydotool mouse button encoding.
+
+    ydotool encodes buttons as a bitmask:
+      low nibble  = button (0x00 left, 0x01 right, 0x02 middle)
+      0x40 = down, 0x80 = up, 0xC0 = full click (down+up)
+    Historical bug: we sent 0x40 (down only) so buttons were never released,
+    which made clicks not register.
+    """
+
+    def _capture(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp, "WAYLAND_TOOL", "ydotool")
+        monkeypatch.setattr(inp, "WAYLAND_TOOL_PATH", "/usr/bin/ydotool")
+        monkeypatch.setattr(inp, "IS_WAYLAND", True)
+        monkeypatch.setattr(inp, "_run_wayland_tool", lambda args, timeout=1.0: calls.append(args) or True)
+        return calls
+
+    def test_left_click_is_c0(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.InputBackend.click_mouse("left")
+        assert calls == [["click", "0xC0"]]
+
+    def test_right_click_is_c1(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.InputBackend.click_mouse("right")
+        assert calls == [["click", "0xC1"]]
+
+    def test_middle_click_is_c2(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.InputBackend.click_mouse("middle")
+        assert calls == [["click", "0xC2"]]
+
+    def test_scroll_up_uses_button_4(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.handle_mouse_scroll(2)
+        assert calls == [["click", "0xC4"], ["click", "0xC4"]]
+
+    def test_scroll_down_uses_button_5(self, monkeypatch):
+        calls = self._capture(monkeypatch)
+        inp.handle_mouse_scroll(-2)
+        assert calls == [["click", "0xC5"], ["click", "0xC5"]]
+
+    def test_no_click_code_is_bare_down(self, monkeypatch):
+        """Every click we emit must include the 'up' bit (0xC0 mask)."""
+        calls = self._capture(monkeypatch)
+        for btn in ("left", "right", "middle"):
+            inp.InputBackend.click_mouse(btn)
+        for args in calls:
+            code = int(args[1], 16)
+            assert code & 0xC0 == 0xC0, f"{args} is missing down+up bits"
