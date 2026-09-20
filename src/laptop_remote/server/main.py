@@ -9,24 +9,22 @@ from ..core.auth import (
 )
 from ..core.network import get_local_ip, setup_ssl_context
 from ..core.window import detect_active_preset
-from ..core.overlay import HAS_TKINTER
 
 from ._app import app, socketio, overlay, active_authorized_sids
 from . import discovery
 
 
-def main(no_gui=False, custom_pin=None, ssl_enabled=False, ssl_cert=None,
+def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
          ssl_key=None, port=5000, tray_enabled=False):
-    """Start the Laptop Remote server.
+    """Start the Laptop Remote server (terminal/headless).
 
     Args:
-        no_gui: If True, skip Tkinter companion window and run terminal-only.
         custom_pin: Optional PIN/password to set at startup (overrides env var).
         ssl_enabled: If True, enable HTTPS/TLS encryption.
         ssl_cert: Optional path to SSL certificate file.
         ssl_key: Optional path to SSL private key file.
         port: Port to bind (default: 5000).
-        tray_enabled: If True, enable system tray icon even in terminal/no-gui mode.
+        tray_enabled: If True, enable an optional system tray icon.
     """
     if custom_pin:
         set_pairing_pin(custom_pin)
@@ -48,10 +46,7 @@ def main(no_gui=False, custom_pin=None, ssl_enabled=False, ssl_cert=None,
     mdns_url = f"{scheme}://remotedeck.local{port_str}"
 
     print("\n" + "=" * 52)
-    if no_gui:
-        print("  ⚡ LAPTOP REMOTE · TERMINAL EDITION")
-    else:
-        print("  ⚡ LAPTOP REMOTE · SERVER ACTIVE")
+    print("  ⚡ LAPTOP REMOTE · TERMINAL EDITION")
     print("=" * 52)
     print(f"  🌐 Local URL      : {url}")
     print(f"  📢 mDNS Discovery : {mdns_url}")
@@ -98,7 +93,7 @@ def main(no_gui=False, custom_pin=None, ssl_enabled=False, ssl_cert=None,
             socketio.emit('revoke', {'message': 'Tokens revoked'}, to=sid)
         return new_pin
 
-    if no_gui and (tray_enabled or '--tray' in sys.argv):
+    if tray_enabled or '--tray' in sys.argv:
         try:
             from ..core.tray import SystemTrayManager, HAS_PYSTRAY
             if HAS_PYSTRAY:
@@ -124,23 +119,7 @@ def main(no_gui=False, custom_pin=None, ssl_enabled=False, ssl_cert=None,
         run_kwargs['ssl_context'] = ssl_context
 
     try:
-        if not no_gui and HAS_TKINTER:
-            try:
-                from ..gui import CompanionApp
-                threading.Thread(target=lambda: socketio.run(app, **run_kwargs), daemon=True).start()
-                companion = CompanionApp(
-                    get_state_callback=get_companion_state,
-                    regenerate_pin_callback=regenerate_pin_action,
-                )
-                overlay.init_with_parent(companion.root)
-                companion.update_data(url, _auth.PAIRING_PIN, 0, detect_active_preset() or 'Universal')
-                companion.run()
-            except Exception as e:
-                print(f"⚠️ GUI could not be opened ({e}), running in terminal mode.")
-                overlay.start()
-                socketio.run(app, **run_kwargs)
-        else:
-            overlay.start()
-            socketio.run(app, **run_kwargs)
+        overlay.start()
+        socketio.run(app, **run_kwargs)
     finally:
         discovery.unregister_mdns(zeroconf_instance, service_info)

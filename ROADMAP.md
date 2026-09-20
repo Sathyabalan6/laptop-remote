@@ -18,7 +18,7 @@ and comment on it.
 ## Medium term
 
 - [ ] **Continuous discovery** — auto-reconnect when Wi-Fi changes
-- [ ] **Custom presets editor** in the GUI companion app
+- [ ] **Presets editor** — a web UI (served by the app) to edit key mappings without touching `presets.json`
 - [ ] **Multi-monitor support** for the laser pointer
 - [ ] **Screen mirroring / preview** (thumbnail of the laptop screen)
 - [ ] **Bluetooth / USB tethering transport** as an alternative to Wi-Fi

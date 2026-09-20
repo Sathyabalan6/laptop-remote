@@ -13,7 +13,7 @@
 
 ## ✨ Features at a Glance
 
-* **🖥️ Desktop Companion & CLI Editions**: Choose between a modern Dark Mode GUI Companion app or a lightweight headless Terminal edition.
+* **⚡ Terminal / Headless Edition**: A lightweight, no-GUI server that prints a QR code and pairing PIN directly in the terminal.
 * **🌐 Zero-Config Discovery**: Connect instantly via QR code scan, local IP, or mDNS (`http://remotedeck.local:5000`).
 * **🔒 Secure PIN Pairing**: Protected with 6-digit rolling PIN verification, session Bearer tokens, and brute-force IP rate limiting.
 * **🎵 Smart Media Deck**: Context-aware media controls for YouTube, Netflix, Disney+ Hotstar, Prime Video, VLC, and web players.
@@ -28,25 +28,35 @@
 
 ## 🚀 Quick Start
 
-### Option 1: GUI Companion App (`LaptopRemote.exe`)
-Ideal for everyday desktop use.
+### From a prebuilt executable (`LaptopRemote-CLI.exe`)
 
-1. **Launch**: Double-click `dist/LaptopRemote.exe`.
+1. **Launch**: Double-click `dist/LaptopRemote-CLI.exe` (or run it from a terminal).
 2. **Scan & Connect**:
    * Ensure your phone and laptop are on the **same Wi-Fi network** (or phone hotspot).
-   * Scan the on-screen **QR Code** with your phone's camera, or navigate to the displayed URL (e.g., `http://192.168.1.X:5000` or `http://remotedeck.local:5000`).
-3. **Pair**: Enter the **6-digit Pairing PIN** shown in the companion window.
+   * Scan the **QR Code** printed in the terminal with your phone's camera, or navigate to the displayed URL (e.g., `http://192.168.1.X:5000` or `http://remotedeck.local:5000`).
+3. **Pair**: Enter the **6-digit Pairing PIN** shown in the terminal.
 4. **Enjoy**: Use the remote from your phone browser or install it as a PWA!
 
-### Option 2: Terminal / Headless Edition (`LaptopRemote-CLI.exe`)
-Ideal for power users, scripts, or low-resource environments.
+### From source (Python 3.10+)
 
 ```bash
-# Run with auto-generated PIN and ASCII QR Code
-LaptopRemote-CLI.exe
+# One-time: install dependencies
+pip install -e .
 
-# Run with a custom PIN/password
-LaptopRemote-CLI.exe --pin 123456
+# Run with an auto-generated PIN and ASCII QR code
+python -m laptop_remote
+
+# Run with a custom PIN / different port
+python -m laptop_remote --pin 123456 --port 5000
+
+# Enable HTTPS/WSS (self-signed cert auto-generated)
+python -m laptop_remote --ssl
+```
+
+Or use the Linux launcher (also sets up Wayland mouse support if needed):
+
+```bash
+./run.sh
 ```
 
 ---
@@ -148,21 +158,14 @@ Key mappings are defined in [`presets.json`](file:///E:/laptop-remote/presets.js
 # Install the package in editable mode (pulls in all dependencies)
 pip install -e .
 
-# Run the Terminal-only / CLI mode server
+# Run the server (terminal edition)
 python -m laptop_remote
-
-# Run GUI Companion App
-python -m laptop_remote.server
 ```
 
-### Compiling Executables (`.exe`)
-Use the included automated build batch scripts:
+### Compiling a Standalone Executable (`.exe`)
 
-* **Interactive / Both Editions**: Double-click **`build.bat`** and select:
-  * `[1]` GUI Companion App (`dist/LaptopRemote.exe`)
-  * `[2]` Terminal Edition (`dist/LaptopRemote-CLI.exe`)
-  * `[3]` Build Both Executables
-* **Direct CLI Build**: Double-click **`build_cli.bat`** to build `dist/LaptopRemote-CLI.exe`.
+* **Windows**: Double-click **`build.bat`** to build `dist/LaptopRemote-CLI.exe`.
+* **Linux**: Run **`./build.sh`** to build `dist/LaptopRemote-CLI`.
 
 ---
 
@@ -185,13 +188,12 @@ laptop-remote/
 │       │   ├── __init__.py     # public API (app, socketio, main)
 │       │   ├── _app.py         # app construction & shared runtime state
 │       │   ├── state.py        # build_state()
-│       │   ├── routes_auth.py  # pairing, revoke, companion, QR
+│       │   ├── routes_auth.py  # pairing, revoke, QR
 │       │   ├── routes_input.py # mouse/key/text/pointer/volume
 │       │   ├── websocket.py    # Socket.IO handlers
 │       │   ├── discovery.py    # mDNS + preset monitor
 │       │   └── main.py         # main() entry point
 │       ├── cli.py              # Terminal/headless entry point
-│       ├── gui.py              # Tkinter desktop companion window
 │       ├── core/               # Platform backends & utilities
 │       │   ├── input.py        # Mouse/keyboard drivers (Windows/macOS/X11/Wayland)
 │       │   ├── keys.py         # Key-name → Linux input-event keycode mapping
@@ -205,7 +207,6 @@ laptop-remote/
 │       │   └── tray.py         # System tray icon manager
 │       └── static/             # Web frontend (served as the remote UI)
 │           ├── index.html
-│           ├── companion.html
 │           ├── css/            # tokens.css, base.css, components.css
 │           └── js/             # app.js, transport.js, trackpad.js, ...
 ├── docs/                       # Design notes & research

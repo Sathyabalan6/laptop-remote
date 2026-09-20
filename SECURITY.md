@@ -23,7 +23,7 @@ put it behind a VPN (WireGuard/Tailscale) instead.
 - PIN entry is **rate-limited** per IP address with escalating lockouts.
 - The PIN **rotates** after each successful pairing and on revoke.
 - All control endpoints require a **bearer token**.
-- Companion/QR endpoints are restricted to **localhost**.
+- The QR image endpoint is restricted to **localhost**.
 
 ## Reporting a vulnerability
 

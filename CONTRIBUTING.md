@@ -32,11 +32,8 @@ pytest
 ## Running the app locally
 
 ```bash
-# Terminal / headless mode
+# Run the server (terminal edition)
 python -m laptop_remote
-
-# GUI companion window
-python -m laptop_remote.server
 ```
 
 ## Project layout
@@ -47,7 +44,7 @@ src/laptop_remote/
 ├── core/           # Platform backends (input, auth, audio, overlay, ...)
 ├── static/         # Web frontend (HTML/CSS/JS — the phone UI)
 ├── cli.py          # Terminal entry point
-└── gui.py          # Tkinter companion window
+└── __main__.py     # python -m laptop_remote
 tests/              # pytest suite
 ```
 

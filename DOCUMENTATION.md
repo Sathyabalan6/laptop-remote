@@ -86,7 +86,7 @@
 - **6-Digit Rolling PIN Pairing**: Requires entering a 6-digit PIN displayed on laptop startup to pair new mobile devices.
 - **Session Tokens**: Cryptographically secure bearer tokens stored in browser `localStorage`.
 - **IP Rate-Limiting & Exponential Backoff**: Prevents brute-force PIN attempts; locks offending IPs for 10 minutes after repeated failures.
-- **Loopback-Only Companion**: Management endpoints (`/companion`, `/companion/state`, `/qr.png`) are locked strictly to loopback (`127.0.0.1` / `::1`).
+- **Loopback-Only Management Endpoints**: The QR image endpoint (`/qr.png`) is locked strictly to loopback (`127.0.0.1` / `::1`).
 - **HTTPS / TLS Encryption**: Optional `--ssl` flag with automatic self-signed certificate generation.
 
 ---
@@ -105,12 +105,11 @@ laptop-remote/
 │   └── laptop_remote/        # Main application package
 │       ├── __main__.py       # python -m laptop_remote
 │       ├── cli.py            # Terminal-only headless launcher
-│       ├── gui.py            # Tkinter companion window launcher
 │       ├── server/           # Flask & SocketIO server package
 │       │   ├── __init__.py   # Public API & registration hookup
 │       │   ├── _app.py       # app/socketio construction & shared runtime state
 │       │   ├── state.py      # build_state() helper
-│       │   ├── routes_auth.py    # Pairing, revoke, companion, QR endpoints
+│       │   ├── routes_auth.py    # Pairing, revoke, QR endpoints
 │       │   ├── routes_input.py   # Mouse, key, text, pointer, volume endpoints
 │       │   ├── websocket.py      # Socket.IO event handlers
 │       │   ├── discovery.py      # mDNS/Zeroconf & preset-change monitor
@@ -152,9 +151,6 @@ laptop-remote/
 
 # Run in background system tray mode
 ./run.sh --tray
-
-# Run in terminal-only headless mode
-./run.sh --no-gui
 
 # Enable HTTPS encryption
 ./run.sh --ssl

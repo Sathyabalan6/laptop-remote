@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Laptop Remote — Terminal / CLI entry point.
 
-Runs the Laptop Remote server purely inside the terminal, with no Tkinter GUI
-companion window.
+Runs the Laptop Remote server purely inside the terminal.
 
 Usage:
     python -m laptop_remote [--pin 123456] [--port 5000] [--ssl] [--tray]
@@ -30,7 +29,6 @@ def main(argv=None) -> int:
 
     try:
         run_server(
-            no_gui=True,
             custom_pin=args.pin,
             ssl_enabled=args.ssl,
             ssl_cert=args.ssl_cert,

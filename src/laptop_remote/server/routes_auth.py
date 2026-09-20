@@ -1,4 +1,4 @@
-"""REST endpoints for pairing, session management, and local companion/QR."""
+"""REST endpoints for pairing, session management, and the local QR image."""
 
 import io
 import secrets
@@ -117,31 +117,6 @@ def revoke():
     print(f"🔒 All session tokens revoked! New Pairing PIN: {new_pin}")
     print(f"========================================\n")
     return jsonify({'ok': True, 'message': 'All tokens revoked.'})
-
-
-@app.route('/companion')
-def companion_page():
-    if not is_localhost(request.remote_addr):
-        return jsonify({'ok': False, 'error': 'Forbidden: Companion is only accessible from localhost'}), 403
-    return send_from_directory(app.static_folder, 'companion.html')
-
-
-@app.route('/companion/state')
-def companion_state():
-    if not is_localhost(request.remote_addr):
-        return jsonify({'ok': False, 'error': 'Forbidden: Companion state is only accessible from localhost'}), 403
-    ip = get_local_ip()
-    with auth_lock:
-        clients_count = len(active_authorized_sids)
-        pin = _auth.PAIRING_PIN
-    scheme, port_str = _scheme_and_port()
-    return jsonify({
-        'url': f"{scheme}://{ip}{port_str}",
-        'mdns_url': f"{scheme}://remotedeck.local{port_str}",
-        'pin': pin,
-        'connected_clients': clients_count,
-        'active_profile': detect_active_preset() or 'Universal',
-    })
 
 
 @app.route('/qr.png')
