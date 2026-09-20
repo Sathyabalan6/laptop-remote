@@ -102,15 +102,12 @@ function onServerState(data) {
     if (data.screen_w) screenW = data.screen_w;
     if (data.screen_h) screenH = data.screen_h;
 
+    // The Present tab is always available (slide controls, timer, blackout).
+    // Only the laser pad depends on a server-side transparent overlay.
+    laserAvailable = !!data.overlay_available;
     const tabBtnPresent = document.getElementById('tab-btn-present');
-    if (tabBtnPresent) {
-      if (data.overlay_available) {
-        tabBtnPresent.style.display = 'flex';
-      } else {
-        tabBtnPresent.style.display = 'none';
-        if (currentTab === 'present') switchTab('media');
-      }
-    }
+    if (tabBtnPresent) tabBtnPresent.style.display = 'flex';
+    if (typeof applyLaserAvailability === 'function') applyLaserAvailability();
 
     if (data.detected_preset && data.detected_preset !== currentPreset) {
       setPreset(data.detected_preset, true);

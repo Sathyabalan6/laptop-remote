@@ -5,9 +5,9 @@ from flask_socketio import emit
 
 from ..core.auth import VALID_TOKENS, auth_lock, socket_require_auth
 from ..core.audio import set_volume, toggle_mute
-from ..core.overlay import HAS_TKINTER, SCREEN_W, SCREEN_H
+from ..core.overlay import SCREEN_W, SCREEN_H
 from ..core.input import (
-    InputBackend, handle_mouse_move, handle_mouse_click,
+    handle_mouse_move, handle_mouse_click,
     handle_mouse_scroll, handle_text_input, handle_key,
 )
 
@@ -107,14 +107,14 @@ def ws_text(data):
 @socketio.on('pointer_on')
 @socket_require_auth
 def ws_pointer_on(data=None):
-    if HAS_TKINTER and overlay.root:
+    if overlay.available:
         overlay.show()
 
 
 @socketio.on('pointer_off')
 @socket_require_auth
 def ws_pointer_off(data=None):
-    if HAS_TKINTER and overlay.root:
+    if overlay.available:
         overlay.hide()
 
 
@@ -122,20 +122,20 @@ def ws_pointer_off(data=None):
 @socket_require_auth
 def ws_blackout(data=None):
     data = data or {}
-    if HAS_TKINTER and overlay.root:
+    if overlay.available:
         overlay.set_blackout(bool(data.get('on', False)))
 
 
 @socketio.on('pointer_move')
 @socket_require_auth
 def ws_pointer_move(data):
+    if not overlay.available:
+        # No transparent overlay available — don't hijack the real cursor.
+        return
     data = data or {}
     try:
         x = max(0, min(SCREEN_W, float(data.get('x', 0))))
         y = max(0, min(SCREEN_H, float(data.get('y', 0))))
-        if HAS_TKINTER and overlay.root:
-            overlay.move(x, y)
-        else:
-            InputBackend.move_mouse(x, y)
+        overlay.move(x, y)
     except (ValueError, TypeError):
         pass

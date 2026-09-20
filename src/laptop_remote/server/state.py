@@ -16,7 +16,7 @@ def build_state(token):
         'authorized': is_auth,
         'screen_w': SCREEN_W,
         'screen_h': SCREEN_H,
-        'overlay_available': True,
+        'overlay_available': overlay.available,
         'blackout': overlay.blackout if (HAS_TKINTER and overlay.root) else False,
         'battery': get_battery_percent() if is_auth else None,
         'detected_preset': detect_active_preset() if is_auth else None,

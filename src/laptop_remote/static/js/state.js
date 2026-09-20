@@ -6,6 +6,8 @@ let currentPreset = localStorage.getItem('player_preset') || 'universal';
 let mouseSensitivity = parseFloat(localStorage.getItem('mouse_sensitivity')) || 1.0;
 let screenW = 1920, screenH = 1080;
 let volumeLevel = parseInt(localStorage.getItem('volume_level')) || 50;
+// Set from server state: true only when a transparent laser overlay exists.
+let laserAvailable = false;
 
 function setPreset(name, isAuto = false) {
   currentPreset = name;

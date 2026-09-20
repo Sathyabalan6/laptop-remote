@@ -15,7 +15,7 @@ from ..core.network import get_local_ip
 from ..core.window import detect_active_preset
 from ..core.overlay import SCREEN_W, SCREEN_H
 
-from ._app import app, socketio, active_authorized_sids
+from ._app import app, socketio, active_authorized_sids, overlay
 from .state import build_state
 
 
@@ -51,7 +51,7 @@ def ping():
         'detected_preset': detected,
         'screen_w': SCREEN_W,
         'screen_h': SCREEN_H,
-        'overlay_available': True,
+        'overlay_available': overlay.available,
     })
 
 

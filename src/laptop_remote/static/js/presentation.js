@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     vibrate(15);
     startPresentationTimer();
+    if (!laserAvailable) return;   // no server overlay on this platform
     laserDot.style.display = 'block';
     updateLaserDot(e);
     socketSend('pointer_on');
@@ -122,16 +123,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   presentPad.addEventListener('touchmove', e => {
     e.preventDefault();
+    if (!laserAvailable) return;
     updateLaserDot(e);
     queuePointerMove(e);
   }, { passive: false });
 
   presentPad.addEventListener('touchend', e => {
     e.preventDefault();
+    if (!laserAvailable) return;
     if (pointerThrottle) { clearTimeout(pointerThrottle); flushPointer(); }
     if (e.touches.length === 0) {
       laserDot.style.display = 'none';
       socketSend('pointer_off');
     }
   }, { passive: false });
+
+  applyLaserAvailability();
 });
+
+// Show or hide the laser pad depending on server overlay availability.
+function applyLaserAvailability() {
+  const pad = document.getElementById('presentPad');
+  if (!pad) return;
+  let note = document.getElementById('laserUnavailableNote');
+  if (laserAvailable) {
+    pad.classList.remove('laser-unavailable');
+    if (note) note.style.display = 'none';
+  } else {
+    pad.classList.add('laser-unavailable');
+    if (!note) {
+      note = document.createElement('div');
+      note.id = 'laserUnavailableNote';
+      note.style.cssText =
+        'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+        'text-align:center;padding:16px;color:var(--on-surface-variant,#c7c5d6);font-size:13px;line-height:1.5;z-index:5;';
+      note.textContent =
+        'Laser pointer is unavailable on this platform. Slide controls, timer and blackout still work.';
+      pad.appendChild(note);
+    }
+    note.style.display = 'flex';
+  }
+}

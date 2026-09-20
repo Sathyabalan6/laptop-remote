@@ -25,6 +25,11 @@ class LaserOverlay:
         self.blackout = False
         self.last_activity = time.time()
         self._ready = threading.Event()   # signals that root is fully initialized
+        # True only once a real overlay window exists. On platforms/compositors
+        # that cannot provide a transparent, click-through overlay (e.g. Linux
+        # under Wayland) this stays False so callers don't fake it by hijacking
+        # the real cursor.
+        self.available = False
 
     def init_with_parent(self, parent_root):
         if not (HAS_TKINTER and IS_WINDOWS and parent_root):
@@ -40,6 +45,7 @@ class LaserOverlay:
             self.canvas.pack(fill='both', expand=True)
             self.dot = self.canvas.create_oval(-50, -50, -30, -30, fill='red', outline='')
             self.root.withdraw()
+            self.available = True
             self._ready.set()
             threading.Thread(target=self._watchdog_loop, daemon=True).start()
         except Exception as e:
@@ -49,6 +55,9 @@ class LaserOverlay:
     def start(self):
         """Start the overlay Tk window in a background thread and wait until it's ready."""
         if not (HAS_TKINTER and IS_WINDOWS):
+            # Transparent, click-through overlays require a Windows-specific Tk
+            # attribute ('-transparentcolor'). On Linux/macOS the laser dot is
+            # unavailable; callers should fall back gracefully.
             return
         self._ready.clear()
         threading.Thread(target=self._run, daemon=True).start()
@@ -77,11 +86,13 @@ class LaserOverlay:
             self.canvas.pack(fill='both', expand=True)
             self.dot = self.canvas.create_oval(-50, -50, -30, -30, fill='red', outline='')
             self.root.withdraw()
+            self.available = True
             self._ready.set()   # signal: root is ready, Flask can now serve pointer requests
             self.root.mainloop()
         except Exception as e:
             print(f"⚠️ Failed to initialize laser overlay: {e}")
             self.root = None
+            self.available = False
             self._ready.set()   # unblock start() even on failure
 
 

@@ -4,9 +4,9 @@ from flask import request, jsonify
 
 from ..core.auth import require_auth, auth_lock
 from ..core.audio import get_volume, set_volume, toggle_mute
-from ..core.overlay import HAS_TKINTER, SCREEN_W, SCREEN_H
+from ..core.overlay import SCREEN_W, SCREEN_H
 from ..core.input import (
-    InputBackend, handle_mouse_move, handle_mouse_click,
+    handle_mouse_move, handle_mouse_click,
     handle_mouse_scroll, handle_text_input, handle_key,
 )
 
@@ -69,7 +69,7 @@ def mouse_scroll():
 @app.route('/pointer/on', methods=['POST'])
 @require_auth
 def pointer_on():
-    if HAS_TKINTER and overlay.root:
+    if overlay.available:
         overlay.show()
     return jsonify({'ok': True})
 
@@ -77,7 +77,7 @@ def pointer_on():
 @app.route('/pointer/off', methods=['POST'])
 @require_auth
 def pointer_off():
-    if HAS_TKINTER and overlay.root:
+    if overlay.available:
         overlay.hide()
     return jsonify({'ok': True})
 
@@ -86,13 +86,14 @@ def pointer_off():
 @require_auth
 def pointer_move():
     data = request.get_json(silent=True) or {}
+    if not overlay.available:
+        # No transparent overlay on this platform/compositor. Do NOT hijack the
+        # real cursor — report that the laser is unavailable instead.
+        return jsonify({'ok': False, 'error': 'Laser overlay unavailable'}), 200
     try:
         x = max(0, min(SCREEN_W, float(data.get('x', 0))))
         y = max(0, min(SCREEN_H, float(data.get('y', 0))))
-        if HAS_TKINTER and overlay.root:
-            overlay.move(x, y)
-        else:
-            InputBackend.move_mouse(x, y)
+        overlay.move(x, y)
     except (ValueError, TypeError):
         pass
     return jsonify({'ok': True})
@@ -102,7 +103,7 @@ def pointer_move():
 @require_auth
 def screen_blackout():
     data = request.get_json(silent=True) or {}
-    if HAS_TKINTER and overlay.root:
+    if overlay.available:
         overlay.set_blackout(bool(data.get('on', False)))
     return jsonify({'ok': True})
 
