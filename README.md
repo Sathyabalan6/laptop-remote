@@ -218,12 +218,19 @@ laptop-remote/
 
 ## 🖥️ Platform Support
 
-| Platform | Mouse / Keyboard | Notes |
+| Platform | Mouse / Keyboard | Presentation Laser Pointer |
 |---|---|---|
-| **Windows** | ✅ Native (`win32api`) | No extra setup |
-| **macOS** | ✅ Native (`Quartz`) | Requires Accessibility permission |
-| **Linux (X11)** | ✅ `pyautogui` / XTest | Works out of the box |
-| **Linux (Wayland)** | ✅ `ydotool` / `dotool` | One-time `bash setup_linux.sh` |
+| **Windows** | ✅ Native (`win32api`) | ✅ Red dot overlay |
+| **macOS** | ✅ Native (`Quartz`) | ❌ Not yet |
+| **Linux (X11)** | ✅ `pyautogui` / XTest | ❌ Not yet (see note) |
+| **Linux (Wayland)** | ✅ `ydotool` / `dotool` — one-time `bash setup_linux.sh` | ❌ Not available |
+
+> **Laser pointer note:** the on-screen red-dot overlay is currently **Windows only**.
+> It relies on a transparent, click-through always-on-top window, which GNOME/KDE
+> Wayland does not allow for normal apps. On other platforms the Present tab still
+> provides **slide navigation, the elapsed timer, and blackout mode**, and the laser
+> pad is hidden with an explanatory message. Contributions to add X11/XWayland
+> overlay support are welcome — see the issues.
 
 ---
 
