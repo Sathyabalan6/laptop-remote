@@ -61,3 +61,49 @@ class TestHandleMouseScroll:
         monkeypatch.setattr(inp, "IS_WAYLAND", False)
         inp.handle_mouse_scroll(9999)
         assert calls and abs(calls[0]) <= 20
+
+
+class TestYdotoolSocketPaths:
+    """Regression tests for the Wayland ydotool socket resolution.
+
+    Historical bug: the daemon creates its socket under $XDG_RUNTIME_DIR, but the
+    code only checked /tmp, AND probed with SOCK_STREAM while the daemon listens
+    on SOCK_DGRAM (errno 91). Both are covered here.
+    """
+
+    def test_includes_xdg_runtime_dir(self, monkeypatch):
+        monkeypatch.setenv("XDG_RUNTIME_DIR", "/run/user/1234")
+        monkeypatch.delenv("YDOTOOL_SOCKET", raising=False)
+        paths = inp._ydotool_socket_paths()
+        assert "/run/user/1234/.ydotool_socket" in paths
+
+    def test_respects_ydotool_socket_env(self, monkeypatch):
+        monkeypatch.setenv("YDOTOOL_SOCKET", "/custom/path.sock")
+        paths = inp._ydotool_socket_paths()
+        assert paths[0] == "/custom/path.sock"
+
+    def test_always_includes_tmp_fallback(self, monkeypatch):
+        monkeypatch.delenv("YDOTOOL_SOCKET", raising=False)
+        monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
+        assert "/tmp/.ydotool_socket" in inp._ydotool_socket_paths()
+
+    def test_detects_datagram_socket(self, monkeypatch, tmp_path):
+        """The daemon uses a SOCK_DGRAM socket; probing must succeed."""
+        import socket as _socket
+
+        sock_path = str(tmp_path / ".ydotool_socket")
+        server = _socket.socket(_socket.AF_UNIX, _socket.SOCK_DGRAM)
+        try:
+            server.bind(sock_path)
+            monkeypatch.setenv("YDOTOOL_SOCKET", sock_path)
+            monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
+            assert inp._ydotoold_socket() == sock_path
+            assert inp._ydotoold_running() is True
+        finally:
+            server.close()
+
+    def test_returns_none_when_no_socket(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("YDOTOOL_SOCKET", str(tmp_path / "missing.sock"))
+        monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
+        # Also ensure the /tmp fallback doesn't accidentally exist.
+        assert inp._ydotoold_socket() in (None, "/tmp/.ydotool_socket")

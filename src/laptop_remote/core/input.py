@@ -53,18 +53,51 @@ def _find_wayland_tool():
 WAYLAND_TOOL, WAYLAND_TOOL_PATH = _find_wayland_tool()
 
 
+def _ydotool_socket_paths():
+    """Return candidate socket paths, in ydotool's own lookup order.
+
+    ydotool/ydotoold resolve the socket as:
+        1. $YDOTOOL_SOCKET (if set)
+        2. $XDG_RUNTIME_DIR/.ydotool_socket
+        3. /tmp/.ydotool_socket
+    """
+    paths = []
+    env_sock = os.environ.get('YDOTOOL_SOCKET')
+    if env_sock:
+        paths.append(env_sock)
+    xdg = os.environ.get('XDG_RUNTIME_DIR')
+    if xdg:
+        paths.append(os.path.join(xdg, '.ydotool_socket'))
+    paths.append('/tmp/.ydotool_socket')
+    return paths
+
+
+def _ydotoold_socket():
+    """Return the first reachable ydotool socket path, or None.
+
+    ydotool's daemon listens on a **datagram** (SOCK_DGRAM) Unix socket, so we
+    must probe with SOCK_DGRAM — connecting with SOCK_STREAM raises
+    "Protocol wrong type for socket" (errno 91).
+    """
+    import socket as _socket
+    for path in _ydotool_socket_paths():
+        if not os.path.exists(path):
+            continue
+        for sock_type in (_socket.SOCK_DGRAM, _socket.SOCK_STREAM):
+            try:
+                s = _socket.socket(_socket.AF_UNIX, sock_type)
+                s.settimeout(0.3)
+                s.connect(path)
+                s.close()
+                return path
+            except Exception:
+                continue
+    return None
+
+
 def _ydotoold_running():
-    """Check whether the ydotool daemon is reachable (socket)."""
-    socket_path = '/tmp/.ydotool_socket'
-    try:
-        import socket as _socket
-        s = _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM)
-        s.settimeout(0.3)
-        s.connect(socket_path)
-        s.close()
-        return True
-    except Exception:
-        return False
+    """Check whether the ydotool daemon is reachable (any known socket)."""
+    return _ydotoold_socket() is not None
 
 
 def _ensure_wayland_daemon():
@@ -77,6 +110,20 @@ def _ensure_wayland_daemon():
         return False
     if _ydotoold_running():
         return True
+    # Prefer the systemd user service if it exists (Ubuntu/Debian package sets
+    # one up with Restart=always). Fall back to spawning the daemon directly.
+    try:
+        probe = subprocess.run(
+            ['systemctl', '--user', 'start', 'ydotool.service'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5.0,
+        )
+        if probe.returncode == 0:
+            for _ in range(10):
+                time.sleep(0.1)
+                if _ydotoold_running():
+                    return True
+    except Exception:
+        pass
     daemon = shutil.which('ydotoold')
     if not daemon:
         return False
@@ -144,17 +191,28 @@ elif IS_MAC:
         pass
 
 def _run_wayland_tool(args, timeout=1.0):
-    """Run the detected Wayland input tool. Returns True on success."""
+    """Run the detected Wayland input tool. Returns True on success.
+
+    For ydotool, we pass the resolved socket path via YDOTOOL_SOCKET so the CLI
+    talks to the daemon regardless of where it created its socket
+    ($XDG_RUNTIME_DIR vs /tmp).
+    """
     if not WAYLAND_TOOL_PATH:
         return False
+    env = os.environ.copy()
+    if WAYLAND_TOOL == 'ydotool':
+        sock = _ydotoold_socket()
+        if sock:
+            env['YDOTOOL_SOCKET'] = sock
     try:
-        subprocess.run(
+        result = subprocess.run(
             [WAYLAND_TOOL_PATH] + args,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=timeout,
+            env=env,
         )
-        return True
+        return result.returncode == 0
     except Exception:
         return False
 
