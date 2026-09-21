@@ -63,12 +63,25 @@
 
 ---
 
-### 4. 📊 Presentation & Laser Pointer Mode (`static/js/presentation.js`, `core/overlay.py`)
+### 4. Presentation and Laser Pointer Mode (static/js/presentation.js, core/overlay.py, core/overlay_x11.py)
 - **Slide Deck Control**: Dedicated Next Slide (`PageDown`/`Right`) and Previous Slide (`PageUp`/`Left`) triggers.
 - **Slideshow Launcher**: Launches presentation slideshow (`F5` / `Ctrl+F5`).
 - **Laser Pointer Touchpad**: Real-time laser touchpad; touching and dragging on phone moves the onscreen red laser dot or updates hardware mouse pointer.
 - **Elapsed Presentation Timer**: Built-in presentation stopwatch timer (`00:00`) tracking talk duration.
 - **Blackout Overlay Toggle**: Instantly blanks the laptop display screen for audience focus.
+
+#### Laser overlay support
+
+| Display platform | Laser overlay |
+|---|---|
+| Windows | Supported by the native Tk overlay |
+| Linux X11 | Supported when the server provides X11 SHAPE 1.1 |
+| Linux Wayland | Not supported directly; XWayland works only when `DISPLAY` and SHAPE 1.1 are available |
+| macOS | Not yet implemented |
+
+The Linux overlay uses a shaped red X11 window with an empty input shape, allowing
+pointer events to pass through. If the display or extension is unavailable, the
+server reports the laser as unavailable instead of moving the system cursor.
 
 ---
 
@@ -121,7 +134,8 @@ laptop-remote/
 │       │   ├── input.py      # Mouse & keyboard backend (Win/macOS/X11/Wayland)
 │       │   ├── keys.py       # Key-name → Linux input-event keycode mapping
 │       │   ├── network.py    # IP discovery & TLS certificate generator
-│       │   ├── overlay.py    # Tkinter laser pointer overlay & blackout
+│       │   ├── overlay.py    # Platform selection and Windows overlay
+│       │   ├── overlay_x11.py # Linux X11 SHAPE overlay
 │       │   ├── power.py      # Battery status reader
 │       │   ├── tray.py       # System tray icon (pystray)
 │       │   └── window.py     # Active window & auto-preset detector
@@ -180,4 +194,3 @@ Laptop Remote auto-starts the `ydotoold` daemon on launch when possible, and pri
 | macOS | ❌ No (native `Quartz`) |
 | Linux (Xorg session) | ❌ No (PyAutoGUI/X11) |
 | Linux (Wayland session) | ✅ Yes (one-time `setup_linux.sh`) |
-

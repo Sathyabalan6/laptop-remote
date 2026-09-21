@@ -25,7 +25,7 @@ classifiers = [
 ]
 
 # Runtime dependencies (cross-platform). Some are optional per-OS:
-#   - pyautogui + python3-xlib are only needed on Linux/X11 fallback.
+#   - pyautogui + python-xlib are only needed on Linux/X11 fallback.
 #   - pywin32 is Windows-only (see [project.optional-dependencies]).
 dependencies = [
     "Flask>=3.0",
@@ -35,7 +35,7 @@ dependencies = [
     "Pillow>=10.0",
     "pyperclip>=1.8",
     "pyautogui>=0.9.54",
-    "python3-xlib>=0.15; sys_platform == 'linux'",
+    "python-xlib>=0.33; sys_platform == 'linux'",
     "zeroconf>=0.130; sys_platform != 'win32'",
     "ifaddr>=0.2",
 ]

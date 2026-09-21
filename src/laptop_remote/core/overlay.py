@@ -1,8 +1,9 @@
 import sys
-import time
 import threading
+import time
 
 IS_WINDOWS = sys.platform.startswith('win')
+IS_LINUX = sys.platform.startswith('linux')
 
 try:
     import tkinter as tk
@@ -30,6 +31,7 @@ class LaserOverlay:
         # under Wayland) this stays False so callers don't fake it by hijacking
         # the real cursor.
         self.available = False
+        self._x11_backend = None
 
     def init_with_parent(self, parent_root):
         if not (HAS_TKINTER and IS_WINDOWS and parent_root):
@@ -54,10 +56,21 @@ class LaserOverlay:
 
     def start(self):
         """Start the overlay Tk window in a background thread and wait until it's ready."""
+        if IS_LINUX:
+            # Use a native X11 window rather than Tk, whose transparent-color
+            # attribute is Windows-only. Wayland works only through an XWayland
+            # DISPLAY with a suitable SHAPE extension.
+            from .overlay_x11 import X11LaserOverlay
+
+            backend = X11LaserOverlay()
+            if backend.start():
+                self._x11_backend = backend
+                self.available = True
+                threading.Thread(target=self._watchdog_loop, daemon=True).start()
+                return
+
         if not (HAS_TKINTER and IS_WINDOWS):
-            # Transparent, click-through overlays require a Windows-specific Tk
-            # attribute ('-transparentcolor'). On Linux/macOS the laser dot is
-            # unavailable; callers should fall back gracefully.
+            # macOS and unsupported Linux display servers remain unavailable.
             return
         self._ready.clear()
         threading.Thread(target=self._run, daemon=True).start()
@@ -100,6 +113,10 @@ class LaserOverlay:
         self.last_activity = time.time()
         if self.blackout:
             return
+        if self._x11_backend:
+            self._x11_backend.show()
+            self.visible = self._x11_backend.visible
+            return
         if self.root:
             try:
                 self.root.after(0, self.root.deiconify)
@@ -109,6 +126,10 @@ class LaserOverlay:
 
     def hide(self):
         if self.blackout:
+            return
+        if self._x11_backend:
+            self._x11_backend.hide()
+            self.visible = self._x11_backend.visible
             return
         if self.root:
             try:
@@ -121,6 +142,10 @@ class LaserOverlay:
         on = bool(on)
         self.blackout = on
         self.last_activity = time.time()
+        if self._x11_backend:
+            self._x11_backend.set_blackout(on)
+            self.visible = self._x11_backend.visible
+            return
         if not self.root:
             return
         def _apply():
@@ -136,6 +161,9 @@ class LaserOverlay:
 
     def move(self, x, y):
         self.last_activity = time.time()
+        if self._x11_backend:
+            self._x11_backend.move(x, y)
+            return
         if self.root:
             try:
                 self.root.after(0, lambda: self.canvas.coords(self.dot, x-12, y-12, x+12, y+12))
