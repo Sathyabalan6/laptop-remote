@@ -83,13 +83,11 @@ def make_backend(monkeypatch):
         SO=SimpleNamespace(Set=0),
         SK=SimpleNamespace(Bounding=0, Input=2),
     )
-    structs = SimpleNamespace(Rectangle=lambda *values: values)
     monkeypatch.setenv("DISPLAY", ":test")
     backend = X11LaserOverlay(
         display_factory=lambda: fake_display,
         xlib=xlib,
         shape_api=shape_api,
-        structs=structs,
     )
     return backend, fake_display
 
@@ -205,7 +203,11 @@ def test_x11_overlay_uses_real_click_through_shape():
         assert backend.window.shape_get_rectangles(backend._shape.SK.Input).rectangles == []
 
         bounding = backend.window.shape_get_rectangles(backend._shape.SK.Bounding).rectangles
-        assert len(bounding) == 25
+        assert bounding
+        assert min(rect.x for rect in bounding) == 0
+        assert min(rect.y for rect in bounding) == 0
+        assert max(rect.x + rect.width for rect in bounding) == 25
+        assert max(rect.y + rect.height for rect in bounding) == 25
         assert max(rect.width for rect in bounding) == 25
 
         backend.show()

@@ -21,11 +21,10 @@ def _circle_rectangles(radius=DOT_RADIUS):
 class X11LaserOverlay:
     """Manage an input-transparent laser/blackout window on an X11 display."""
 
-    def __init__(self, display_factory=None, xlib=None, shape_api=None, structs=None):
+    def __init__(self, display_factory=None, xlib=None, shape_api=None):
         self._display_factory = display_factory
         self._xlib = xlib
         self._shape = shape_api
-        self._structs = structs
         self._display = None
         self._screen = None
         self.window = None
@@ -39,13 +38,11 @@ class X11LaserOverlay:
     def _load_xlib(self):
         if self._display_factory is not None:
             return
-        from Xlib import X, display, structs
+        from Xlib import X, display
         from Xlib.ext import shape
-
         self._xlib = X
         self._display_factory = display.Display
         self._shape = shape
-        self._structs = structs
 
     def start(self):
         if not os.environ.get("DISPLAY"):
@@ -81,10 +78,9 @@ class X11LaserOverlay:
             return False
 
     def _set_dot_shape(self):
-        rectangles = [self._structs.Rectangle(*rect) for rect in _circle_rectangles()]
         self.window.shape_rectangles(
             self._shape.SO.Set, self._shape.SK.Bounding,
-            self._xlib.Unsorted, 0, 0, rectangles,
+            self._xlib.Unsorted, 0, 0, _circle_rectangles(),
         )
 
     def _set_empty_input_shape(self):
@@ -145,11 +141,9 @@ class X11LaserOverlay:
                 self.window.shape_rectangles(
                     self._shape.SO.Set, self._shape.SK.Bounding,
                     x.Unsorted, 0, 0,
-                    [self._structs.Rectangle(
-                        0, 0,
+                    [(0, 0,
                         self._screen.width_in_pixels,
-                        self._screen.height_in_pixels,
-                    )],
+                        self._screen.height_in_pixels)],
                 )
                 self.window.clear_area(
                     0, 0,
