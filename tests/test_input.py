@@ -1,8 +1,23 @@
 """Unit tests for platform-independent input math (no display required)."""
 
+import os
+import socket
+import sys
+import tempfile
+
 import pytest
 
 from laptop_remote.core import input as inp
+
+# ydotool/Wayland only exists on Linux; skip the backend-specific tests elsewhere.
+LINUX_ONLY = pytest.mark.skipif(
+    not sys.platform.startswith("linux"),
+    reason="Wayland/ydotool backend is Linux-only",
+)
+UNIX_SOCKET = pytest.mark.skipif(
+    not hasattr(socket, "AF_UNIX"),
+    reason="Unix domain sockets unavailable",
+)
 
 
 class TestApplyAcceleration:
@@ -75,7 +90,8 @@ class TestYdotoolSocketPaths:
         monkeypatch.setenv("XDG_RUNTIME_DIR", "/run/user/1234")
         monkeypatch.delenv("YDOTOOL_SOCKET", raising=False)
         paths = inp._ydotool_socket_paths()
-        assert "/run/user/1234/.ydotool_socket" in paths
+        expected = os.path.join("/run/user/1234", ".ydotool_socket")
+        assert expected in paths
 
     def test_respects_ydotool_socket_env(self, monkeypatch):
         monkeypatch.setenv("YDOTOOL_SOCKET", "/custom/path.sock")
@@ -87,14 +103,20 @@ class TestYdotoolSocketPaths:
         monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
         assert "/tmp/.ydotool_socket" in inp._ydotool_socket_paths()
 
-    def test_detects_datagram_socket(self, monkeypatch, tmp_path):
-        """The daemon uses a SOCK_DGRAM socket; probing must succeed."""
-        import socket as _socket
+    @UNIX_SOCKET
+    def test_detects_datagram_socket(self, monkeypatch):
+        """The daemon uses a SOCK_DGRAM socket; probing must succeed.
 
-        sock_path = str(tmp_path / ".ydotool_socket")
-        server = _socket.socket(_socket.AF_UNIX, _socket.SOCK_DGRAM)
+        Uses a short /tmp path because macOS limits AF_UNIX paths to ~104 chars.
+        """
+        short_dir = tempfile.mkdtemp(prefix="yds", dir="/tmp")
+        sock_path = os.path.join(short_dir, "s")
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         try:
-            server.bind(sock_path)
+            try:
+                server.bind(sock_path)
+            except OSError as e:  # pragma: no cover - platform dependent
+                pytest.skip(f"cannot bind unix socket: {e}")
             monkeypatch.setenv("YDOTOOL_SOCKET", sock_path)
             monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
             assert inp._ydotoold_socket() == sock_path
@@ -109,6 +131,7 @@ class TestYdotoolSocketPaths:
         assert inp._ydotoold_socket() in (None, "/tmp/.ydotool_socket")
 
 
+@LINUX_ONLY
 class TestWaylandButtonCodes:
     """Regression tests for ydotool mouse button encoding.
 
