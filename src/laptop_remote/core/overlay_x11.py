@@ -1,5 +1,6 @@
 """X11 laser and blackout windows backed by the X SHAPE extension."""
 
+import logging
 import math
 import os
 import threading
@@ -73,7 +74,10 @@ class X11LaserOverlay:
             self._display.sync()
             self.available = True
             return True
-        except Exception:  # noqa: BLE001 - initialization failures must leave the pointer unavailable
+        except Exception as exc:  # noqa: BLE001 - initialization failures must leave the pointer unavailable
+            logging.getLogger(__name__).warning(
+                "Failed to initialize X11 laser overlay: %s", exc,
+            )
             self.close()
             return False
 

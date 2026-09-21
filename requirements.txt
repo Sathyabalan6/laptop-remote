@@ -9,7 +9,7 @@ qrcode>=7.4
 Pillow>=10.0
 pyperclip>=1.8
 pyautogui>=0.9.54
-python3-xlib>=0.15; sys_platform == 'linux'
+python-xlib>=0.33; sys_platform == 'linux'
 zeroconf>=0.130; sys_platform != 'win32'
 ifaddr>=0.2
 
