@@ -200,7 +200,8 @@ laptop-remote/
 │       │   ├── auth.py         # PIN generation, bearer tokens, rate limiting
 │       │   ├── config.py       # Presets JSON loader & path resolver
 │       │   ├── network.py      # Local IP resolution & SSL certificate setup
-│       │   ├── overlay.py      # Laser pointer & blackout Tk overlay
+│       │   ├── overlay.py    # Platform selection and Windows overlay
+│       │   ├── overlay_x11.py # Linux X11 SHAPE overlay
 │       │   ├── power.py        # Battery status monitor
 │       │   ├── window.py       # Foreground window detection & auto-preset
 │       │   ├── audio.py        # Cross-platform volume control
@@ -222,15 +223,14 @@ laptop-remote/
 |---|---|---|
 | **Windows** | ✅ Native (`win32api`) | ✅ Red dot overlay |
 | **macOS** | ✅ Native (`Quartz`) | ❌ Not yet |
-| **Linux (X11)** | ✅ `pyautogui` / XTest | ❌ Not yet (see note) |
-| **Linux (Wayland)** | ✅ `ydotool` / `dotool` — one-time `bash setup_linux.sh` | ❌ Not available |
+| **Linux (X11)** | pyautogui / XTest | X11 SHAPE 1.1 overlay |
+| **Linux (Wayland)** | ydotool / dotool; one-time setup_linux.sh | XWayland only when DISPLAY and SHAPE 1.1 are available |
 
-> **Laser pointer note:** the on-screen red-dot overlay is currently **Windows only**.
-> It relies on a transparent, click-through always-on-top window, which GNOME/KDE
-> Wayland does not allow for normal apps. On other platforms the Present tab still
-> provides **slide navigation, the elapsed timer, and blackout mode**, and the laser
-> pad is hidden with an explanatory message. Contributions to add X11/XWayland
-> overlay support are welcome — see the issues.
+> **Laser pointer note:** Windows uses its native Tk overlay. Linux uses an X11
+> SHAPE 1.1 window with an empty input shape so mouse and touch events pass through.
+> A direct Wayland session is not supported. XWayland availability depends on its
+> display exposing SHAPE 1.1; if initialization fails, the app reports the pointer
+> unavailable and keeps the laser pad hidden. macOS support is not yet implemented.
 
 ---
 
