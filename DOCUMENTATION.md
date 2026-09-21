@@ -63,8 +63,7 @@
 
 ---
 
-### 4. 📊 Presentation & Laser Pointer Mode (`static/js/presentation.js`, `core/overlay.py    # Platform selection and Windows overlay
-### 4. 📊 Presentation & Laser Pointer Mode (`static/js/presentation.js`, `core/overlay_x11.py # Linux X11 SHAPE overlay
+### 4. Presentation and Laser Pointer Mode (static/js/presentation.js, core/overlay.py, core/overlay_x11.py)
 - **Slide Deck Control**: Dedicated Next Slide (`PageDown`/`Right`) and Previous Slide (`PageUp`/`Left`) triggers.
 - **Slideshow Launcher**: Launches presentation slideshow (`F5` / `Ctrl+F5`).
 - **Laser Pointer Touchpad**: Real-time laser touchpad; touching and dragging on phone moves the onscreen red laser dot or updates hardware mouse pointer.
