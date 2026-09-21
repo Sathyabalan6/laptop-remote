@@ -356,39 +356,34 @@ def _wayland_send_keys(keys):
         else:
             _wayland_type_text(name)
 
-if IS_WAYLAND:
-    # Wayland-native path: use ydotool/dotool which injects via uinput and
-    # works with any Wayland compositor (unlike pyautogui's XTEST backend).
+if not USE_NATIVE_MOUSE:
+    # Linux (X11 or Wayland): pick the backend at CALL time, not import time.
+    # This follows the real session and keeps the functions testable, since
+    # IS_WAYLAND / WAYLAND_TOOL_PATH can be monkeypatched.
     def _move_mouse(x, y):
-        if WAYLAND_TOOL == 'dotool':
-            ok = _run_wayland_tool(['mouseto', str(int(x)), str(int(y))])
-        else:  # ydotool
-            ok = _run_wayland_tool(['mousemove', '--absolute', str(int(x)), str(int(y))])
-        if not ok and pyautogui:
+        if IS_WAYLAND and WAYLAND_TOOL_PATH:
+            if WAYLAND_TOOL == 'dotool':
+                ok = _run_wayland_tool(['mouseto', str(int(x)), str(int(y))])
+            else:  # ydotool
+                ok = _run_wayland_tool(['mousemove', '--absolute', str(int(x)), str(int(y))])
+            if ok:
+                return
+        if pyautogui:
             # Fallback (Xorg session or Xwayland-only apps)
             pyautogui.moveTo(x, y, duration=0)
 
     def _click_mouse(button='left'):
         btn = {'left': 'left', 'right': 'right', 'middle': 'middle'}.get(button, 'left')
-        if WAYLAND_TOOL == 'dotool':
-            ok = _run_wayland_tool(['click', btn])
-        else:  # ydotool
-            # ydotool button encoding is a bitmask: low nibble selects the button
-            # (0x00 left, 0x01 right, 0x02 middle) and 0xC0 = full click
-            # (0x40 down + 0x80 up). Using 0x40 alone leaves the button held down.
-            ok = _run_wayland_tool(['click', {'left': '0xC0', 'right': '0xC1', 'middle': '0xC2'}.get(btn, '0xC0')])
-        if not ok and pyautogui:
-            pyautogui.click(button=button)
-
-    # On Wayland we still treat pyautogui as available for keyboard/scroll
-    # (scroll/keyboard have the same XTEST limitation, so prefer the tool too).
-    USE_NATIVE_MOUSE = True
-
-elif not USE_NATIVE_MOUSE:
-    def _move_mouse(x, y):
-        if pyautogui:
-            pyautogui.moveTo(x, y, duration=0)
-    def _click_mouse(button='left'):
+        if IS_WAYLAND and WAYLAND_TOOL_PATH:
+            if WAYLAND_TOOL == 'dotool':
+                ok = _run_wayland_tool(['click', btn])
+            else:  # ydotool
+                # ydotool button encoding is a bitmask: low nibble selects the
+                # button (0x00 left, 0x01 right, 0x02 middle) and 0xC0 = full
+                # click (0x40 down + 0x80 up). 0x40 alone leaves it held down.
+                ok = _run_wayland_tool(['click', {'left': '0xC0', 'right': '0xC1', 'middle': '0xC2'}.get(btn, '0xC0')])
+            if ok:
+                return
         if pyautogui:
             pyautogui.click(button=button)
 
