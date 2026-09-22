@@ -21,7 +21,13 @@ function setPreset(name, isAuto = false) {
   });
 
   if (!isAuto) {
-    const displayName = window.presetLogic.getPresetDisplayName(name);
+    const displayName = window.presetLogic?.getPresetDisplayName
+      ? window.presetLogic.getPresetDisplayName(name)
+      : (name === 'youtube_hotstar'
+        ? 'YouTube / Hotstar'
+        : name === 'vlc'
+          ? 'VLC Player'
+          : 'Universal / Netflix');
     showToast('Preset: ' + displayName);
   }
 }
