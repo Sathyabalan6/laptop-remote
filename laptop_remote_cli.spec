@@ -41,7 +41,7 @@ hiddenimports = [
 ]
 
 if sys.platform.startswith('win'):
-    hiddenimports += ['win32api', 'win32con', 'win32gui']
+    hiddenimports += ['win32api', 'win32con', 'win32gui', 'pycaw', 'comtypes']
 elif sys.platform.startswith('linux'):
     hiddenimports += ['Xlib']
 
@@ -54,7 +54,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter'],
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

@@ -41,7 +41,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-windows = ["pywin32>=306"]
+windows = [
+    "pywin32>=306",
+    "pycaw>=20240210",
+    "comtypes>=1.2.0",
+]
 tray = ["pystray>=0.19"]
 build = ["pyinstaller>=6.0"]
 dev = ["pytest>=7.4", "pytest-cov>=4.1"]
@@ -57,7 +61,9 @@ Documentation = "https://github.com/Sathyabalan6/laptop-remote#readme"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-packages = ["laptop_remote", "laptop_remote.core"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
 "laptop_remote" = ["static/**/*", "presets.json"]
