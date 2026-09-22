@@ -1,3 +1,27 @@
+# Demo GIF
+![alt text](docs/images/laptopScreen.png)
+
+# Screenshots
+
+# Media Tab
+![alt text](docs/images/media.png)
+
+# Mouse & Trackpad
+![alt text](docs/images/mouse.png)
+![alt text](docs/images/trakpad.png)
+
+# Presentation
+![alt text](docs/images/presentation.png)
+
+# Desktop Companion
+# Laptop screen which is controled by mobile screen
+![alt text](docs/images/laptopScreen.png)
+
+# Mobile screen which controlling laptop
+![alt text](docs/images/mobilescreen.jpeg)
+
+
+
 # 📱 Laptop Remote (Remote Deck)
 
 [![CI](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml)
