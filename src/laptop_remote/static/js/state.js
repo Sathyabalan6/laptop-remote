@@ -13,7 +13,7 @@ function setPreset(name, isAuto = false) {
   currentPreset = name;
   localStorage.setItem('player_preset', name);
   if (!isAuto) vibrate(15);
-  
+
   document.querySelectorAll('.preset-btn').forEach(btn => {
     const isActive = btn.id === 'preset-btn-' + name;
     btn.classList.toggle('active', isActive);
@@ -21,9 +21,13 @@ function setPreset(name, isAuto = false) {
   });
 
   if (!isAuto) {
-    let displayName = 'Universal / Netflix';
-    if (name === 'youtube_hotstar') displayName = 'YouTube / Hotstar';
-    if (name === 'vlc') displayName = 'VLC Player';
+    const displayName = window.presetLogic?.getPresetDisplayName
+      ? window.presetLogic.getPresetDisplayName(name)
+      : (name === 'youtube_hotstar'
+        ? 'YouTube / Hotstar'
+        : name === 'vlc'
+          ? 'VLC Player'
+          : 'Universal / Netflix');
     showToast('Preset: ' + displayName);
   }
 }
@@ -38,7 +42,7 @@ async function requestWakeLock() {
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 requestWakeLock();
@@ -76,7 +80,7 @@ function swipeTab(direction) {
   const tabs = getTabOrder();
   const index = tabs.indexOf(currentTab);
   if (index === -1) return;
-  
+
   if (direction === 'left' && index < tabs.length - 1) {
     switchTab(tabs[index + 1]);
   } else if (direction === 'right' && index > 0) {
@@ -87,20 +91,20 @@ function swipeTab(direction) {
 let swiperStartX = 0, swiperStartY = 0, swiperValid = false;
 
 document.addEventListener('touchstart', e => {
-  if (e.touches.length > 1 || 
-      e.target.closest('#trackpad') || 
-      e.target.closest('#presentPad') || 
-      e.target.closest('#tab-keyboard') || 
-      e.target.closest('.control-btn-circle') || 
-      e.target.closest('.control-pill') || 
-      e.target.closest('.preset-btn') || 
-      e.target.closest('.toggle-btn') || 
-      e.target.closest('.mouse-click-btn') || 
-      e.target.closest('.slide-ctrl-btn') || 
-      e.target.closest('.volume-slider') || 
-      e.target.closest('.sensitivity-slider') || 
-      e.target.closest('.nav-item') || 
-      e.target.closest('.pin-overlay')) {
+  if (e.touches.length > 1 ||
+    e.target.closest('#trackpad') ||
+    e.target.closest('#presentPad') ||
+    e.target.closest('#tab-keyboard') ||
+    e.target.closest('.control-btn-circle') ||
+    e.target.closest('.control-pill') ||
+    e.target.closest('.preset-btn') ||
+    e.target.closest('.toggle-btn') ||
+    e.target.closest('.mouse-click-btn') ||
+    e.target.closest('.slide-ctrl-btn') ||
+    e.target.closest('.volume-slider') ||
+    e.target.closest('.sensitivity-slider') ||
+    e.target.closest('.nav-item') ||
+    e.target.closest('.pin-overlay')) {
     swiperValid = false;
     return;
   }
