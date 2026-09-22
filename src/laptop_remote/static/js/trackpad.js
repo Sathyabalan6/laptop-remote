@@ -16,11 +16,11 @@ let scrollTimeout = null;
 function startContinuousScroll(e, dir) {
   if (e && e.cancelable) e.preventDefault();
   stopContinuousScroll();
-  
+
   const dy = dir === 'up' ? 12 : -12;
   vibrate(15);
   scroll(dy);
-  
+
   scrollTimeout = setTimeout(() => {
     scrollInterval = setInterval(() => {
       vibrate(8);
@@ -42,15 +42,21 @@ function stopContinuousScroll(e) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const {
+    applyInertia,
+    clampSensitivity,
+    classifyGesture
+  } = window.trackpadLogic;
   const sensSlider = document.getElementById('sensitivitySlider');
   const sensLabel = document.getElementById('sensitivityLabel');
 
   if (sensSlider && sensLabel) {
+    mouseSensitivity = clampSensitivity(mouseSensitivity);
     sensSlider.value = mouseSensitivity;
     sensLabel.textContent = mouseSensitivity.toFixed(1) + 'x';
 
     sensSlider.addEventListener('input', e => {
-      mouseSensitivity = parseFloat(e.target.value);
+      mouseSensitivity = clampSensitivity(parseFloat(e.target.value));
       sensLabel.textContent = mouseSensitivity.toFixed(1) + 'x';
       localStorage.setItem('mouse_sensitivity', mouseSensitivity);
     });
@@ -62,27 +68,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!pad) return;
 
-  let lastTouches  = [];
-  let maxFingers   = 0;
-  let moveSent     = false;
-  let scrollSent   = false;
+  let lastTouches = [];
+  let maxFingers = 0;
+  let moveSent = false;
+  let scrollSent = false;
   let totalMovement = 0;
-  let bufferedDx   = 0;
-  let bufferedDy   = 0;
+  let bufferedDx = 0;
+  let bufferedDy = 0;
 
   let pendingDx = 0, pendingDy = 0;
   let pendingScrollDy = 0;
-  let moveThrottle   = null;
+  let moveThrottle = null;
   let scrollThrottle = null;
-  
+
   let lastScrollVelocity = 0;
-  let scrollInertiaId    = null;
-  let hasVibratedScroll  = false;
+  let scrollInertiaId = null;
+  let hasVibratedScroll = false;
 
   const SCROLL_SENSITIVITY = Math.min(2.5, Math.max(1.0, (window.devicePixelRatio || 1) * 1.2));
-  const MOVE_THRESHOLD_PX  = 2;
-  const INERTIA_DECAY      = 0.82;
-  const INERTIA_MIN        = 0.8;
+  const MOVE_THRESHOLD_PX = 2;
+  const INERTIA_DECAY = 0.82;
+  const INERTIA_MIN = 0.8;
 
   async function flushMove() {
     if (pendingDx === 0 && pendingDy === 0) {
@@ -124,18 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function runInertia() {
-    lastScrollVelocity *= INERTIA_DECAY;
+    lastScrollVelocity = applyInertia(lastScrollVelocity, INERTIA_DECAY);
     if (Math.abs(lastScrollVelocity) < INERTIA_MIN) {
       cancelAnimationFrame(scrollInertiaId);
       scrollInertiaId = null;
       return;
     }
-    
+
     pendingScrollDy += lastScrollVelocity;
     if (!scrollThrottle) {
       scrollThrottle = setTimeout(flushScroll, 16);
     }
-    
+
     scrollInertiaId = requestAnimationFrame(runInertia);
   }
 
@@ -148,14 +154,14 @@ document.addEventListener('DOMContentLoaded', () => {
       lastScrollVelocity = 0;
     }
 
-    maxFingers    = e.touches.length;
-    moveSent      = false;
-    scrollSent    = false;
+    maxFingers = e.touches.length;
+    moveSent = false;
+    scrollSent = false;
     totalMovement = 0;
-    bufferedDx    = 0;
-    bufferedDy    = 0;
+    bufferedDx = 0;
+    bufferedDy = 0;
     hasVibratedScroll = false;
-    
+
     const rect = pad.getBoundingClientRect();
     lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
 
@@ -177,6 +183,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     maxFingers = Math.max(maxFingers, e.touches.length);
     const rect = pad.getBoundingClientRect();
+    const currentPoints = Array.from(e.touches).map(t => ({
+      x: t.clientX,
+      y: t.clientY
+    }));
+
+    let gesture = classifyGesture(
+      lastTouches,
+      currentPoints,
+      totalMovement,
+      MOVE_THRESHOLD_PX
+    );
 
     if (e.touches.length === 2) {
       const t0 = e.touches[0], t1 = e.touches[1];
@@ -186,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const curYAvg  = (t0.clientY + t1.clientY) / 2;
+      const curYAvg = (t0.clientY + t1.clientY) / 2;
       const lastYAvg = (lastTouches[0].y + lastTouches[1].y) / 2;
       const dy = curYAvg - lastYAvg;
 
@@ -212,6 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
       bufferedDx += dx;
       bufferedDy += dy;
       totalMovement += Math.sqrt(dx * dx + dy * dy);
+      gesture = classifyGesture(
+        lastTouches,
+        [{ x: t.clientX, y: t.clientY }],
+        totalMovement,
+        MOVE_THRESHOLD_PX
+      );
 
       if (ghost) {
         const x = t.clientX - rect.left;
@@ -221,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ghost.classList.add('visible');
       }
 
-      if (totalMovement > MOVE_THRESHOLD_PX) {
+      if (gesture === 'move') {
         pendingDx += bufferedDx;
         pendingDy += bufferedDy;
         bufferedDx = 0;
@@ -239,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
   pad.addEventListener('touchend', e => {
     e.preventDefault();
 
-    if (moveThrottle)   { cancelAnimationFrame(moveThrottle); moveThrottle = null; flushMove(); }
+    if (moveThrottle) { cancelAnimationFrame(moveThrottle); moveThrottle = null; flushMove(); }
     if (scrollThrottle) { clearTimeout(scrollThrottle); scrollThrottle = null; flushScroll(); }
 
     socketSend('mouse_stop');
@@ -253,12 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (e.touches.length === 0) {
-      lastTouches  = [];
-      moveSent     = false;
-      scrollSent   = false;
-      maxFingers   = 0;
-      bufferedDx   = 0;
-      bufferedDy   = 0;
+      lastTouches = [];
+      moveSent = false;
+      scrollSent = false;
+      maxFingers = 0;
+      bufferedDx = 0;
+      bufferedDy = 0;
       pad.classList.remove('active');
       if (ghost) ghost.classList.remove('visible');
       if (scrollIndicator) scrollIndicator.classList.remove('show');

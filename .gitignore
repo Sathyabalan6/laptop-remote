@@ -24,3 +24,6 @@ env/
 .certs/
 *.pem
 *.key
+
+# Node.js dependencies
+node_modules/
