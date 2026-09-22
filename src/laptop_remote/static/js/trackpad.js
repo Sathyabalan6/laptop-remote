@@ -42,11 +42,29 @@ function stopContinuousScroll(e) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const {
-    applyInertia,
-    clampSensitivity,
-    classifyGesture
-  } = window.trackpadLogic;
+  const trackpadLogic = window.trackpadLogic || {};
+
+const applyInertia =
+  trackpadLogic.applyInertia || ((velocity, decay) => velocity * decay);
+
+const clampSensitivity =
+  trackpadLogic.clampSensitivity ||
+  ((value, min = 0.5, max = 4.0) =>
+    Math.min(max, Math.max(min, value)));
+
+const classifyGesture =
+  trackpadLogic.classifyGesture ||
+  ((prevPoints, currPoints, totalMovement = 0, movementThreshold = 2) => {
+    if (currPoints.length === 2) {
+      return 'scroll';
+    }
+
+    if (currPoints.length === 1 && prevPoints.length === 1) {
+      return totalMovement > movementThreshold ? 'move' : 'tap';
+    }
+
+    return 'tap';
+  });
   const sensSlider = document.getElementById('sensitivitySlider');
   const sensLabel = document.getElementById('sensitivityLabel');
 
