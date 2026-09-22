@@ -1,27 +1,3 @@
-# Demo GIF
-![alt text](docs/images/laptopScreen.png)
-
-# Screenshots
-
-# Media Tab
-![alt text](docs/images/media.png)
-
-# Mouse & Trackpad
-![alt text](docs/images/mouse.png)
-![alt text](docs/images/trakpad.png)
-
-# Presentation
-![alt text](docs/images/presentation.png)
-
-# Desktop Companion
-# Laptop screen which is controled by mobile screen
-![alt text](docs/images/laptopScreen.png)
-
-# Mobile screen which controlling laptop
-![alt text](docs/images/mobilescreen.jpeg)
-
-
-
 # 📱 Laptop Remote (Remote Deck)
 
 [![CI](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml)
@@ -31,7 +7,29 @@
 
 > Turn your smartphone into a powerful, low-latency remote control for your laptop. Control media playback, stream a high-precision trackpad, navigate with a virtual D-Pad and keyboard, and present with a real-time screen laser pointer.
 
+<p align="center">
+  <img src="docs/images/laser-trackpad-demo.gif" alt="Laser Pointer & Trackpad Demo" width="650">
+</p>
+
 > ⚠️ **LAN-only tool.** Designed for trusted local networks (home Wi-Fi / hotspot). Do **not** expose it to the public internet — see [SECURITY.md](SECURITY.md).
+
+---
+
+## 📸 Screenshots
+
+| Media Controls | Touch Trackpad | Virtual Mouse | Presentation Deck |
+| :---: | :---: | :---: | :---: |
+| ![Media Controls](docs/images/media.png) | ![Touch Trackpad](docs/images/trackpad.png) | ![Virtual Mouse](docs/images/mouse.png) | ![Presentation](docs/images/presentation.png) |
+
+<details>
+<summary><b>👀 View Real-World & Desktop Companion Preview</b></summary>
+<br>
+
+| Laptop Terminal Server | Phone Controlling Laptop |
+| :---: | :---: |
+| ![Laptop Terminal](docs/images/laptopScreen.png) | ![Phone Remote](docs/images/mobilescreen.jpeg) |
+
+</details>
 
 ---
 
