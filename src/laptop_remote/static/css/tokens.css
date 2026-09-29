@@ -1,41 +1,58 @@
-/* ── DESIGN SYSTEM & TOKENS ── */
+/* ── DESIGN SYSTEM & TOKENS ──
+   Precision Studio Remote Aesthetic (Tactile Matte Graphite)
+*/
 :root {
-  /* Colors - Emerald OLED Theme */
-  --background: #000000;
-  --surface: #0b120d;
-  --surface-dim: #070c09;
-  --surface-container-lowest: #040805;
-  --surface-container-low: #101b13;
-  --surface-container: #17261b;
-  --surface-container-high: #203325;
-  --surface-container-highest: #28402e;
-  --surface-hover: #294230;
-  --surface-bright: #33523c;
-  --on-surface: #e8f5e9;
-  --on-surface-variant: #a5d6a7;
-  --primary: #69f0ae;
-  --primary-container: #00e676;
-  --on-primary-container: #00371a;
-  --secondary: #b9f6ca;
-  --secondary-container: #1b3d26;
-  --on-secondary-container: #a5d6a7;
-  --tertiary: #10b981;
-  --border: #1a2f20;
-  --danger: #ef4444;
-  --foreground: #f1f8f3;
-  --foreground-muted: #81c784;
-  --outline: #4caf50;
-  --outline-variant: #1b3823;
+  /* Colors - Studio Graphite & Precision Accents */
+  --background: #0c0d10;
+  --surface: #14171d;
+  --surface-dim: #0f1115;
+  --surface-container-lowest: #08090c;
+  --surface-container-low: #111317;
+  --surface-container: #1a1d24;
+  --surface-container-high: #222630;
+  --surface-container-highest: #2b303d;
+  --surface-hover: #262a35;
+  --surface-bright: #323846;
 
-  /* Spacing */
+  /* Content & Contrast (WCAG 2.2 AA compliant) */
+  --on-surface: #f1f5f9;
+  --on-surface-variant: #94a3b8;
+  --foreground: #f8fafc;
+  --foreground-muted: #64748b;
+
+  /* Functional Accents */
+  --primary: #38bdf8;
+  --primary-container: #0284c7;
+  --on-primary-container: #f0f9ff;
+  --secondary: #e2e8f0;
+  --secondary-container: #242936;
+  --on-secondary-container: #94a3b8;
+  --tertiary: #10b981;
+  --accent-amber: #f59e0b;
+  --danger: #ef4444;
+  --danger-surface: #2d1417;
+  --border: #222630;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-focus: #38bdf8;
+  --outline: #38bdf8;
+  --outline-variant: #1e293b;
+
+  /* Tactile Elevation & Hardware Lighting */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-button-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 0 1px rgba(0, 0, 0, 0.8);
+  --shadow-dial: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+  /* Spacing Scale */
   --container-padding: 20px;
   --container-padding-mobile: 16px;
-  --card-padding: 14px;
+  --card-padding: 16px;
   --gap-standard: 12px;
   --gap-grid: 8px;
   --gap-icon: 6px;
 
-  /* Border Radius */
+  /* Radii */
   --radius-cards: 16px;
   --radius-buttons: 12px;
   --radius-small: 8px;
@@ -56,64 +73,68 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-/* ── TYPOGRAPHY TOKENS ── */
+/* ── REFINED TYPOGRAPHY SCALE ── */
 .heading-caps {
   font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--on-surface);
 }
 
 .metadata-caps {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
+  color: var(--on-surface-variant);
 }
 
 .nav-caps {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .ui-action {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .numeric-display {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .subheading {
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  font-weight: 400;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
 }
 
 .micro-label {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
+  color: var(--on-surface-variant);
 }
 
 .body-text {
   font-size: 13px;
   font-weight: 400;
-  line-height: 1.45;
+  line-height: 1.5;
+  color: var(--on-surface-variant);
 }
 
 .headline-lg {
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--foreground);
 }

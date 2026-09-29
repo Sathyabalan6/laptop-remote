@@ -39,6 +39,12 @@
         </span>
       </div>
       <span class="battery-chip nav-caps" id="batteryPct" style="display:none"></span>
+      <button class="header-action-btn" onclick="forgetDevice()" aria-label="Disconnect and forget device" title="Disconnect device">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -186,18 +192,18 @@
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
               </svg>
               <span>Full</span>
-            </button>
           </div>
-          <!-- Forget This Device Button -->
-          <button class="forget-device-btn ui-action" onclick="forgetDevice()" aria-label="Forget this device and revoke session">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            <span>Forget This Device</span>
-          </button>
         </div>
+
+        <!-- Forget This Device Button (Isolated safely at bottom) -->
+        <button class="forget-device-btn ui-action" onclick="forgetDevice()" aria-label="Forget this device and revoke session">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Forget This Device</span>
+        </button>
 
       </div>
     </div>
@@ -345,62 +351,86 @@
           </div>
           <div class="shortcuts-grid">
             <button class="shortcut-tile" onclick="send_key_action('skip_intro')" aria-label="Skip intro or recap">
-              <span class="tile-icon">⏭</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+              </span>
               <span class="tile-title">Skip Intro</span>
               <span class="tile-sub">S</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('theater_mode')" aria-label="Toggle theater mode">
-              <span class="tile-icon">⛶</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline></svg>
+              </span>
               <span class="tile-title">Theater</span>
               <span class="tile-sub">T</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('miniplayer')" aria-label="Toggle miniplayer / PiP">
-              <span class="tile-icon">🗗</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><rect x="12" y="10" width="8" height="8" rx="1.5"></rect></svg>
+              </span>
               <span class="tile-title">Miniplayer</span>
               <span class="tile-sub">I</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('audio_track_cycle')" aria-label="Cycle audio language stream">
-              <span class="tile-icon">🌐</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+              </span>
               <span class="tile-title">Audio Dub</span>
               <span class="tile-sub">A / B</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('speed_up')" aria-label="Speed up playback">
-              <span class="tile-icon">⚡</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+              </span>
               <span class="tile-title">Speed +</span>
               <span class="tile-sub">⇧ &gt; / ]</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('speed_down')" aria-label="Slow down playback">
-              <span class="tile-icon">🐢</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
+              </span>
               <span class="tile-title">Speed -</span>
               <span class="tile-sub">⇧ &lt; / [</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('subtitles_sync_advance')" aria-label="Advance subtitle sync">
-              <span class="tile-icon">💬</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 15l3-3-3-3"></path></svg>
+              </span>
               <span class="tile-title">Sub Sync -</span>
               <span class="tile-sub">G / Z</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('subtitles_sync_delay')" aria-label="Delay subtitle sync">
-              <span class="tile-icon">💬</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M17 15l-3-3 3-3"></path></svg>
+              </span>
               <span class="tile-title">Sub Sync +</span>
               <span class="tile-sub">H / ⇧Z</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('browser_tab_next')" aria-label="Next browser tab">
-              <span class="tile-icon">📑</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="14" rx="2"></rect><path d="M8 3h11a2 2 0 0 1 2 2v11"></path></svg>
+              </span>
               <span class="tile-title">Next Tab</span>
               <span class="tile-sub">Ctrl+Tab</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('browser_reload')" aria-label="Reload page">
-              <span class="tile-icon">🔄</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              </span>
               <span class="tile-title">Reload</span>
               <span class="tile-sub">F5</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('subtitles_size_up')" aria-label="Subtitle size up">
-              <span class="tile-icon">🗚</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4M6 5v14M12 9h6M15 9v10M19 12h4M21 10v4"></path></svg>
+              </span>
               <span class="tile-title">Sub Size +</span>
               <span class="tile-sub">+</span>
             </button>
             <button class="shortcut-tile" onclick="send_key_action('subtitles_size_down')" aria-label="Subtitle size down">
-              <span class="tile-icon">🗛</span>
+              <span class="tile-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4M6 5v14M12 11h6M15 11v8M19 15h4"></path></svg>
+              </span>
               <span class="tile-title">Sub Size -</span>
               <span class="tile-sub">-</span>
             </button>

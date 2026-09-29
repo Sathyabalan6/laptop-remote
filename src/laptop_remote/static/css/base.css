@@ -64,6 +64,36 @@ header {
   color: var(--foreground);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface-container-low);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.header-action-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-surface);
+}
+
+.header-action-btn:active {
+  transform: scale(0.92);
+}
+
 /* ── ACCESSIBILITY & FOCUS MANAGEMENT ── */
 button:focus-visible,
 input:focus-visible,
@@ -113,12 +143,12 @@ input:focus-visible,
 
 .status-dot.active {
   background: var(--tertiary);
-  box-shadow: 0 1px 4px rgba(78, 222, 163, 0.4);
+  box-shadow: 0 1px 6px rgba(16, 185, 129, 0.5);
 }
 
 .status-dot.pairing {
   background: var(--primary);
-  box-shadow: 0 1px 4px rgba(192, 193, 255, 0.4);
+  box-shadow: 0 1px 6px rgba(56, 189, 248, 0.5);
 }
 
 .status-dot.offline {
@@ -239,17 +269,26 @@ nav {
   cursor: pointer;
   padding: 6px 16px;
   border-radius: var(--radius-buttons);
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+}
+
+.nav-item:active {
+  transform: scale(0.94);
 }
 
 .nav-item.active {
   color: var(--primary);
-  background-color: var(--secondary-container);
+  background-color: var(--surface-container-high);
 }
 
 .nav-item svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
+  transition: transform 0.15s ease;
+}
+
+.nav-item.active svg {
+  transform: translateY(-1px);
 }
 
 /* ── TOAST NOTIFICATION ── */
