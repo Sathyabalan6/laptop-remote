@@ -1,6 +1,8 @@
 # 📱 Laptop Remote (Remote Deck)
 
 [![CI](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Sathyabalan6/laptop-remote/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/laptop-remote.svg)](https://pypi.org/project/laptop-remote/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/laptop-remote)](https://pypi.org/project/laptop-remote/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#-platform-support)
@@ -50,33 +52,53 @@
 
 ## 🚀 Quick Start
 
-### From a prebuilt executable (`LaptopRemote-CLI.exe`)
+### 1. From Prebuilt Executable (Windows — No Python Needed)
 
-1. **Launch**: Double-click `dist/LaptopRemote-CLI.exe` (or run it from a terminal).
-2. **Scan & Connect**:
-   * Ensure your phone and laptop are on the **same Wi-Fi network** (or phone hotspot).
-   * Scan the **QR Code** printed in the terminal with your phone's camera, or navigate to the displayed URL (e.g., `http://192.168.1.X:5000` or `http://remotedeck.local:5000`).
-3. **Pair**: Enter the **6-digit Pairing PIN** shown in the terminal.
-4. **Enjoy**: Use the remote from your phone browser or install it as a PWA!
+1. Download **[`LaptopRemote-CLI.exe` from GitHub Releases](https://github.com/Sathyabalan6/laptop-remote/releases/latest)**.
+2. Double-click `LaptopRemote-CLI.exe` (or run it in Command Prompt / PowerShell).
+3. Connect your phone on the same Wi-Fi by scanning the printed QR code!
 
-### From source (Python 3.10+)
+---
+
+### 2. Via `pip` or `pipx` (Cross-Platform)
 
 ```bash
-# One-time: install dependencies
+# Standard install (Windows, macOS, Linux):
+pip install laptop-remote
+laptop-remote
+
+# Modern Linux (Ubuntu/Debian) with pipx:
+pipx install laptop-remote
+laptop-remote
+# Or run without installing:
+pipx run laptop-remote
+
+# Windows with native master volume support:
+pip install "laptop-remote[windows]"
+```
+
+---
+
+### 3. From Source (Developers / Git Clone)
+
+```bash
+git clone https://github.com/Sathyabalan6/laptop-remote.git
+cd laptop-remote
+
+# Install in editable mode
 pip install -e .
 
 # Run with an auto-generated PIN and ASCII QR code
-python -m laptop_remote
+laptop-remote
 
-# Run with a custom PIN / different port
-python -m laptop_remote --pin 123456 --port 5000
+# Run with a custom PIN or different port
+laptop-remote --pin 123456 --port 5000
 
 # Enable HTTPS/WSS (self-signed cert auto-generated)
-python -m laptop_remote --ssl
+laptop-remote --ssl
 ```
 
-Or use the Linux launcher (also sets up Wayland mouse support if needed):
-
+Linux users can also use the launcher script:
 ```bash
 ./run.sh
 ```
@@ -145,7 +167,7 @@ Or use the Linux launcher (also sets up Wayland mouse support if needed):
 
 ## ⚙️ Configuration & Custom Presets
 
-Key mappings are defined in [`presets.json`](file:///E:/laptop-remote/presets.json). You can customize or add hotkeys for your favorite applications:
+Key mappings are defined in [`presets.json`](presets.json). You can customize or add hotkeys for your favorite applications:
 
 ```json
 {
@@ -257,10 +279,15 @@ laptop-remote/
 ---
 
 ## 🧪 Running Tests
-
+ 
 ```bash
+# Python backend tests (82 tests)
 pip install -e ".[dev]"
 pytest
+
+# Frontend unit tests (17 Vitest tests)
+npm install
+npm test
 ```
 
 Tests run automatically on Linux, Windows, and macOS via GitHub Actions.
