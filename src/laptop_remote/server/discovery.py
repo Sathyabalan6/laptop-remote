@@ -22,7 +22,7 @@ def register_mdns(ip, port, ssl_enabled, mdns_url):
         return None, None
     try:
         zeroconf_instance = Zeroconf()
-        desc = {'version': '1.0'}
+        desc = {'version': '1.0.4'}
         service_type = "_https._tcp.local." if ssl_enabled else "_http._tcp.local."
         service_info = ServiceInfo(
             service_type,

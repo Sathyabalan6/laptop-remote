@@ -33,8 +33,12 @@ def get_local_ip():
 def get_cert_paths():
     """Get persistent paths for auto-generated SSL certificates."""
     import os
-    from .config import get_executable_dir
-    cert_dir = os.path.join(get_executable_dir(), '.certs')
+    from .config import get_executable_dir, get_user_data_dir
+    exec_dir = get_executable_dir()
+    if os.path.exists(os.path.join(exec_dir, 'pyproject.toml')) and os.access(exec_dir, os.W_OK):
+        cert_dir = os.path.join(exec_dir, '.certs')
+    else:
+        cert_dir = os.path.join(get_user_data_dir(), 'certs')
     os.makedirs(cert_dir, exist_ok=True)
     return os.path.join(cert_dir, 'cert.pem'), os.path.join(cert_dir, 'key.pem')
 
@@ -90,7 +94,9 @@ def setup_ssl_context(cert_file=None, key_file=None):
             .not_valid_after(now + datetime.timedelta(days=365))
             .sign(key, hashes.SHA256())
         )
-        with open(key_path, 'wb') as f:
+        import stat
+        fd = os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR)
+        with open(fd, 'wb') as f:
             f.write(key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,

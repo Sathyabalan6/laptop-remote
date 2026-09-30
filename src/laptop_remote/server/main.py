@@ -86,6 +86,12 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
             'active_profile': detect_active_preset() or 'Universal',
         }
 
+    def _notify_revoked_clients(sids):
+        from .state import build_state
+        state = build_state(None)
+        for sid in sids:
+            socketio.emit('state', state, to=sid)
+
     def regenerate_pin_action():
         with auth_lock:
             VALID_TOKENS.clear()
@@ -93,9 +99,16 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
             new_pin = _auth.PAIRING_PIN
             sids_to_notify = list(active_authorized_sids)
             active_authorized_sids.clear()
-        for sid in sids_to_notify:
-            socketio.emit('revoke', {'message': 'Tokens revoked'}, to=sid)
+        _notify_revoked_clients(sids_to_notify)
         return new_pin
+
+    def revoke_all_action():
+        with auth_lock:
+            VALID_TOKENS.clear()
+            _auth.PAIRING_PIN = generate_pairing_pin()
+            sids_to_notify = list(active_authorized_sids)
+            active_authorized_sids.clear()
+        _notify_revoked_clients(sids_to_notify)
 
     if tray_enabled or '--tray' in sys.argv:
         try:
@@ -104,7 +117,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
                 tray = SystemTrayManager(
                     get_state_cb=get_companion_state,
                     regenerate_pin_cb=regenerate_pin_action,
-                    revoke_cb=lambda: VALID_TOKENS.clear(),
+                    revoke_cb=revoke_all_action,
                     quit_cb=lambda: sys.exit(0),
                 )
                 tray.start()

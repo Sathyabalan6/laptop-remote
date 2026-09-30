@@ -647,37 +647,5 @@
   <script src="/static/js/trackpad.js"></script>
   <script src="/static/js/presentation.js"></script>
   <script src="/static/js/app.js"></script>
-
-  <!-- Interactive UI micro-sync glue script -->
-  <script>
-    // Volume slider visual track sync
-    const volSlider = document.getElementById('volumeSlider');
-    const volFill = document.getElementById('volume-fill');
-    const volThumb = document.getElementById('volume-thumb');
-    const volPct = document.getElementById('volumePct');
-
-    if (volSlider && volFill && volThumb) {
-      volSlider.addEventListener('input', (e) => {
-        const val = e.target.value;
-        volFill.style.width = val + '%';
-        volThumb.style.left = `calc(${val}% - 12px)`;
-        if (volPct) volPct.textContent = val + '%';
-      });
-    }
-
-    // Custom Toast function bridge
-    window.showToast = function(msg) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toastMsg');
-      if (toast && toastMsg) {
-        toastMsg.textContent = msg;
-        toast.classList.remove('opacity-0');
-        clearTimeout(window.__toastTimer);
-        window.__toastTimer = setTimeout(() => {
-          toast.classList.add('opacity-0');
-        }, 1500);
-      }
-    };
-  </script>
 </body>
 </html>

@@ -62,15 +62,19 @@ class SystemTrayManager:
             state = self.get_state()
             url = state.get("url", "http://127.0.0.1:5000")
             try:
-                import tkinter as tk
-                r = tk.Tk()
-                r.withdraw()
-                r.clipboard_clear()
-                r.clipboard_append(url)
-                r.update()
-                r.destroy()
+                import pyperclip
+                pyperclip.copy(url)
             except Exception:
-                pass
+                try:
+                    import tkinter as tk
+                    r = tk.Tk()
+                    r.withdraw()
+                    r.clipboard_clear()
+                    r.clipboard_append(url)
+                    r.update()
+                    r.destroy()
+                except Exception:
+                    pass
 
     def _on_regen_pin(self, icon, item):
         if self.regenerate_pin:

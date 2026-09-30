@@ -40,6 +40,10 @@ def _get_volume_windows():
 def _set_volume_windows(pct):
     global _last_known_volume
     try:
+        pct = max(0, min(100, int(round(float(pct)))))
+    except (ValueError, TypeError):
+        pct = _last_known_volume
+    try:
         from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
         from ctypes import cast, POINTER
         from comtypes import CLSCTX_ALL
@@ -123,7 +127,10 @@ def _get_volume_linux():
 
 def _set_volume_linux(pct):
     global _last_known_volume
-    pct = max(0, min(100, int(pct)))
+    try:
+        pct = max(0, min(100, int(round(float(pct)))))
+    except (ValueError, TypeError):
+        pct = _last_known_volume
     if shutil.which('wpctl'):
         try:
             val = pct / 100.0
@@ -235,7 +242,10 @@ def get_volume():
 def set_volume(pct):
     """Set system master volume to pct (0-100)."""
     global _last_known_volume
-    pct = max(0, min(100, int(pct)))
+    try:
+        pct = max(0, min(100, int(round(float(pct)))))
+    except (ValueError, TypeError):
+        pct = _last_known_volume
     success = False
     if IS_WINDOWS:
         success = _set_volume_windows(pct)

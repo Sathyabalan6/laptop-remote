@@ -275,3 +275,15 @@ class TestSemanticActionsAndRateLimiting:
         assert r1.get("ok") is True
         assert r2.get("throttled") is True
 
+    def test_backspace_not_rate_limited(self, monkeypatch):
+        sent = []
+        monkeypatch.setattr(inp.InputBackend, "send_keys", lambda k: sent.append(k))
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+
+        r1 = inp.handle_key("backspace")
+        r2 = inp.handle_key("backspace")
+        assert r1.get("ok") is True
+        assert r2.get("ok") is True
+        assert "throttled" not in r2
+        assert len(sent) == 2
+

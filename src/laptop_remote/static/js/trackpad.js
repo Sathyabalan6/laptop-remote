@@ -300,7 +300,7 @@ const classifyGesture =
     }
   }, { passive: false });
 
-  pad.addEventListener('touchend', e => {
+  const handleTouchEndOrCancel = e => {
     e.preventDefault();
 
     if (moveThrottle) { cancelAnimationFrame(moveThrottle); moveThrottle = null; flushMove(); }
@@ -308,7 +308,7 @@ const classifyGesture =
 
     socketSend('mouse_stop');
 
-    if (maxFingers === 1 && !moveSent) {
+    if (e.type === 'touchend' && maxFingers === 1 && !moveSent) {
       click_btn('left');
     }
 
@@ -329,5 +329,8 @@ const classifyGesture =
     } else {
       lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
     }
-  }, { passive: false });
+  };
+
+  pad.addEventListener('touchend', handleTouchEndOrCancel, { passive: false });
+  pad.addEventListener('touchcancel', handleTouchEndOrCancel, { passive: false });
 });

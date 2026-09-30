@@ -5,4 +5,4 @@ This package bundles the web frontend (``static/``), the Flask/SocketIO server
 backends (``core/``).
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.4"

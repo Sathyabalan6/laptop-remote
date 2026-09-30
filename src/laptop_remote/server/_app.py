@@ -62,6 +62,7 @@ def resource_path(relative):
 _PACKAGE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__, static_folder=os.path.join(_PACKAGE_ROOT, 'static'))
+app.secret_key = secrets.token_hex(32)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Import the overlay after app/socketio so it can be shared everywhere.

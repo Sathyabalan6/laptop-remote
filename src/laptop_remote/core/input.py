@@ -620,13 +620,15 @@ def handle_text_input(text, press_enter=False):
 
 _last_key_press_time = 0.0
 _KEY_MIN_INTERVAL = 0.07  # Max ~14 keys per second
+_UNTHROTTLED_KEYS = {'backspace', 'delete'}
 
 def handle_key(action, preset='universal'):
     global _last_key_press_time
     now = time.time()
-    if now - _last_key_press_time < _KEY_MIN_INTERVAL:
-        return {'ok': True, 'throttled': True}
-    _last_key_press_time = now
+    if action not in _UNTHROTTLED_KEYS:
+        if now - _last_key_press_time < _KEY_MIN_INTERVAL:
+            return {'ok': True, 'throttled': True}
+        _last_key_press_time = now
 
     _log_action(f"key={action!r} preset={preset!r}")
 
@@ -641,69 +643,69 @@ def handle_key(action, preset='universal'):
         if not action:
             return {'ok': False, 'error': 'No action provided'}
 
-    if action in ('mute', 'vol_up', 'vol_down'):
-        from .audio import get_volume, set_volume, toggle_mute
-        if action == 'mute':
-            toggle_mute()
-        elif action == 'vol_up':
-            curr = get_volume()
-            set_volume(min(100, curr['volume'] + 5))
-        elif action == 'vol_down':
-            curr = get_volume()
-            set_volume(max(0, curr['volume'] - 5))
-        return {'ok': True}
+        if action in ('mute', 'vol_up', 'vol_down'):
+            from .audio import get_volume, set_volume, toggle_mute
+            if action == 'mute':
+                toggle_mute()
+            elif action == 'vol_up':
+                curr = get_volume()
+                set_volume(min(100, curr['volume'] + 5))
+            elif action == 'vol_down':
+                curr = get_volume()
+                set_volume(max(0, curr['volume'] - 5))
+            return {'ok': True}
 
-    presentation_actions = {
-        'next_slide': lambda: press('right'),
-        'prev_slide': lambda: press('left'),
-        'present_start': lambda: InputBackend.send_keys(presentation_start_key()),
-        'present_exit': lambda: press('esc'),
-    }
-    if action in presentation_actions:
-        presentation_actions[action]()
-        return {'ok': True}
+        presentation_actions = {
+            'next_slide': lambda: press('right'),
+            'prev_slide': lambda: press('left'),
+            'present_start': lambda: InputBackend.send_keys(presentation_start_key()),
+            'present_exit': lambda: press('esc'),
+        }
+        if action in presentation_actions:
+            presentation_actions[action]()
+            return {'ok': True}
 
-    mod_cmd = 'command' if IS_MAC else 'ctrl'
-    direct_keys = {
-        'enter': 'enter',
-        'backspace': 'backspace',
-        'escape': 'esc',
-        'esc': 'esc',
-        'tab': 'tab',
-        'shift_tab': ['shift', 'tab'],
-        'up': 'up',
-        'down': 'down',
-        'left': 'left',
-        'right': 'right',
-        'pageup': 'pageup',
-        'pagedown': 'pagedown',
-        'home': 'home',
-        'end': 'end',
-        'space': 'space',
-        'search_url': [mod_cmd, 'l'],
-        'search_focus': '/',
-        'browser_back': ['command', '['] if IS_MAC else ['alt', 'left'],
-        'browser_forward': ['command', ']'] if IS_MAC else ['alt', 'right'],
-        'browser_tab_next': ['command', 'option', 'right'] if IS_MAC else ['ctrl', 'tab'],
-        'browser_tab_prev': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
-        'next_tab': ['command', 'option', 'right'] if IS_MAC else ['ctrl', 'tab'],
-        'prev_tab': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
-        'browser_reload': ['command', 'r'] if IS_MAC else 'f5',
-        'reload': ['command', 'r'] if IS_MAC else 'f5',
-    }
-    if action in direct_keys:
-        InputBackend.send_keys(direct_keys[action])
-        return {'ok': True}
+        mod_cmd = 'command' if IS_MAC else 'ctrl'
+        direct_keys = {
+            'enter': 'enter',
+            'backspace': 'backspace',
+            'escape': 'esc',
+            'esc': 'esc',
+            'tab': 'tab',
+            'shift_tab': ['shift', 'tab'],
+            'up': 'up',
+            'down': 'down',
+            'left': 'left',
+            'right': 'right',
+            'pageup': 'pageup',
+            'pagedown': 'pagedown',
+            'home': 'home',
+            'end': 'end',
+            'space': 'space',
+            'search_url': [mod_cmd, 'l'],
+            'search_focus': '/',
+            'browser_back': ['command', '['] if IS_MAC else ['alt', 'left'],
+            'browser_forward': ['command', ']'] if IS_MAC else ['alt', 'right'],
+            'browser_tab_next': ['command', 'option', 'right'] if IS_MAC else ['ctrl', 'tab'],
+            'browser_tab_prev': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
+            'next_tab': ['command', 'option', 'right'] if IS_MAC else ['ctrl', 'tab'],
+            'prev_tab': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
+            'browser_reload': ['command', 'r'] if IS_MAC else 'f5',
+            'reload': ['command', 'r'] if IS_MAC else 'f5',
+        }
+        if action in direct_keys:
+            InputBackend.send_keys(direct_keys[action])
+            return {'ok': True}
 
-    presets_map = load_presets()
-    preset_config = presets_map.get(preset, presets_map.get('universal', {}))
-    keys = preset_config.get(action)
-    if keys:
-        InputBackend.send_keys(keys)
-        return {'ok': True}
+        presets_map = load_presets()
+        preset_config = presets_map.get(preset, presets_map.get('universal', {}))
+        keys = preset_config.get(action)
+        if keys:
+            InputBackend.send_keys(keys)
+            return {'ok': True}
 
-    if len(action) == 1 or action.isalnum():
-        press(action)
-        return {'ok': True}
+        if len(action) == 1 or action.isalnum():
+            press(action)
+            return {'ok': True}
 
-    return {'ok': False, 'error': f"Key map missing for action '{action}' in preset '{preset}'"}
+        return {'ok': False, 'error': f"Key map missing for action '{action}' in preset '{preset}'"}

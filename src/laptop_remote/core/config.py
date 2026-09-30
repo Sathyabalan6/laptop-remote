@@ -24,7 +24,31 @@ def get_executable_dir():
     # Fallback: repo root is three levels up from core/ (src/laptop_remote/core).
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-PRESETS_PATH = os.path.join(get_executable_dir(), 'presets.json')
+def get_user_data_dir():
+    """Return user-writable config directory (e.g. ~/.config/laptop-remote or %APPDATA%/laptop-remote)."""
+    if sys.platform.startswith('win'):
+        base = os.environ.get('APPDATA') or os.path.expanduser('~')
+    elif sys.platform.startswith('darwin'):
+        base = os.path.expanduser('~/Library/Application Support')
+    else:
+        base = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+    d = os.path.join(base, 'laptop-remote')
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception:
+        pass
+    return d
+
+def _resolve_presets_path():
+    exec_dir = get_executable_dir()
+    local_presets = os.path.join(exec_dir, 'presets.json')
+    if os.path.exists(local_presets):
+        return local_presets
+    if os.path.exists(os.path.join(exec_dir, 'pyproject.toml')) and os.access(exec_dir, os.W_OK):
+        return local_presets
+    return os.path.join(get_user_data_dir(), 'presets.json')
+
+PRESETS_PATH = _resolve_presets_path()
 
 DEFAULT_PRESETS = {
   "youtube_hotstar": {

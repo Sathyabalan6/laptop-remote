@@ -114,16 +114,22 @@ function clearSearchInput() {
 document.addEventListener('DOMContentLoaded', () => {
   const volumeSlider = document.getElementById('volumeSlider');
   const volumePctText = document.getElementById('volumePct');
+  const volFill = document.getElementById('volume-fill');
+  const volThumb = document.getElementById('volume-thumb');
 
   if (volumeSlider && volumePctText) {
     volumeSlider.value = volumeLevel;
     volumePctText.textContent = volumeLevel + '%';
+    if (volFill) volFill.style.width = volumeLevel + '%';
+    if (volThumb) volThumb.style.left = `calc(${volumeLevel}% - 12px)`;
 
     let volumeThrottle = null;
     volumeSlider.addEventListener('input', e => {
       const val = parseInt(e.target.value);
       volumeLevel = val;
       volumePctText.textContent = val + '%';
+      if (volFill) volFill.style.width = val + '%';
+      if (volThumb) volThumb.style.left = `calc(${val}% - 12px)`;
       localStorage.setItem('volume_level', val);
 
       if (!volumeThrottle) {
