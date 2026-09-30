@@ -1,140 +1,170 @@
-/* ── DESIGN SYSTEM & TOKENS ──
-   Precision Studio Remote Aesthetic (Tactile Matte Graphite)
+/* ── APPLE HIG DESIGN SYSTEM TOKENS ──
+   Inspired by Apple Design Guidelines (macOS / iOS / visionOS Glass & Materials)
 */
 :root {
-  /* Colors - Studio Graphite & Precision Accents */
-  --background: #0c0d10;
-  --surface: #14171d;
-  --surface-dim: #0f1115;
-  --surface-container-lowest: #08090c;
-  --surface-container-low: #111317;
-  --surface-container: #1a1d24;
-  --surface-container-high: #222630;
-  --surface-container-highest: #2b303d;
-  --surface-hover: #262a35;
-  --surface-bright: #323846;
+  /* System Materials & Backgrounds */
+  --bg-primary: #000000;
+  --bg-secondary: #0c0d0f;
+  --material-ultra-thin: rgba(255, 255, 255, 0.05);
+  --material-thin: rgba(255, 255, 255, 0.08);
+  --material-regular: rgba(28, 28, 30, 0.68);
+  --material-thick: rgba(36, 36, 40, 0.78);
+  --material-opaque: #1c1c1e;
+  --material-card: rgba(30, 31, 36, 0.55);
+  --material-card-hover: rgba(44, 45, 52, 0.65);
+  
+  /* Apple System Colors */
+  --apple-blue: #007aff;
+  --apple-blue-rgb: 0, 122, 255;
+  --apple-blue-hover: #0b84fe;
+  --apple-indigo: #5e5ce6;
+  --apple-indigo-rgb: 94, 92, 230;
+  --apple-cyan: #32ade6;
+  --apple-green: #34c759;
+  --apple-amber: #ff9f0a;
+  --apple-red: #ff453a;
+  --apple-red-dim: rgba(255, 69, 58, 0.16);
 
-  /* Content & Contrast (WCAG 2.2 AA compliant) */
-  --on-surface: #f1f5f9;
-  --on-surface-variant: #94a3b8;
-  --foreground: #f8fafc;
-  --foreground-muted: #64748b;
+  /* Primary Accent & Surfaces */
+  --primary: var(--apple-blue);
+  --primary-container: rgba(0, 122, 255, 0.15);
+  --on-primary: #ffffff;
+  --secondary: var(--apple-indigo);
+  --secondary-container: rgba(94, 92, 230, 0.18);
+  --tertiary: var(--apple-green);
+  --danger: var(--apple-red);
+  --danger-surface: var(--apple-red-dim);
+  
+  /* Text & Labels (Apple SF Hierarchy) */
+  --label-primary: #ffffff;
+  --label-secondary: rgba(235, 235, 245, 0.6);
+  --label-tertiary: rgba(235, 235, 245, 0.38);
+  --label-quaternary: rgba(235, 235, 245, 0.18);
 
-  /* Functional Accents */
-  --primary: #38bdf8;
-  --primary-container: #0284c7;
-  --on-primary-container: #f0f9ff;
-  --secondary: #e2e8f0;
-  --secondary-container: #242936;
-  --on-secondary-container: #94a3b8;
-  --tertiary: #10b981;
-  --accent-amber: #f59e0b;
-  --danger: #ef4444;
-  --danger-surface: #2d1417;
-  --border: #222630;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-focus: #38bdf8;
-  --outline: #38bdf8;
-  --outline-variant: #1e293b;
+  /* Bridge aliases for backward compatibility */
+  --on-surface: var(--label-primary);
+  --on-surface-variant: var(--label-secondary);
+  --foreground: var(--label-primary);
+  --foreground-muted: var(--label-tertiary);
+  --background: var(--bg-primary);
+  --surface: var(--material-card);
+  --surface-dim: #131315;
+  --surface-container-lowest: #0e0e10;
+  --surface-container-low: var(--material-thin);
+  --surface-container: var(--material-regular);
+  --surface-container-high: var(--material-thick);
+  --surface-container-highest: #353437;
+  --surface-hover: var(--material-card-hover);
+  --border: var(--separator);
+  --border-focus: var(--apple-blue);
+  --outline: var(--apple-blue);
 
-  /* Tactile Elevation & Hardware Lighting */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --shadow-button-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.6), inset 0 0 1px rgba(0, 0, 0, 0.8);
-  --shadow-dial: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  /* Borders & Specular Hairlines */
+  --separator: rgba(255, 255, 255, 0.1);
+  --separator-subtle: rgba(255, 255, 255, 0.06);
+  --specular-stroke: inset 0 1px 0.5px rgba(255, 255, 255, 0.18);
+  --specular-border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Elevation & Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-floating: 0 16px 36px -4px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 24px rgba(0, 122, 255, 0.35);
+  --shadow-button: var(--shadow-sm);
+  --shadow-button-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+  --shadow-dial: 0 10px 28px rgba(94, 92, 230, 0.45), var(--specular-stroke);
+
+  /* Apple Radii Scale */
+  --radius-full: 9999px;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --radius-cards: var(--radius-lg);
+  --radius-buttons: var(--radius-md);
+  --radius-pills: var(--radius-full);
 
   /* Spacing Scale */
-  --container-padding: 20px;
+  --container-padding: 16px;
   --container-padding-mobile: 16px;
   --card-padding: 16px;
   --gap-standard: 12px;
   --gap-grid: 8px;
   --gap-icon: 6px;
 
-  /* Radii */
-  --radius-cards: 16px;
-  --radius-buttons: 12px;
-  --radius-small: 8px;
-  --radius-pills: 9999px;
-
-  /* Z-Index Hierarchy */
-  --z-base: 1;
-  --z-sticky: 10;
-  --z-banner: 20;
-  --z-header: 30;
-  --z-nav: 40;
-  --z-toast: 50;
-  --z-modal: 100;
-
   /* Typography */
-  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Geist", "Helvetica Neue", sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Sora", sans-serif;
+  --font-sf: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  --font-mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
 }
 
-/* ── REFINED TYPOGRAPHY SCALE ── */
+/* Base Typographic Utility Classes */
 .heading-caps {
-  font-family: var(--font-display);
+  font-family: var(--font-sf);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--on-surface);
+  letter-spacing: -0.01em;
+  color: var(--label-primary);
 }
 
 .metadata-caps {
+  font-family: var(--font-sf);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
-  color: var(--on-surface-variant);
+  color: var(--label-secondary);
 }
 
 .nav-caps {
-  font-size: 11px;
+  font-family: var(--font-sf);
+  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
 .ui-action {
+  font-family: var(--font-sf);
   font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.01em;
 }
 
 .numeric-display {
-  font-size: 20px;
-  font-weight: 600;
+  font-family: var(--font-sf);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .subheading {
+  font-family: var(--font-sf);
   font-size: 12px;
   font-weight: 400;
-  color: var(--on-surface-variant);
+  color: var(--label-secondary);
   line-height: 1.4;
 }
 
 .micro-label {
+  font-family: var(--font-sf);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--on-surface-variant);
+  color: var(--label-secondary);
 }
 
 .body-text {
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--on-surface-variant);
+  font-family: var(--font-sf);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--label-secondary);
 }
 
 .headline-lg {
-  font-family: var(--font-display);
+  font-family: var(--font-sf);
   font-size: 18px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--foreground);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--label-primary);
 }
