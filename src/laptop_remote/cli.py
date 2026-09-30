@@ -14,6 +14,7 @@ import argparse
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="laptop-remote", description="Laptop Remote - Terminal Edition")
     parser.add_argument("--pin", default=None, help="Set a custom pairing PIN/password")
+    parser.add_argument("--name", "-n", default=None, help="Friendly device name displayed in the remote header (e.g. 'Vivobook')")
     parser.add_argument("--port", type=int, default=5000, help="Port to bind (default: 5000)")
     parser.add_argument("--ssl", action="store_true", help="Enable HTTPS/TLS encryption (auto-generates self-signed cert if none provided)")
     parser.add_argument("--ssl-cert", default=None, help="Path to SSL certificate (.pem/.crt)")
@@ -30,6 +31,7 @@ def main(argv=None) -> int:
     try:
         run_server(
             custom_pin=args.pin,
+            name=args.name,
             ssl_enabled=args.ssl,
             ssl_cert=args.ssl_cert,
             ssl_key=args.ssl_key,

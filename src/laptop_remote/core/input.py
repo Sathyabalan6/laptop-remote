@@ -618,7 +618,16 @@ def handle_text_input(text, press_enter=False):
         except Exception as e:
             return {'ok': False, 'error': str(e)}
 
+_last_key_press_time = 0.0
+_KEY_MIN_INTERVAL = 0.07  # Max ~14 keys per second
+
 def handle_key(action, preset='universal'):
+    global _last_key_press_time
+    now = time.time()
+    if now - _last_key_press_time < _KEY_MIN_INTERVAL:
+        return {'ok': True, 'throttled': True}
+    _last_key_press_time = now
+
     _log_action(f"key={action!r} preset={preset!r}")
 
     def press(key):
@@ -654,6 +663,7 @@ def handle_key(action, preset='universal'):
         presentation_actions[action]()
         return {'ok': True}
 
+    mod_cmd = 'command' if IS_MAC else 'ctrl'
     direct_keys = {
         'enter': 'enter',
         'backspace': 'backspace',
@@ -670,11 +680,16 @@ def handle_key(action, preset='universal'):
         'home': 'home',
         'end': 'end',
         'space': 'space',
-        'search_url': ['ctrl', 'l'],
+        'search_url': [mod_cmd, 'l'],
         'search_focus': '/',
-        'browser_tab_next': ['ctrl', 'tab'],
-        'browser_tab_prev': ['ctrl', 'shift', 'tab'],
-        'browser_reload': 'f5',
+        'browser_back': ['command', '['] if IS_MAC else ['alt', 'left'],
+        'browser_forward': ['command', ']'] if IS_MAC else ['alt', 'right'],
+        'browser_tab_next': ['command', 'option', 'right'] if IS_MAC else ['ctrl', 'tab'],
+        'browser_tab_prev': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
+        'next_tab': ['command', 'option', 'right'] if IS_MAC else ['ctrl', 'tab'],
+        'prev_tab': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
+        'browser_reload': ['command', 'r'] if IS_MAC else 'f5',
+        'reload': ['command', 'r'] if IS_MAC else 'f5',
     }
     if action in direct_keys:
         InputBackend.send_keys(direct_keys[action])

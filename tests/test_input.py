@@ -232,3 +232,46 @@ class TestWaylandKeySequences:
         inp.InputBackend.send_keys(["ctrl", "shift", "tab"])
         for args in calls:
             assert args[-1].endswith(":0"), f"key left held: {args}"
+
+
+class TestSemanticActionsAndRateLimiting:
+    def test_semantic_browser_back(self, monkeypatch):
+        sent = []
+        monkeypatch.setattr(inp.InputBackend, "send_keys", lambda k: sent.append(k))
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+
+        res = inp.handle_key("browser_back")
+        assert res.get("ok") is True
+        assert len(sent) == 1
+        assert sent[0] == (["command", "["] if inp.IS_MAC else ["alt", "left"])
+
+    def test_semantic_next_tab(self, monkeypatch):
+        sent = []
+        monkeypatch.setattr(inp.InputBackend, "send_keys", lambda k: sent.append(k))
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+
+        res = inp.handle_key("next_tab")
+        assert res.get("ok") is True
+        assert len(sent) == 1
+        assert sent[0] == (["command", "option", "right"] if inp.IS_MAC else ["ctrl", "tab"])
+
+    def test_semantic_reload(self, monkeypatch):
+        sent = []
+        monkeypatch.setattr(inp.InputBackend, "send_keys", lambda k: sent.append(k))
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+
+        res = inp.handle_key("reload")
+        assert res.get("ok") is True
+        assert len(sent) == 1
+        assert sent[0] == (["command", "r"] if inp.IS_MAC else "f5")
+
+    def test_key_rate_limiting(self, monkeypatch):
+        sent = []
+        monkeypatch.setattr(inp.InputBackend, "send_keys", lambda k: sent.append(k))
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+
+        r1 = inp.handle_key("up")
+        r2 = inp.handle_key("up")
+        assert r1.get("ok") is True
+        assert r2.get("throttled") is True
+

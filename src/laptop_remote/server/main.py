@@ -7,6 +7,7 @@ import laptop_remote.core.auth as _auth
 from ..core.auth import (
     VALID_TOKENS, auth_lock, generate_pairing_pin, set_pairing_pin,
 )
+from ..core.device import set_custom_device_name
 from ..core.network import get_local_ip, setup_ssl_context
 from ..core.window import detect_active_preset
 
@@ -15,7 +16,7 @@ from . import discovery
 
 
 def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
-         ssl_key=None, port=5000, tray_enabled=False):
+         ssl_key=None, port=5000, tray_enabled=False, name=None):
     """Start the Laptop Remote server (terminal/headless).
 
     Args:
@@ -25,9 +26,12 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
         ssl_key: Optional path to SSL private key file.
         port: Port to bind (default: 5000).
         tray_enabled: If True, enable an optional system tray icon.
+        name: Optional friendly device name (e.g. 'Vivobook').
     """
     if custom_pin:
         set_pairing_pin(custom_pin)
+    if name:
+        set_custom_device_name(name)
 
     try:
         import qrcode

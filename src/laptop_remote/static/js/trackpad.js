@@ -17,15 +17,15 @@ function startContinuousScroll(e, dir) {
   if (e && e.cancelable) e.preventDefault();
   stopContinuousScroll();
 
-  const dy = dir === 'up' ? 12 : -12;
+  const dy = dir === 'up' ? 3 : -3;
   vibrate(15);
   scroll(dy);
 
   scrollTimeout = setTimeout(() => {
     scrollInterval = setInterval(() => {
       vibrate(8);
-      scroll(dy);
-    }, 80);
+      scroll(dir === 'up' ? 2 : -2);
+    }, 90);
   }, 250);
 }
 
@@ -67,15 +67,30 @@ const classifyGesture =
   });
   const sensSlider = document.getElementById('sensitivitySlider');
   const sensLabel = document.getElementById('sensitivityLabel');
+  const speedPopoverLabel = document.getElementById('speedPopoverLabel');
+  const sensFill = document.getElementById('speedSliderFill');
+  const sensThumb = document.getElementById('speedSliderThumb');
 
-  if (sensSlider && sensLabel) {
+  function updateSpeedUI(val) {
+    if (sensLabel) sensLabel.textContent = val.toFixed(1) + 'x';
+    if (speedPopoverLabel) speedPopoverLabel.textContent = val.toFixed(1) + 'x';
+    if (sensFill && sensThumb && sensSlider) {
+      const min = parseFloat(sensSlider.min) || 0.5;
+      const max = parseFloat(sensSlider.max) || 4.0;
+      const percent = ((val - min) / (max - min)) * 100;
+      sensFill.style.width = percent + '%';
+      sensThumb.style.left = percent + '%';
+    }
+  }
+
+  if (sensSlider) {
     mouseSensitivity = clampSensitivity(mouseSensitivity);
     sensSlider.value = mouseSensitivity;
-    sensLabel.textContent = mouseSensitivity.toFixed(1) + 'x';
+    updateSpeedUI(mouseSensitivity);
 
     sensSlider.addEventListener('input', e => {
       mouseSensitivity = clampSensitivity(parseFloat(e.target.value));
-      sensLabel.textContent = mouseSensitivity.toFixed(1) + 'x';
+      updateSpeedUI(mouseSensitivity);
       localStorage.setItem('mouse_sensitivity', mouseSensitivity);
     });
   }
@@ -193,6 +208,14 @@ const classifyGesture =
 
     pad.classList.add('active');
     if (scrollIndicator) scrollIndicator.classList.remove('show');
+
+    if (typeof closeAllPopovers === 'function') closeAllPopovers();
+
+    const centerPrompt = document.getElementById('centerPrompt');
+    if (centerPrompt && !centerPrompt.classList.contains('opacity-0')) {
+      centerPrompt.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => { centerPrompt.style.display = 'none'; }, 300);
+    }
   }, { passive: false });
 
   pad.addEventListener('touchmove', e => {

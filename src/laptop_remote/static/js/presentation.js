@@ -31,13 +31,43 @@ function slideCtrl(action) {
   updateSlideCounter();
 }
 
+let restartConfirmTimeout = null;
+
 function resetPresentation() {
+  const btn = document.getElementById('restartBtn');
+  if (btn && !btn.classList.contains('confirming')) {
+    btn.classList.add('confirming');
+    btn.setAttribute('title', 'Tap again to reset to Slide 1');
+    const origHtml = btn.innerHTML;
+    btn.dataset.origHtml = origHtml;
+    btn.innerHTML = '<span class="text-xs font-bold text-amber-400">⚠️ Tap again to confirm restart to Slide 1</span>';
+    vibrate(20);
+    if (typeof showToast === 'function') showToast('⚠️ Tap again to reset to Slide 1');
+    
+    clearTimeout(restartConfirmTimeout);
+    restartConfirmTimeout = setTimeout(() => {
+      btn.classList.remove('confirming');
+      if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+      btn.setAttribute('title', 'Restart from Slide 1');
+    }, 3000);
+    return;
+  }
+
+  if (btn) {
+    btn.classList.remove('confirming');
+    if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+    btn.setAttribute('title', 'Restart from Slide 1');
+  }
+  clearTimeout(restartConfirmTimeout);
+
   slideIndex = 1;
   updateSlideCounter();
   elapsedSeconds = 0;
   const t = document.getElementById('elapsedTimer');
   if (t) t.textContent = '00:00';
-  vibrate(15);
+  vibrate([30, 50]);
+  if (typeof showToast === 'function') showToast('⏮️ Restarted at Slide 1');
+  if (typeof closeAllPopovers === 'function') closeAllPopovers();
 }
 
 let blackoutActive = false;
@@ -143,24 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Show or hide the laser pad depending on server overlay availability.
 function applyLaserAvailability() {
-  const pad = document.getElementById('presentPad');
-  if (!pad) return;
-  let note = document.getElementById('laserUnavailableNote');
-  if (laserAvailable) {
-    pad.classList.remove('laser-unavailable');
-    if (note) note.style.display = 'none';
-  } else {
-    pad.classList.add('laser-unavailable');
-    if (!note) {
-      note = document.createElement('div');
-      note.id = 'laserUnavailableNote';
-      note.style.cssText =
-        'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
-        'text-align:center;padding:16px;color:var(--on-surface-variant,#c7c5d6);font-size:13px;line-height:1.5;z-index:5;';
-      note.textContent =
-        'Laser pointer is unavailable on this platform. Slide controls, timer and blackout still work.';
-      pad.appendChild(note);
-    }
-    note.style.display = 'flex';
+  const section = document.getElementById('presentLaserSection');
+  if (section) {
+    section.style.display = laserAvailable ? 'flex' : 'none';
   }
 }

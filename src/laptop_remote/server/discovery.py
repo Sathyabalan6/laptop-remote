@@ -11,6 +11,7 @@ except ImportError:
 
 from ..core.auth import auth_lock
 from ..core.window import detect_active_preset
+from ..core.power import get_battery_percent
 
 from ._app import socketio, active_authorized_sids
 
@@ -51,8 +52,11 @@ def unregister_mdns(zeroconf_instance, service_info):
 
 
 def preset_monitor():
-    """Poll the active-window preset and broadcast changes to authorized clients."""
+    """Poll the active-window preset and battery status, broadcasting changes to authorized clients."""
     last_preset = None
+    last_battery = None
+    battery_poll_counter = 0
+
     while True:
         time.sleep(2.0)
         with auth_lock:
@@ -67,3 +71,16 @@ def preset_monitor():
                     socketio.emit('preset_changed', {'preset': p}, to=sid)
         except Exception as e:
             print(f"preset monitor: {e}")
+
+        # Check battery status every 4 seconds (every 2 cycles)
+        battery_poll_counter += 1
+        if battery_poll_counter >= 2:
+            battery_poll_counter = 0
+            try:
+                b = get_battery_percent()
+                if b != last_battery:
+                    last_battery = b
+                    for sid in authorized_sids:
+                        socketio.emit('battery_update', {'battery': b}, to=sid)
+            except Exception as e:
+                print(f"battery monitor: {e}")

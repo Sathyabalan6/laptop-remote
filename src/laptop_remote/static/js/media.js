@@ -18,10 +18,28 @@ async function send_key_action(actionName) {
 }
 
 function quickJumpSearch() {
-  switchTab('keyboard');
-  setTimeout(() => {
+  if (typeof openKeysSheetWithSearch === 'function') {
+    openKeysSheetWithSearch();
+  } else {
     focusSearchSite();
-  }, 150);
+  }
+}
+
+const PRESET_ACTIONS = {
+  universal: ['skip_intro', 'theater_mode', 'miniplayer', 'speed_up', 'speed_down'],
+  youtube_hotstar: ['skip_intro', 'theater_mode', 'miniplayer', 'speed_up', 'speed_down'],
+  vlc: ['audio_track_cycle', 'speed_up', 'speed_down']
+};
+
+function updatePresetShortcuts(preset) {
+  const allowed = PRESET_ACTIONS[preset] || PRESET_ACTIONS.universal;
+  document.querySelectorAll('#mediaShortcutGrid .shortcut-tile').forEach(tile => {
+    const act = tile.getAttribute('data-action');
+    const isAllowed = allowed.includes(act);
+    tile.classList.toggle('opacity-30', !isAllowed);
+    tile.classList.toggle('pointer-events-none', !isAllowed);
+    tile.setAttribute('aria-disabled', isAllowed ? 'false' : 'true');
+  });
 }
 
 function focusSearchSite() {
@@ -132,4 +150,39 @@ function updateAudioUI(audio) {
   if (volThumb) volThumb.style.left = `calc(${vol}% - 12px)`;
   if (volumePctText) volumePctText.textContent = (audio.muted ? '🔇 ' : '') + vol + '%';
   localStorage.setItem('volume_level', vol);
+
+  const muteBtn = document.getElementById('mute-toggle');
+  if (muteBtn) {
+    muteBtn.setAttribute('aria-pressed', audio.muted ? 'true' : 'false');
+    muteBtn.classList.toggle('bg-error-container/40', !!audio.muted);
+    muteBtn.classList.toggle('text-error', !!audio.muted);
+    muteBtn.classList.toggle('border-error/30', !!audio.muted);
+  }
+}
+
+let ccActive = false;
+let fsActive = false;
+
+function toggleCC() {
+  ccActive = !ccActive;
+  const btn = document.getElementById('cc-toggle');
+  if (btn) {
+    btn.setAttribute('aria-pressed', ccActive ? 'true' : 'false');
+    btn.classList.toggle('bg-primary/20', ccActive);
+    btn.classList.toggle('text-primary', ccActive);
+    btn.classList.toggle('border-primary/40', ccActive);
+  }
+  send('subtitles');
+}
+
+function toggleFS() {
+  fsActive = !fsActive;
+  const btn = document.getElementById('fs-toggle');
+  if (btn) {
+    btn.setAttribute('aria-pressed', fsActive ? 'true' : 'false');
+    btn.classList.toggle('bg-primary/20', fsActive);
+    btn.classList.toggle('text-primary', fsActive);
+    btn.classList.toggle('border-primary/40', fsActive);
+  }
+  send('fullscreen');
 }

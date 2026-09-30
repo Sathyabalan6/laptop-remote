@@ -38,6 +38,13 @@ def on_disconnect():
             active_authorized_sids.discard(request.sid)
 
 
+@socketio.on('get_battery')
+@socket_require_auth
+def ws_get_battery(data=None):
+    from ..core.power import get_battery_percent
+    emit('battery_update', {'battery': get_battery_percent()})
+
+
 @socketio.on('volume_set')
 @socket_require_auth
 def ws_volume_set(data):

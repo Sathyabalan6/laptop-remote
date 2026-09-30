@@ -48,42 +48,76 @@ function setStatus(s) {
   const dot = document.getElementById('statusDot');
   const statusLabel = document.getElementById('statusLabel');
   const banner = document.getElementById('connBanner');
+
+  const text = s === 'active' ? 'Active' : (s === 'pairing' ? 'Pairing' : 'Offline');
+
   if (dot) dot.className = 'status-dot ' + (s === 'active' ? 'active' : (s === 'pairing' ? 'pairing' : 'offline'));
-  if (s === 'active') {
-    if (statusLabel) statusLabel.textContent = 'Active';
-    if (banner) banner.classList.remove('visible');
-  } else if (s === 'pairing') {
-    if (statusLabel) statusLabel.textContent = 'Pairing';
+  if (statusLabel) statusLabel.textContent = text;
+
+  if (s === 'active' || s === 'pairing') {
     if (banner) banner.classList.remove('visible');
   } else {
-    if (statusLabel) statusLabel.textContent = 'Offline';
     if (banner) banner.classList.add('visible');
   }
 }
 
 function updateBattery(pct) {
-  const el = document.getElementById('batteryPct');
-  if (!el) return;
+  const chip = document.getElementById('batteryLowChip');
+  const text = document.getElementById('batteryLowText');
+  const settingsBattery = document.getElementById('settingsBattery');
+
+  if (settingsBattery) {
+    settingsBattery.textContent = (pct !== null && pct !== undefined) ? (pct + '%') : '--';
+  }
+
   if (pct === null || pct === undefined) {
-    el.style.display = 'none';
+    if (chip) {
+      chip.classList.add('hidden');
+      chip.classList.remove('flex');
+    }
   } else {
-    el.style.display = '';
-    el.textContent = '🔋 ' + pct + '%';
+    const isLow = pct <= 20;
+    if (chip && text) {
+      text.textContent = pct + '%';
+      if (isLow) {
+        chip.classList.remove('hidden');
+        chip.classList.add('flex');
+      } else {
+        chip.classList.add('hidden');
+        chip.classList.remove('flex');
+      }
+    }
   }
 }
 
+
 function presetDisplayName(p) {
-  if (p === 'vlc') return 'VLC Player';
-  if (p === 'youtube_hotstar') return 'YT / Hotstar';
-  return 'Universal / Netflix';
+  if (p === 'vlc') return 'VLC';
+  if (p === 'youtube_hotstar') return 'YouTube / Hotstar';
+  return 'Universal';
 }
+
+let batteryPollTimer = null;
 
 function connectSocket(token) {
   if (socket) { socket.disconnect(); socket = null; }
+  if (batteryPollTimer) { clearInterval(batteryPollTimer); batteryPollTimer = null; }
   if (typeof io === 'undefined') return;
   socket = io({ auth: { token }, reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 8000 });
-  socket.on('connect', () => {});
+  socket.on('connect', () => {
+    if (batteryPollTimer) clearInterval(batteryPollTimer);
+    batteryPollTimer = setInterval(() => {
+      if (socket && socket.connected) {
+        socket.emit('get_battery');
+      }
+    }, 10000);
+  });
   socket.on('state', onServerState);
+  socket.on('battery_update', d => {
+    if (d && 'battery' in d) {
+      updateBattery(d.battery);
+    }
+  });
   socket.on('audio_state', updateAudioUI);
   socket.on('preset_changed', d => {
     if (d && d.preset && d.preset !== currentPreset) {
@@ -91,7 +125,11 @@ function connectSocket(token) {
       showToast('🎯 Auto-preset: ' + presetDisplayName(d.preset));
     }
   });
-  socket.on('disconnect', () => setStatus('offline'));
+  socket.on('disconnect', () => {
+    if (batteryPollTimer) { clearInterval(batteryPollTimer); batteryPollTimer = null; }
+    if (typeof stopDpadRepeat === 'function') stopDpadRepeat();
+    setStatus('offline');
+  });
   socket.on('connect_error', () => setStatus('offline'));
 }
 
@@ -101,6 +139,20 @@ function onServerState(data) {
     hidePinOverlay();
     if (data.screen_w) screenW = data.screen_w;
     if (data.screen_h) screenH = data.screen_h;
+
+    // Dynamically update real host telemetry in header and settings modal
+    const devName = data.device_name || data.hostname || 'Laptop';
+    const platform = data.platform ? (' · ' + data.platform) : '';
+    const fullDisplayName = devName + platform;
+
+    const headerName = document.getElementById('headerDeviceName');
+    if (headerName) headerName.textContent = fullDisplayName;
+
+    const settingsDev = document.getElementById('settingsDeviceName');
+    if (settingsDev) settingsDev.textContent = devName;
+
+    const settingsPlat = document.getElementById('settingsPlatform');
+    if (settingsPlat) settingsPlat.textContent = data.platform || 'Unknown';
 
     // The Present tab is always available (slide controls, timer, blackout).
     // Only the laser pad depends on a server-side transparent overlay.
@@ -157,6 +209,17 @@ const labels = {
 async function send(action) {
   vibrate(25);
   await socketSend('key', { action, preset: currentPreset });
+}
+
+function disconnectSession() {
+  if (socket && socket.connected) {
+    socket.disconnect();
+    setStatus('offline');
+    showToast('🔌 Disconnected');
+  } else {
+    connectSocket(localStorage.getItem('session_token') || '');
+    showToast('🔄 Reconnecting...');
+  }
 }
 
 let forgetTimeout = null;
