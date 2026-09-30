@@ -3,9 +3,11 @@
   "version": "1.0.2",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:css": "tailwindcss -i src/laptop_remote/static/css/tailwind-input.css -o src/laptop_remote/static/css/tailwind.css --minify"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.19",
     "vitest": "^5.0.1"
   }
 }
