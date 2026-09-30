@@ -57,13 +57,34 @@ function switchTab(name) {
   currentTab = name;
   vibrate(15);
 
+  const tabTitles = {
+    media: 'Media',
+    mouse: 'Trackpad',
+    keyboard: 'Control',
+    present: 'Keynote'
+  };
+  const titleEl = document.getElementById('headerTitle');
+  if (titleEl && tabTitles[name]) {
+    titleEl.textContent = tabTitles[name];
+  }
+
   document.querySelectorAll('.nav-item').forEach(btn => {
     const isActive = btn.id === 'tab-btn-' + name;
     btn.classList.toggle('active', isActive);
     btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    if (isActive) {
+      btn.classList.add('bg-surface-variant', 'text-primary', 'shadow-[0_2px_8px_rgba(0,0,0,0.35)]');
+      btn.classList.remove('text-on-surface-variant');
+    } else {
+      btn.classList.remove('bg-surface-variant', 'text-primary', 'shadow-[0_2px_8px_rgba(0,0,0,0.35)]');
+      btn.classList.add('text-on-surface-variant');
+    }
   });
+
   document.querySelectorAll('.tab-panel').forEach(panel => {
-    panel.classList.toggle('active', panel.id === 'tab-' + name);
+    const isActive = panel.id === 'tab-' + name;
+    panel.classList.toggle('active', isActive);
+    panel.classList.toggle('hidden', !isActive);
   });
 }
 

@@ -125,7 +125,11 @@ function updateAudioUI(audio) {
   volumeLevel = vol;
   const volumeSlider = document.getElementById('volumeSlider');
   const volumePctText = document.getElementById('volumePct');
+  const volFill = document.getElementById('volume-fill');
+  const volThumb = document.getElementById('volume-thumb');
   if (volumeSlider) volumeSlider.value = vol;
+  if (volFill) volFill.style.width = vol + '%';
+  if (volThumb) volThumb.style.left = `calc(${vol}% - 12px)`;
   if (volumePctText) volumePctText.textContent = (audio.muted ? '🔇 ' : '') + vol + '%';
   localStorage.setItem('volume_level', vol);
 }

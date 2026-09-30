@@ -69,7 +69,7 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- TAB 1: MEDIA REMOTE (Apple HIG Cupertino Spatial Deck)         -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="tab-panel active flex flex-col w-full px-4 pb-8 gap-y-4" id="tab-media" role="tabpanel" aria-labelledby="tab-btn-media">
+    <div class="tab-panel active flex-col w-full px-4 pb-8 gap-y-4" id="tab-media" role="tabpanel" aria-labelledby="tab-btn-media">
       
       <!-- Spotlight Search Pill Trigger -->
       <div class="w-full">
@@ -215,7 +215,7 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- TAB 2: MAGIC TRACKPAD WITH TOUCH ANIMATION (Apple HIG)        -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="tab-panel hidden flex flex-col w-full px-4 gap-y-3.5 select-none" id="tab-mouse" role="tabpanel" aria-labelledby="tab-btn-mouse">
+    <div class="tab-panel flex-col w-full px-4 gap-y-3.5 select-none" id="tab-mouse" role="tabpanel" aria-labelledby="tab-btn-mouse">
       
       <!-- Status & Quick Preset Capsule -->
       <div class="flex items-center justify-between px-1">
@@ -383,7 +383,7 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- TAB 3: CONTROL, SIRI D-PAD & SHORTCUTS (Apple HIG)            -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="tab-panel hidden flex flex-col w-full px-4 pb-8 gap-y-4" id="tab-keyboard" role="tabpanel" aria-labelledby="tab-btn-keyboard">
+    <div class="tab-panel flex-col w-full px-4 pb-8 gap-y-4" id="tab-keyboard" role="tabpanel" aria-labelledby="tab-btn-keyboard">
       
       <!-- Ambient Active Target Pill -->
       <div class="flex items-center justify-between px-3.5 py-2 rounded-full bg-surface-container-high/60 backdrop-blur-xl shadow-sm border border-white/[0.04]">
@@ -601,7 +601,7 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- TAB 4: KEYNOTE PRESENTATION & VISION LASER (Apple HIG)        -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="tab-panel hidden flex flex-col w-full px-4 gap-y-3.5" id="tab-present" role="tabpanel" aria-labelledby="tab-btn-present">
+    <div class="tab-panel flex-col w-full px-4 gap-y-3.5" id="tab-present" role="tabpanel" aria-labelledby="tab-btn-present">
       
       <!-- Active Deck Header & Visual Badge -->
       <div class="bg-surface-container-high rounded-2xl p-4 shadow-sm flex items-center justify-between border border-white/[0.06]">
@@ -776,7 +776,7 @@
   </div>
 
   <!-- Apple HIG Pairing Modal Dialog -->
-  <div class="pin-overlay fixed inset-0 z-50 bg-black/75 backdrop-blur-xl flex flex-col items-center justify-center p-6 transition-all duration-300" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinTitle" style="display:none;">
+  <div class="pin-overlay fixed inset-0 z-50 bg-black/75 backdrop-blur-xl flex flex-col items-center justify-center p-6 transition-all duration-300" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
     <div class="w-full max-w-sm bg-surface-container/90 rounded-3xl p-6 shadow-2xl border border-white/[0.1] flex flex-col items-center text-center">
       <div class="w-12 h-12 rounded-2xl bg-primary/20 text-primary flex items-center justify-center mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -819,32 +819,6 @@
 
   <!-- Interactive UI micro-sync glue script -->
   <script>
-    // Tab title synchronization
-    const tabTitles = {
-      media: 'Media',
-      mouse: 'Trackpad',
-      keyboard: 'Control',
-      present: 'Keynote'
-    };
-
-    const origSwitchTab = window.switchTab;
-    window.switchTab = function(name) {
-      if (origSwitchTab) origSwitchTab(name);
-      const titleEl = document.getElementById('headerTitle');
-      if (titleEl && tabTitles[name]) {
-        titleEl.textContent = tabTitles[name];
-      }
-      // Update dock styling
-      document.querySelectorAll('.nav-item').forEach(btn => {
-        const isActive = btn.id === 'tab-btn-' + name;
-        if (isActive) {
-          btn.className = 'nav-item active flex flex-col items-center justify-center w-16 h-12 rounded-full transition-all bg-surface-variant text-primary shadow-[0_2px_8px_rgba(0,0,0,0.35)]';
-        } else {
-          btn.className = 'nav-item flex flex-col items-center justify-center w-16 h-12 rounded-full text-on-surface-variant hover:text-on-surface transition-all';
-        }
-      });
-    };
-
     // Volume slider visual track sync
     const volSlider = document.getElementById('volumeSlider');
     const volFill = document.getElementById('volume-fill');

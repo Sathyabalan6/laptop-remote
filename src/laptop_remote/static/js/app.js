@@ -4,14 +4,27 @@
 function showPinOverlay() {
   const pinOverlay = document.getElementById('pinOverlay');
   const hiddenInput = document.getElementById('pinInputHidden');
-  if (pinOverlay) pinOverlay.classList.add('visible');
-  if (hiddenInput) hiddenInput.focus();
+  if (pinOverlay) {
+    pinOverlay.style.display = 'flex';
+    void pinOverlay.offsetWidth;
+    pinOverlay.classList.add('visible');
+  }
+  if (hiddenInput) {
+    setTimeout(() => hiddenInput.focus(), 50);
+  }
 }
 
 function hidePinOverlay() {
   const pinOverlay = document.getElementById('pinOverlay');
   const hiddenInput = document.getElementById('pinInputHidden');
-  if (pinOverlay) pinOverlay.classList.remove('visible');
+  if (pinOverlay) {
+    pinOverlay.classList.remove('visible');
+    setTimeout(() => {
+      if (!pinOverlay.classList.contains('visible')) {
+        pinOverlay.style.display = 'none';
+      }
+    }, 280);
+  }
   if (hiddenInput) hiddenInput.blur();
 }
 
