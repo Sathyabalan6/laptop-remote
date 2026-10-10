@@ -261,6 +261,7 @@ const classifyGesture =
     );
 
     if (e.touches.length === 2) {
+      if (ghost) ghost.classList.remove('visible');
       const t0 = e.touches[0], t1 = e.touches[1];
 
       if (lastTouches.length < 2) {
@@ -272,12 +273,12 @@ const classifyGesture =
       const lastYAvg = (lastTouches[0].y + lastTouches[1].y) / 2;
       const dy = curYAvg - lastYAvg;
 
-      if (!hasVibratedScroll && Math.abs(dy) > 5) {
+      if (!hasVibratedScroll && Math.abs(dy) > 4) {
         vibrate(8);
         hasVibratedScroll = true;
       }
 
-      const scrollUnit = dy * SCROLL_SENSITIVITY * 1.5;
+      const scrollUnit = dy * SCROLL_SENSITIVITY * 1.8;
       pendingScrollDy += scrollUnit;
       scrollSent = true;
 

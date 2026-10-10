@@ -176,6 +176,11 @@ if IS_WINDOWS:
                 win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
             else:
                 win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
+        def _scroll_mouse(clicks):
+            if win32api and win32con:
+                win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, int(clicks * 120), 0)
+            elif pyautogui:
+                pyautogui.scroll(clicks)
         USE_NATIVE_MOUSE = True
     except ImportError:
         pass
@@ -220,6 +225,9 @@ elif IS_MAC:
             btn = kCGMouseButtonLeft if button == 'left' else kCGMouseButtonRight
             ev = CGEventCreateMouseEvent(None, ev_type, (x, y), btn)
             CGEventPost(kCGHIDEventTap, ev)
+        def _scroll_mouse(clicks):
+            if pyautogui:
+                pyautogui.scroll(clicks)
         USE_NATIVE_MOUSE = True
     except ImportError:
         pass
@@ -442,7 +450,22 @@ if not USE_NATIVE_MOUSE:
             if ok:
                 return
         if pyautogui:
-            pyautogui.mouseUp(button=button)
+            pyautogui.mouseUp(button=btn)
+
+    def _scroll_mouse(clicks):
+        if IS_WAYLAND and WAYLAND_TOOL_PATH:
+            if WAYLAND_TOOL == 'dotool':
+                ok = _run_wayland_tool(['scroll', str(clicks)])
+            else:
+                code = '0xC4' if clicks > 0 else '0xC5'
+                ok = True
+                for _ in range(abs(clicks)):
+                    if not _run_wayland_tool(['click', code]):
+                        ok = False
+            if ok:
+                return
+        if pyautogui:
+            pyautogui.scroll(clicks)
 
 class InputBackend:
     @staticmethod
@@ -460,6 +483,10 @@ class InputBackend:
     @staticmethod
     def mouse_up(button='left'):
         _mouse_up(button)
+
+    @staticmethod
+    def scroll_mouse(clicks):
+        _scroll_mouse(clicks)
 
     @staticmethod
     def send_keys(keys):
@@ -594,28 +621,23 @@ def handle_mouse_click(button='left', action='click'):
         InputBackend.click_mouse(button)
 
 
+_scroll_accumulator = 0.0
+
 def handle_mouse_scroll(dy):
-    try:
-        dy = float(dy)
-    except (ValueError, TypeError):
-        dy = 0.0
-    dy = max(-20, min(20, dy))
-    clicks = int(round(dy))
-    if clicks == 0:
-        return
-    if IS_WAYLAND and WAYLAND_TOOL_PATH:
-        # ydotool/dotool scroll via wheel buttons 4 (up) / 5 (down).
-        if WAYLAND_TOOL == 'dotool':
-            _run_wayland_tool(['scroll', str(clicks)])
-        else:
-            # ydotool button bitmask: 0xC4 = wheel up (button 4) click,
-            # 0xC5 = wheel down (button 5) click. Positive dy scrolls up.
-            code = '0xC4' if clicks > 0 else '0xC5'
-            for _ in range(abs(clicks)):
-                _run_wayland_tool(['click', code])
-        return
-    if pyautogui:
-        pyautogui.scroll(clicks)
+    global _scroll_accumulator
+    with INPUT_LOCK:
+        try:
+            dy = float(dy)
+        except (ValueError, TypeError):
+            dy = 0.0
+        if dy == 0.0:
+            return
+        _scroll_accumulator += dy
+        clicks = int(_scroll_accumulator)
+        if clicks != 0:
+            _scroll_accumulator -= clicks
+            clicks = max(-50, min(50, clicks))
+            InputBackend.scroll_mouse(clicks)
 
 def presentation_start_key():
     if IS_WINDOWS and HAS_WIN32GUI and win32gui:

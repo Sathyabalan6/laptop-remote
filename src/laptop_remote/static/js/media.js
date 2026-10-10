@@ -84,8 +84,14 @@ function focusSearchSite() {
   vibrate(15);
   send_key_action('search_focus');
   const input = document.getElementById('searchInput');
+  const clearBtn = document.getElementById('searchClearBtn');
   if (input) {
+    input.value = '/';
+    lastSearchValue = '/';
+    if (clearBtn) clearBtn.classList.add('visible');
     input.focus();
+    const len = input.value.length;
+    input.setSelectionRange(len, len);
   }
   showToast('Focused in-page search (/)');
 }
@@ -95,6 +101,8 @@ function focusAddressBar() {
   send_key_action('search_url');
   const input = document.getElementById('searchInput');
   if (input) {
+    input.value = '';
+    lastSearchValue = '';
     input.focus();
   }
   showToast('Focused URL address bar (Ctrl+L)');
@@ -139,6 +147,10 @@ function clearSearchInput() {
   const input = document.getElementById('searchInput');
   const clearBtn = document.getElementById('searchClearBtn');
   if (input) {
+    const len = lastSearchValue.length;
+    for (let k = 0; k < len; k++) {
+      send_raw_key('backspace');
+    }
     input.value = '';
     input.focus();
   }

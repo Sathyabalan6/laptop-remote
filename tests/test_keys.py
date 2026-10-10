@@ -1,12 +1,10 @@
 """Unit tests for the key-name → Linux keycode mapping."""
 
-import pytest
-
 from laptop_remote.core.keys import (
-    key_name_to_code,
-    char_to_press,
-    split_keys,
     KEYCODES,
+    char_to_press,
+    key_name_to_code,
+    split_keys,
 )
 
 
@@ -39,6 +37,13 @@ class TestKeyNameToCode:
         assert key_name_to_code("f10") == 68
         assert key_name_to_code("f11") == 87
         assert key_name_to_code("f12") == 88
+
+    def test_printscreen_keycodes(self):
+        assert key_name_to_code("printscreen") == 99
+        assert key_name_to_code("prtsc") == 99
+        assert key_name_to_code("prtscr") == 99
+        assert key_name_to_code("sysrq") == 99
+        assert key_name_to_code("print") == 99
 
     def test_case_insensitive(self):
         assert key_name_to_code("ENTER") == 28

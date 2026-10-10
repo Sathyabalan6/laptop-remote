@@ -70,12 +70,27 @@ class TestHandleMouseMoveBounds:
 
 
 class TestHandleMouseScroll:
+    def test_fractional_scroll_accumulation(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "scroll_mouse", lambda n: calls.append(n))
+        inp._scroll_accumulator = 0.0
+
+        # Small sub-integer moves accumulate across frames
+        inp.handle_mouse_scroll(0.4)
+        assert calls == []
+
+        inp.handle_mouse_scroll(0.7)
+        assert calls == [1]
+
+        inp.handle_mouse_scroll(0.9)
+        assert calls == [1, 1]
+
     def test_clamps_extreme_scroll(self, monkeypatch):
         calls = []
-        monkeypatch.setattr(inp, "pyautogui", type("P", (), {"scroll": staticmethod(lambda n: calls.append(n))})())
-        monkeypatch.setattr(inp, "IS_WAYLAND", False)
+        monkeypatch.setattr(inp.InputBackend, "scroll_mouse", lambda n: calls.append(n))
+        inp._scroll_accumulator = 0.0
         inp.handle_mouse_scroll(9999)
-        assert calls and abs(calls[0]) <= 20
+        assert calls and abs(calls[0]) <= 50
 
 
 class TestYdotoolSocketPaths:

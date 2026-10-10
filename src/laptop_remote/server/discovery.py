@@ -1,19 +1,25 @@
 """Network discovery (mDNS/Zeroconf) and active-preset change monitor."""
 
+import contextlib
+import socket as _socket
 import time
+from typing import Any
+
+from .. import __version__
+from ..core.auth import auth_lock
+from ..core.power import get_battery_percent
+from ..core.window import detect_active_preset
+from ._app import active_authorized_sids, socketio
+
+ServiceInfo: Any = None
+Zeroconf: Any = None
+HAS_ZEROCONF = False
 
 try:
     from zeroconf import ServiceInfo, Zeroconf
-    import socket as _socket
     HAS_ZEROCONF = True
 except ImportError:
-    HAS_ZEROCONF = False
-
-from ..core.auth import auth_lock
-from ..core.window import detect_active_preset
-from ..core.power import get_battery_percent
-
-from ._app import socketio, active_authorized_sids
+    pass
 
 
 def register_mdns(ip, port, ssl_enabled, mdns_url):
@@ -22,7 +28,7 @@ def register_mdns(ip, port, ssl_enabled, mdns_url):
         return None, None
     try:
         zeroconf_instance = Zeroconf()
-        desc = {'version': '1.0.4'}
+        desc = {'version': __version__}
         service_type = "_https._tcp.local." if ssl_enabled else "_http._tcp.local."
         service_info = ServiceInfo(
             service_type,
@@ -43,12 +49,10 @@ def register_mdns(ip, port, ssl_enabled, mdns_url):
 def unregister_mdns(zeroconf_instance, service_info):
     if not (HAS_ZEROCONF and zeroconf_instance):
         return
-    try:
+    with contextlib.suppress(Exception):
         print("🧹 Unregistering mDNS Zeroconf service...")
         zeroconf_instance.unregister_service(service_info)
         zeroconf_instance.close()
-    except Exception:
-        pass
 
 
 def preset_monitor():
