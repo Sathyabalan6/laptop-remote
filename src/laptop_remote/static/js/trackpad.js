@@ -158,7 +158,19 @@ const classifyGesture =
     pendingDx = 0;
     pendingDy = 0;
 
-    const ok = await socketSend('mouse_move', { dx, dy, sens: mouseSensitivity });
+    let ok = false;
+    if (typeof socket !== 'undefined' && socket && socket.connected) {
+      const buffer = new Int16Array([
+        Math.round(dx * 10),
+        Math.round(dy * 10),
+        Math.round(mouseSensitivity * 10)
+      ]);
+      socket.emit('mouse_move', buffer.buffer);
+      ok = true;
+    } else {
+      ok = await socketSend('mouse_move', { dx, dy, sens: mouseSensitivity });
+    }
+
     if (!ok) { moveThrottle = null; return; }
     if (pendingDx !== 0 || pendingDy !== 0) {
       moveThrottle = requestAnimationFrame(flushMove);
@@ -278,7 +290,8 @@ const classifyGesture =
         hasVibratedScroll = true;
       }
 
-      const scrollUnit = dy * SCROLL_SENSITIVITY * 1.8;
+      const dirMultiplier = (typeof scrollDirection !== 'undefined' && scrollDirection === 'inverted') ? -1 : 1;
+      const scrollUnit = dy * SCROLL_SENSITIVITY * 1.8 * dirMultiplier;
       pendingScrollDy += scrollUnit;
       scrollSent = true;
 

@@ -3,19 +3,25 @@
 import io
 import secrets
 
-from flask import request, jsonify, send_from_directory, Response
+from flask import Response, jsonify, request, send_from_directory
 
 import laptop_remote.core.auth as _auth
 from ..core.auth import (
-    VALID_TOKENS, auth_lock,
-    generate_pairing_pin, require_auth,
-    is_localhost, is_ip_locked, check_and_record_failed_ip, clear_failed_ip,
+    VALID_TOKENS,
+    auth_lock,
+    check_and_record_failed_ip,
+    clear_failed_ip,
+    generate_pairing_pin,
+    get_active_sessions,
+    is_ip_locked,
+    is_localhost,
+    register_session,
+    revoke_session,
 )
 from ..core.network import get_local_ip
+from ..core.overlay import SCREEN_H, SCREEN_W
 from ..core.window import detect_active_preset
-from ..core.overlay import SCREEN_W, SCREEN_H
-
-from ._app import app, socketio, active_authorized_sids, overlay
+from ._app import active_authorized_sids, app, overlay, socketio
 from .state import build_state
 
 
@@ -32,7 +38,7 @@ def _scheme_and_port():
 
 @app.route('/')
 def index():
-    return send_from_directory(app.static_folder, 'index.html')
+    return send_from_directory(app.static_folder or 'static', 'index.html')
 
 
 @app.route('/ping', methods=['GET'])
@@ -75,12 +81,15 @@ def pair():
             _auth.PAIRING_PIN = generate_pairing_pin()
             new_pin = _auth.PAIRING_PIN
             client_token = secrets.token_hex(24)
-            VALID_TOKENS.add(client_token)
 
-        print(f"\n========================================")
+        # register_session acquires auth_lock itself (non-reentrant) — call outside the lock
+        dev_name = data.get('device_name') or request.headers.get('User-Agent', 'Phone')[:32]
+        register_session(client_token, client_ip, dev_name)
+
+        print("\n========================================")
         print(f"✅ Successful pairing! Old PIN {old_pin} expired.")
         print(f"   New Pairing PIN (for next device): {new_pin}")
-        print(f"========================================\n")
+        print("========================================\n")
         return jsonify({'ok': True, 'token': client_token})
 
     allowed, lockout_secs = check_and_record_failed_ip(client_ip)
@@ -103,8 +112,16 @@ def revoke():
     if not (localhost_caller or is_auth):
         return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
+    data = request.get_json(silent=True) or {}
+    target_device_id = data.get('device_id') or data.get('token')
+
+    if target_device_id:
+        revoked = revoke_session(target_device_id)
+        return jsonify({'ok': revoked, 'message': f'Device {target_device_id} revoked.' if revoked else 'Device not found'})
+
     with auth_lock:
         VALID_TOKENS.clear()
+        _auth.PAIRED_SESSIONS.clear()
         _auth.PAIRING_PIN = generate_pairing_pin()
         new_pin = _auth.PAIRING_PIN
         sids_to_notify = list(active_authorized_sids)
@@ -113,10 +130,26 @@ def revoke():
     for sid in sids_to_notify:
         socketio.emit('state', build_state(None), to=sid)
 
-    print(f"\n========================================")
+    print("\n========================================")
     print(f"🔒 All session tokens revoked! New Pairing PIN: {new_pin}")
-    print(f"========================================\n")
+    print("========================================\n")
     return jsonify({'ok': True, 'message': 'All tokens revoked.'})
+
+
+@app.route('/devices', methods=['GET'])
+def list_devices():
+    token = request.headers.get('Authorization')
+    if token and token.startswith('Bearer '):
+        token = token[7:]
+
+    localhost_caller = is_localhost(request.remote_addr)
+    with auth_lock:
+        is_auth = bool(token and token in VALID_TOKENS)
+
+    if not (localhost_caller or is_auth):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
+
+    return jsonify({'ok': True, 'devices': get_active_sessions()})
 
 
 @app.route('/qr.png')
@@ -133,7 +166,7 @@ def qr_image():
         qr.make(fit=True)
         img = qr.make_image(fill_color='#c1c1ff', back_color='#0c0e14')
         buf = io.BytesIO()
-        img.save(buf, format='PNG')
+        img.save(buf, 'PNG')
         buf.seek(0)
         return Response(buf.getvalue(), mimetype='image/png')
     except Exception:

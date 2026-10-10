@@ -3,10 +3,12 @@ import secrets
 import threading
 import time
 from functools import wraps
-from flask import request, jsonify, session
+
+from flask import jsonify, request, session
 
 auth_lock = threading.Lock()
 VALID_TOKENS = set()
+PAIRED_SESSIONS = {}
 
 def generate_pairing_pin():
     """Always generates a fresh random 6-digit PIN (used for rotation after pairing)."""
@@ -90,6 +92,56 @@ def check_and_record_failed_ip(ip):
 def clear_failed_ip(ip):
     with ip_rate_lock:
         failed_attempts_by_ip.pop(ip, None)
+
+def register_session(token, client_ip, device_name="Phone"):
+    """Register a new active device session token with metadata."""
+    with auth_lock:
+        VALID_TOKENS.add(token)
+        PAIRED_SESSIONS[token] = {
+            'id': token[:8],
+            'device_name': device_name or 'Phone',
+            'ip': client_ip or 'unknown',
+            'created_at': time.time(),
+            'last_seen': time.time(),
+        }
+
+def touch_session(token):
+    """Update last seen timestamp for an active session."""
+    with auth_lock:
+        if token in PAIRED_SESSIONS:
+            PAIRED_SESSIONS[token]['last_seen'] = time.time()
+
+def revoke_session(token_or_id):
+    """Revoke a single session token or token ID."""
+    with auth_lock:
+        target_token = None
+        for tok, data in list(PAIRED_SESSIONS.items()):
+            if tok == token_or_id or data.get('id') == token_or_id:
+                target_token = tok
+                break
+        if target_token:
+            VALID_TOKENS.discard(target_token)
+            PAIRED_SESSIONS.pop(target_token, None)
+            return True
+        if token_or_id in VALID_TOKENS:
+            VALID_TOKENS.discard(token_or_id)
+            return True
+        return False
+
+def get_active_sessions():
+    """Return a list of currently paired and authorized device sessions."""
+    with auth_lock:
+        return [
+            {
+                'id': data.get('id', tok[:8]),
+                'device_name': data.get('device_name', 'Device'),
+                'ip': data.get('ip', 'unknown'),
+                'created_at': data.get('created_at', 0),
+                'last_seen': data.get('last_seen', 0),
+            }
+            for tok, data in PAIRED_SESSIONS.items()
+            if tok in VALID_TOKENS
+        ]
 
 def require_auth(f):
     @wraps(f)

@@ -580,15 +580,56 @@ def apply_acceleration(delta, base_speed=BASE_SPEED, accel_power=ACCEL_POWER):
         return delta * base_speed
     return sign * (ad ** accel_power) * base_speed
 
+def is_wayland_missing_daemon():
+    """Return True if running on Wayland and no input daemon or tool is active."""
+    if not IS_WAYLAND:
+        return False
+    if not WAYLAND_TOOL_PATH:
+        return True
+    return WAYLAND_TOOL == 'ydotool' and not _ydotoold_running()
+
+_screen_bounds_cache = None
+_screen_bounds_time = 0.0
+
 def get_screen_bounds():
+    global _screen_bounds_cache, _screen_bounds_time
+    now = time.time()
+    if _screen_bounds_cache is not None and (now - _screen_bounds_time) < 15.0:
+        return _screen_bounds_cache
+
+    bounds = None
     if IS_WINDOWS and USE_NATIVE_MOUSE and win32api and win32con:
         with contextlib.suppress(Exception):
             min_x = win32api.GetSystemMetrics(win32con.SM_XVIRTUALSCREEN)
             min_y = win32api.GetSystemMetrics(win32con.SM_YVIRTUALSCREEN)
             max_x = min_x + win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN) - 1
             max_y = min_y + win32api.GetSystemMetrics(win32con.SM_CYVIRTUALSCREEN) - 1
-            return min_x, min_y, max_x, max_y
-    return 0, 0, SCREEN_W - 1, SCREEN_H - 1
+            bounds = (min_x, min_y, max_x, max_y)
+    elif sys.platform.startswith('darwin'):
+        with contextlib.suppress(Exception):
+            import AppKit  # type: ignore
+            screens = AppKit.NSScreen.screens()
+            if screens:
+                min_x = int(min(s.frame().origin.x for s in screens))
+                min_y = int(min(s.frame().origin.y for s in screens))
+                max_x = int(max(s.frame().origin.x + s.frame().size.width for s in screens)) - 1
+                max_y = int(max(s.frame().origin.y + s.frame().size.height for s in screens)) - 1
+                bounds = (min_x, min_y, max_x, max_y)
+    elif sys.platform.startswith('linux') and not IS_WAYLAND:
+        with contextlib.suppress(Exception):
+            from Xlib import display
+            d = display.Display()
+            s = d.screen()
+            w, h = s.width_in_pixels, s.height_in_pixels
+            d.close()
+            bounds = (0, 0, w - 1, h - 1)
+
+    if bounds is None:
+        bounds = (0, 0, SCREEN_W - 1, SCREEN_H - 1)
+
+    _screen_bounds_cache = bounds
+    _screen_bounds_time = now
+    return bounds
 
 def handle_mouse_move(dx, dy, sens=1.0):
     global _last_cursor_pos

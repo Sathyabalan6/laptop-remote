@@ -168,3 +168,34 @@
   letter-spacing: -0.02em;
   color: var(--label-primary);
 }
+
+/* ── OLED TRUE BLACK THEME ── */
+html.theme-oled {
+  --bg-primary: #000000;
+  --bg-secondary: #000000;
+  --material-ultra-thin: #000000;
+  --material-thin: #000000;
+  --material-regular: #000000;
+  --material-thick: #050505;
+  --material-opaque: #000000;
+  --material-card: #000000;
+  --surface-container-low: #000000;
+  --surface-container: #000000;
+  --surface-container-high: #050505;
+  --separator: rgba(255, 255, 255, 0.16);
+  --separator-subtle: rgba(255, 255, 255, 0.1);
+}
+
+html.theme-oled body {
+  background-color: var(--bg-primary);
+  background-image: none;
+}
+
+html.theme-oled .bg-surface-container,
+html.theme-oled .bg-surface-container-low,
+html.theme-oled .bg-surface-container-high,
+html.theme-oled .modal-panel {
+  background-color: #000000;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+

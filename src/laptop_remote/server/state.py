@@ -4,6 +4,7 @@ import socket
 from ..core.audio import get_volume
 from ..core.auth import VALID_TOKENS, auth_lock
 from ..core.device import get_device_display_name
+from ..core.input import is_wayland_missing_daemon
 from ..core.overlay import SCREEN_H, SCREEN_W
 from ..core.power import get_battery_percent
 from ..core.window import detect_active_preset
@@ -25,4 +26,5 @@ def build_state(token):
         'battery': get_battery_percent() if is_auth else None,
         'detected_preset': detect_active_preset() if is_auth else None,
         'audio': get_volume() if is_auth else None,
+        'wayland_warning': is_wayland_missing_daemon() if is_auth else False,
     }

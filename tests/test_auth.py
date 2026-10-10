@@ -1,5 +1,6 @@
 """Unit tests for pairing PIN generation and IP rate limiting."""
 
+import secrets
 import time
 
 import pytest
@@ -72,3 +73,32 @@ class TestIpRateLimiting:
         assert auth.is_ip_locked(ip)[0] is True
         auth.clear_failed_ip(ip)
         assert auth.is_ip_locked(ip)[0] is False
+
+
+class TestMultiDeviceSessions:
+    def test_register_and_get_sessions(self):
+        sample_token = secrets.token_hex(16)
+        auth.register_session(sample_token, "192.168.1.50", "Pixel 8")
+        sessions = auth.get_active_sessions()
+        assert any(s["id"] == sample_token[:8] and s["device_name"] == "Pixel 8" for s in sessions)
+        assert sample_token in auth.VALID_TOKENS
+
+    def test_touch_session(self):
+        sample_token = secrets.token_hex(16)
+        auth.register_session(sample_token, "192.168.1.51", "iPhone 15")
+        auth.PAIRED_SESSIONS[sample_token]["last_seen"] = time.time() - 100.0
+        past_time = auth.PAIRED_SESSIONS[sample_token]["last_seen"]
+        auth.touch_session(sample_token)
+        assert auth.PAIRED_SESSIONS[sample_token]["last_seen"] > past_time
+
+    def test_revoke_session_by_id(self):
+        sample_token = secrets.token_hex(16)
+        auth.register_session(sample_token, "192.168.1.52", "iPad")
+        assert sample_token in auth.VALID_TOKENS
+        assert auth.revoke_session(sample_token[:8]) is True
+        assert sample_token not in auth.VALID_TOKENS
+        assert not any(s["id"] == sample_token[:8] for s in auth.get_active_sessions())
+
+    def test_revoke_nonexistent_returns_false(self):
+        assert auth.revoke_session("nonexistent_id_999") is False
+

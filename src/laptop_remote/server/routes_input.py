@@ -4,6 +4,7 @@ from flask import jsonify, request
 
 from ..core.audio import get_volume, set_volume, toggle_mute
 from ..core.auth import auth_lock, require_auth
+from ..core.config import load_presets, save_presets
 from ..core.input import (
     handle_key,
     handle_mouse_click,
@@ -129,3 +130,15 @@ def volume_api():
         socketio.emit('audio_state', res, to=sid)
 
     return jsonify(res)
+
+
+@app.route('/presets', methods=['GET', 'POST'])
+@require_auth
+def presets_api():
+    if request.method == 'GET':
+        return jsonify(load_presets())
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({'ok': False, 'error': 'Invalid presets JSON'}), 400
+    ok = save_presets(data)
+    return jsonify({'ok': ok})

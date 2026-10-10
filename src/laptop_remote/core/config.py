@@ -1,6 +1,7 @@
+import contextlib
+import json
 import os
 import sys
-import json
 
 def get_executable_dir():
     """Return the directory that holds user-editable data (presets.json).
@@ -35,17 +36,20 @@ def get_user_data_dir():
     d = os.path.join(base, 'laptop-remote')
     try:
         os.makedirs(d, exist_ok=True)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"⚠️ Error creating user data directory: {e}")
     return d
 
 def _resolve_presets_path():
-    exec_dir = get_executable_dir()
-    local_presets = os.path.join(exec_dir, 'presets.json')
-    if os.path.exists(local_presets):
-        return local_presets
-    if os.path.exists(os.path.join(exec_dir, 'pyproject.toml')) and os.access(exec_dir, os.W_OK):
-        return local_presets
+    try:
+        exec_dir = get_executable_dir()
+        local_presets = os.path.join(exec_dir, 'presets.json')
+        if os.path.exists(local_presets):
+            return local_presets
+        if os.path.exists(os.path.join(exec_dir, 'pyproject.toml')) and os.access(exec_dir, os.W_OK):
+            return local_presets
+    except Exception as e:
+        print(f"⚠️ Error resolving local presets: {e}")
     return os.path.join(get_user_data_dir(), 'presets.json')
 
 PRESETS_PATH = _resolve_presets_path()
@@ -121,7 +125,7 @@ def load_presets():
             print(f"⚠️ Could not write default presets: {e}")
             return DEFAULT_PRESETS
     try:
-        with open(PRESETS_PATH, 'r', encoding='utf-8') as f:
+        with open(PRESETS_PATH, encoding='utf-8') as f:
             data = json.load(f)
             updated = False
             for k, v in DEFAULT_PRESETS.items():
@@ -129,12 +133,22 @@ def load_presets():
                     data[k] = v
                     updated = True
             if updated:
-                try:
-                    with open(PRESETS_PATH, 'w', encoding='utf-8') as out_f:
-                        json.dump(data, out_f, indent=2)
-                except Exception:
-                    pass
+                with contextlib.suppress(Exception), open(PRESETS_PATH, 'w', encoding='utf-8') as out_f:
+                    json.dump(data, out_f, indent=2)
             return data
     except Exception as e:
         print(f"⚠️ Error reading presets.json: {e}, falling back to defaults.")
         return DEFAULT_PRESETS
+
+
+def save_presets(new_presets):
+    """Save user-customized presets dictionary to presets.json."""
+    if not isinstance(new_presets, dict):
+        return False
+    try:
+        with open(PRESETS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(new_presets, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"⚠️ Error saving presets.json: {e}")
+        return False

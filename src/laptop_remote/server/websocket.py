@@ -1,10 +1,13 @@
 """Socket.IO event handlers (mouse, key, text, pointer, volume, blackout)."""
 
+import contextlib
+import struct
+
 from flask import request, session
 from flask_socketio import emit
 
 from ..core.audio import set_volume, toggle_mute
-from ..core.auth import VALID_TOKENS, auth_lock, socket_require_auth
+from ..core.auth import VALID_TOKENS, auth_lock, socket_require_auth, touch_session
 from ..core.input import (
     handle_key,
     handle_mouse_click,
@@ -29,6 +32,8 @@ def on_connect(auth):
         session['token'] = token if valid else None
         if session['token']:
             active_authorized_sids.add(request.sid)  # type: ignore
+    if session.get('token'):
+        touch_session(session['token'])
     emit('state', build_state(session['token']))
 
 
@@ -72,13 +77,19 @@ def ws_volume_toggle_mute(data=None):
 @socketio.on('mouse_move')
 @socket_require_auth
 def ws_mouse_move(data):
-    data = data or {}
+    if isinstance(data, (bytes, bytearray, memoryview)) and len(data) >= 6:
+        with contextlib.suppress(Exception):
+            dx_raw, dy_raw, sens_raw = struct.unpack('<hhh', bytes(data[:6]))
+            handle_mouse_move(dx_raw / 10.0, dy_raw / 10.0, max(0.1, sens_raw / 10.0))
+            return
+
+    payload = data if isinstance(data, dict) else {}
     try:
-        dx = float(data.get('dx', 0.0))
-        dy = float(data.get('dy', 0.0))
+        dx = float(payload.get('dx', 0.0))
+        dy = float(payload.get('dy', 0.0))
     except (ValueError, TypeError):
         dx = dy = 0.0
-    handle_mouse_move(dx, dy, data.get('sens', 1.0))
+    handle_mouse_move(dx, dy, payload.get('sens', 1.0))
 
 
 @socketio.on('mouse_stop')

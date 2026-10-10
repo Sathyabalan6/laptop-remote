@@ -154,6 +154,35 @@ class TestAuthenticatedEndpoints:
         resp_after = client.post("/mouse/click", json={"button": "left"}, headers=headers)
         assert resp_after.status_code == 401
 
+    def test_single_device_revoke(self, client, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        # First query active devices
+        resp_dev = client.get("/devices", headers=headers)
+        assert resp_dev.status_code == 200
+        assert "devices" in resp_dev.get_json()
+
+        # Revoke by device token prefix
+        resp_rev = client.post("/revoke", json={"device_id": auth_token[:8]}, headers=headers)
+        assert resp_rev.status_code == 200
+
+    def test_presets_endpoints(self, client, auth_token, tmp_path, monkeypatch):
+        from laptop_remote.core import config as cfg
+        tmp_presets = tmp_path / "presets.json"
+        tmp_presets.write_text('{"universal": {"play_pause": "space"}}')
+        monkeypatch.setattr(cfg, "PRESETS_PATH", str(tmp_presets))
+
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        resp_get = client.get("/presets", headers=headers)
+        assert resp_get.status_code == 200
+        assert "universal" in resp_get.get_json()
+
+        resp_post = client.post("/presets", json={"my_profile": {"play_pause": "p"}}, headers=headers)
+        assert resp_post.status_code == 200
+        assert resp_post.get_json()["ok"] is True
+
+        resp_bad = client.post("/presets", data="not json", headers=headers)
+        assert resp_bad.status_code == 400
+
 
 class TestQRCodeEndpoint:
     def test_qr_accessible_from_localhost(self, client):

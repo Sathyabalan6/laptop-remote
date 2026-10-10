@@ -175,15 +175,20 @@
       
       <!-- Preset Picker with Subtext Card -->
       <div class="w-full flex flex-col gap-1.5">
-        <div class="w-full p-1 rounded-full bg-surface-container-low/90 backdrop-blur-xl flex items-center shadow-inner relative border border-white/[0.05]" id="segmented-group" role="radiogroup" aria-label="Media presets">
-          <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full bg-surface-variant text-primary font-semibold text-xs text-center shadow-[0_2px_8px_rgba(0,0,0,0.45)] transition-all active truncate" id="preset-btn-universal" role="radio" aria-checked="true" onclick="setPreset('universal')" type="button">
-            Universal
-          </button>
-          <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-youtube_hotstar" role="radio" aria-checked="false" onclick="setPreset('youtube_hotstar')" type="button">
-            YouTube / Hotstar
-          </button>
-          <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-vlc" role="radio" aria-checked="false" onclick="setPreset('vlc')" type="button">
-            VLC Player
+        <div class="flex items-center gap-1.5 w-full">
+          <div class="flex-1 p-1 rounded-full bg-surface-container-low/90 backdrop-blur-xl flex items-center shadow-inner relative border border-white/[0.05]" id="segmented-group" role="radiogroup" aria-label="Media presets">
+            <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full bg-surface-variant text-primary font-semibold text-xs text-center shadow-[0_2px_8px_rgba(0,0,0,0.45)] transition-all active truncate" id="preset-btn-universal" role="radio" aria-checked="true" onclick="setPreset('universal')" type="button">
+              Universal
+            </button>
+            <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-youtube_hotstar" role="radio" aria-checked="false" onclick="setPreset('youtube_hotstar')" type="button">
+              YouTube / Hotstar
+            </button>
+            <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-vlc" role="radio" aria-checked="false" onclick="setPreset('vlc')" type="button">
+              VLC Player
+            </button>
+          </div>
+          <button class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface-container-low/90 hover:bg-surface-variant active:scale-95 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all border border-white/[0.05]" onclick="openPresetsModal()" type="button" aria-label="Customize presets">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
           </button>
         </div>
         <p class="text-[11px] text-on-surface-variant px-2 text-center" id="presetDescription">Standard web media keys (Space, Arrow keys, F, M, S for intro)</p>
@@ -719,6 +724,33 @@
         </div>
       </div>
 
+      <!-- Preferences Card -->
+      <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2.5 border border-white/[0.06]">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-on-surface-variant font-medium">Appearance</span>
+          <button id="themeToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleTheme()" type="button">Dark Glass</button>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Scroll Direction</span>
+          <button id="scrollDirToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleScrollDirection()" type="button">Natural</button>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Shortcut Presets</span>
+          <button class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="openPresetsModal()" type="button">Customize</button>
+        </div>
+      </div>
+
+      <!-- Paired Devices Card -->
+      <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2 border border-white/[0.06]">
+        <div class="flex items-center justify-between text-xs font-bold text-on-surface">
+          <span>Active Devices</span>
+          <button class="text-primary text-[11px] font-semibold" onclick="loadPairedDevices()" type="button">Refresh</button>
+        </div>
+        <div id="pairedDevicesList" class="flex flex-col gap-1 max-h-32 overflow-y-auto">
+          <span class="text-xs text-on-surface-variant">Loading devices...</span>
+        </div>
+      </div>
+
       <!-- Action Buttons Row -->
       <div class="flex flex-col gap-2.5 pt-1">
         <button class="w-full h-11 min-h-[44px] rounded-xl bg-surface-variant hover:bg-surface-bright text-on-surface font-semibold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 border border-white/[0.06]" onclick="disconnectSession(); closeSettingsModal();" type="button">
@@ -729,6 +761,49 @@
         <button class="forget-device-btn w-full h-11 min-h-[44px] rounded-xl bg-error-container/20 hover:bg-error-container/40 text-error font-semibold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 border border-error/20" onclick="forgetDevice()" type="button">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
           <span>Forget This Device</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- PRESETS MANAGER MODAL DIALOG                                 -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div class="overlay-backdrop" id="presetsModalBackdrop" onclick="closePresetsModal()"></div>
+  <div class="modal-dialog-container" id="presetsModal" role="dialog" aria-modal="true" aria-labelledby="presetsModalTitle">
+    <div class="modal-panel w-full max-w-sm bg-surface-container/95 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl border border-white/[0.1] flex flex-col gap-4 max-h-[85vh]">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-secondary/20 text-secondary flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          </div>
+          <h2 class="font-headline-sm text-base font-bold text-on-surface" id="presetsModalTitle">Media Presets</h2>
+        </div>
+        <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-surface-variant hover:bg-surface-bright flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-90" onclick="closePresetsModal()" aria-label="Close presets" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Preset Selector Tabs inside Modal -->
+      <div class="w-full p-1 rounded-xl bg-surface-container-low flex items-center gap-1 border border-white/[0.05]">
+        <button class="preset-editor-tab-btn flex-1 py-1.5 px-2 rounded-lg bg-primary text-white text-xs font-semibold text-center transition-all truncate" data-preset="universal" onclick="selectEditorPreset('universal')" type="button">Universal</button>
+        <button class="preset-editor-tab-btn flex-1 py-1.5 px-2 rounded-lg bg-surface-variant text-on-surface-variant text-xs font-semibold text-center transition-all truncate" data-preset="youtube_hotstar" onclick="selectEditorPreset('youtube_hotstar')" type="button">YouTube</button>
+        <button class="preset-editor-tab-btn flex-1 py-1.5 px-2 rounded-lg bg-surface-variant text-on-surface-variant text-xs font-semibold text-center transition-all truncate" data-preset="vlc" onclick="selectEditorPreset('vlc')" type="button">VLC</button>
+      </div>
+
+      <!-- Action Hotkeys List -->
+      <div id="presetEditorList" class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-1 max-h-64 overflow-y-auto border border-white/[0.06]">
+        <span class="text-xs text-on-surface-variant">Loading hotkeys...</span>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center gap-2 pt-1">
+        <button class="flex-1 h-11 min-h-[44px] rounded-xl bg-surface-variant hover:bg-surface-bright text-on-surface font-semibold text-xs flex items-center justify-center transition-all active:scale-95 border border-white/[0.06]" onclick="resetPresetsEditor()" type="button">
+          Reset
+        </button>
+        <button class="flex-1 h-11 min-h-[44px] rounded-xl bg-primary hover:opacity-90 text-white font-semibold text-xs flex items-center justify-center transition-all active:scale-95 shadow-md" onclick="savePresetsEditor()" type="button">
+          Save Presets
         </button>
       </div>
     </div>

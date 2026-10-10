@@ -3,8 +3,6 @@
 import json
 import os
 
-import pytest
-
 from laptop_remote.core import config
 
 
@@ -44,6 +42,19 @@ class TestLoadPresets:
         presets = config.load_presets()
 
         assert presets == config.DEFAULT_PRESETS
+
+
+class TestSavePresets:
+    def test_save_presets_success(self, tmp_path, monkeypatch):
+        out_file = tmp_path / "presets.json"
+        monkeypatch.setattr(config, "PRESETS_PATH", str(out_file))
+
+        custom = {"custom_app": {"play_pause": "p"}}
+        assert config.save_presets(custom) is True
+        assert json.loads(out_file.read_text()) == custom
+
+    def test_save_presets_invalid_type(self):
+        assert config.save_presets("invalid_string") is False
 
 
 class TestExecutableDir:

@@ -7,7 +7,6 @@ Usage:
     python -m laptop_remote [--pin 123456] [--port 5000] [--ssl] [--tray]
 """
 
-import sys
 import argparse
 
 
@@ -41,6 +40,16 @@ def main(argv=None) -> int:
     except KeyboardInterrupt:
         print("\n\n👋 Server stopped by user (Ctrl+C). Goodbye!\n")
         return 0
+    except OSError as e:
+        if "Address already in use" in str(e) or getattr(e, "errno", None) in (98, 10048):
+            print(f"\n❌ Port {args.port} is already in use by another running app or instance.")
+            print(f"   Try starting on a different port:  laptop-remote --port {args.port + 1}\n")
+            return 1
+        print(f"\n❌ Network / OS error: {e}\n")
+        return 1
+    except Exception as e:
+        print(f"\n❌ Server error: {e}\n")
+        return 1
     return 0
 
 

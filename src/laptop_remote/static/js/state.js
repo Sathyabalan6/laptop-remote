@@ -8,8 +8,131 @@ let currentPreset = localStorage.getItem('player_preset') || 'universal';
 let mouseSensitivity = parseFloat(localStorage.getItem('mouse_sensitivity')) || 1.0;
 let screenW = 1920, screenH = 1080;
 let volumeLevel = parseInt(localStorage.getItem('volume_level')) || 50;
+let scrollDirection = localStorage.getItem('scroll_direction') || 'natural';
+let currentTheme = (typeof localStorage !== 'undefined' ? localStorage.getItem('app_theme') : null) || 'dark';
 // Set from server state: true only when a transparent laser overlay exists.
 let laserAvailable = false;
+
+function setTheme(theme) {
+  currentTheme = theme === 'oled' ? 'oled' : 'dark';
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('app_theme', currentTheme);
+  }
+  if (typeof document !== 'undefined' && document.documentElement) {
+    if (currentTheme === 'oled') {
+      document.documentElement.classList.add('theme-oled');
+    } else {
+      document.documentElement.classList.remove('theme-oled');
+    }
+  }
+  if (typeof document !== 'undefined') {
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+      btn.textContent = currentTheme === 'oled' ? 'OLED Black' : 'Dark Glass';
+      btn.setAttribute('data-theme', currentTheme);
+    }
+  }
+}
+
+function toggleTheme() {
+  vibrate(15);
+  setTheme(currentTheme === 'dark' ? 'oled' : 'dark');
+  if (typeof showToast === 'function') {
+    showToast('Theme: ' + (currentTheme === 'oled' ? 'OLED Pitch Black' : 'Dark Glass'));
+  }
+}
+
+if (typeof document !== 'undefined' && document.documentElement) {
+  setTheme(currentTheme);
+}
+
+function setScrollDirection(dir) {
+  scrollDirection = dir === 'inverted' ? 'inverted' : 'natural';
+  localStorage.setItem('scroll_direction', scrollDirection);
+  const btn = document.getElementById('scrollDirToggleBtn');
+  if (btn) {
+    btn.textContent = scrollDirection === 'inverted' ? 'Inverted' : 'Natural';
+    btn.setAttribute('data-dir', scrollDirection);
+  }
+}
+
+function toggleScrollDirection() {
+  vibrate(15);
+  setScrollDirection(scrollDirection === 'natural' ? 'inverted' : 'natural');
+  showToast('Scroll: ' + (scrollDirection === 'inverted' ? 'Inverted' : 'Natural'));
+}
+
+async function loadPairedDevices() {
+  const container = document.getElementById('pairedDevicesList');
+  if (!container) return;
+  const token = localStorage.getItem('session_token') || '';
+  try {
+    const res = await fetch('/devices', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    container.replaceChildren();
+    if (data.devices && data.devices.length > 0) {
+      data.devices.forEach(d => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0 text-xs';
+
+        const info = document.createElement('div');
+        info.className = 'flex flex-col min-w-0 pr-2';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'font-semibold text-on-surface truncate';
+        nameSpan.textContent = d.device_name || 'Device';
+
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'text-[10px] text-on-surface-variant font-mono';
+        metaSpan.textContent = `${d.ip} · ID: ${d.id}`;
+
+        info.appendChild(nameSpan);
+        info.appendChild(metaSpan);
+
+        const btn = document.createElement('button');
+        btn.className = 'px-2 py-1 min-h-[32px] rounded-lg bg-error-container/20 hover:bg-error-container/40 text-error text-[11px] font-semibold active:scale-95 transition-all';
+        btn.textContent = 'Revoke';
+        btn.onclick = () => revokeSingleDevice(d.id);
+
+        row.appendChild(info);
+        row.appendChild(btn);
+        container.appendChild(row);
+      });
+    } else {
+      const emptySpan = document.createElement('span');
+      emptySpan.className = 'text-xs text-on-surface-variant';
+      emptySpan.textContent = 'No other devices paired';
+      container.appendChild(emptySpan);
+    }
+  } catch {
+    const fallbackSpan = document.createElement('span');
+    fallbackSpan.className = 'text-xs text-on-surface-variant';
+    fallbackSpan.textContent = '1 active device';
+    container.replaceChildren(fallbackSpan);
+  }
+}
+
+async function revokeSingleDevice(deviceId) {
+  vibrate(20);
+  const token = localStorage.getItem('session_token') || '';
+  try {
+    const res = await fetch('/revoke', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ device_id: deviceId })
+    });
+    if (res.ok) {
+      showToast('🔒 Device revoked');
+      loadPairedDevices();
+    }
+  } catch { }
+}
 
 function setPreset(name, isAuto = false) {
   currentPreset = name;
@@ -53,7 +176,7 @@ async function requestWakeLock() {
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
     }
-  } catch (_) { }
+  } catch { }
 }
 
 requestWakeLock();
@@ -150,7 +273,7 @@ function openOverlay(overlayId, focusElId) {
 
   try {
     history.pushState({ remoteOverlay: overlayId }, '');
-  } catch (_) { }
+  } catch { }
 
   if (focusElId) {
     setTimeout(() => {
@@ -187,7 +310,7 @@ function closeOverlay(overlayId, fromPopState = false, skipHistory = false) {
   if (!fromPopState && !skipHistory && history.state && history.state.remoteOverlay === targetId) {
     try {
       history.back();
-    } catch (_) { }
+    } catch { }
   }
 }
 
@@ -207,6 +330,9 @@ function openKeysSheetWithSearch() {
 
 function openSettingsModal() {
   vibrate(15);
+  setTheme(currentTheme);
+  setScrollDirection(scrollDirection);
+  loadPairedDevices();
   openOverlay('settingsModal');
 }
 
@@ -221,6 +347,152 @@ function openHelpModal() {
 
 function closeHelpModal() {
   closeOverlay('helpModal');
+}
+
+let editorPresets = null;
+let editorActivePreset = 'universal';
+
+const PRESET_LABEL_MAP = {
+  play_pause: 'Play / Pause',
+  skip_forward: 'Skip Forward 10s',
+  skip_back: 'Skip Back 10s',
+  fullscreen: 'Fullscreen',
+  subtitles: 'Subtitles / CC',
+  theater_mode: 'Theater Mode',
+  miniplayer: 'Miniplayer',
+  speed_up: 'Speed Up',
+  speed_down: 'Speed Down',
+  skip_intro: 'Skip Intro'
+};
+
+function openPresetsModal() {
+  vibrate(15);
+  openOverlay('presetsModal');
+  loadPresetsEditor();
+}
+
+function closePresetsModal() {
+  closeOverlay('presetsModal');
+}
+
+function selectEditorPreset(presetName) {
+  vibrate(10);
+  editorActivePreset = presetName;
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('.preset-editor-tab-btn').forEach(btn => {
+      const isActive = btn.getAttribute('data-preset') === presetName;
+      btn.classList.toggle('active', isActive);
+      btn.classList.toggle('bg-primary', isActive);
+      btn.classList.toggle('text-white', isActive);
+      btn.classList.toggle('bg-surface-variant', !isActive);
+    });
+  }
+  renderPresetEditorActions();
+}
+
+async function loadPresetsEditor() {
+  const container = typeof document !== 'undefined' ? document.getElementById('presetEditorList') : null;
+  if (!container) return;
+  const token = typeof localStorage !== 'undefined' ? (localStorage.getItem('session_token') || '') : '';
+  try {
+    const res = await fetch('/presets', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      editorPresets = await res.json();
+    }
+  } catch {
+    editorPresets = null;
+  }
+  if (!editorPresets) {
+    editorPresets = {
+      universal: { play_pause: 'space', skip_forward: 'right', skip_back: 'left', fullscreen: 'f', subtitles: 'c' },
+      youtube_hotstar: { play_pause: 'space', skip_forward: 'l', skip_back: 'j', fullscreen: 'f', subtitles: 'c' },
+      vlc: { play_pause: 'space', skip_forward: 'right', skip_back: 'left', fullscreen: 'f', subtitles: 'c' }
+    };
+  }
+  renderPresetEditorActions();
+}
+
+function renderPresetEditorActions() {
+  const container = typeof document !== 'undefined' ? document.getElementById('presetEditorList') : null;
+  if (!container || !editorPresets) return;
+  container.replaceChildren();
+
+  const currentMap = editorPresets[editorActivePreset] || {};
+  const actions = Object.keys(PRESET_LABEL_MAP);
+
+  actions.forEach(action => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0 text-xs';
+
+    const label = document.createElement('span');
+    label.className = 'font-medium text-on-surface';
+    label.textContent = PRESET_LABEL_MAP[action] || action;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'w-24 px-2 py-1 rounded-lg bg-surface-variant text-primary font-mono text-xs text-center border border-white/[0.08] focus:border-primary focus:outline-none';
+    const val = currentMap[action];
+    input.value = Array.isArray(val) ? val.join('+') : (val || '');
+    input.oninput = (e) => {
+      const trimmed = e.target.value.trim();
+      if (trimmed.includes('+')) {
+        currentMap[action] = trimmed.split('+').map(k => k.trim());
+      } else {
+        currentMap[action] = trimmed;
+      }
+    };
+
+    row.appendChild(label);
+    row.appendChild(input);
+    container.appendChild(row);
+  });
+}
+
+async function savePresetsEditor() {
+  vibrate(20);
+  if (!editorPresets) return;
+  const token = typeof localStorage !== 'undefined' ? (localStorage.getItem('session_token') || '') : '';
+  try {
+    const res = await fetch('/presets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(editorPresets)
+    });
+    if (res.ok) {
+      showToast('✅ Presets saved');
+      closePresetsModal();
+    } else {
+      showToast('⚠️ Failed to save presets');
+    }
+  } catch {
+    showToast('⚠️ Network error');
+  }
+}
+
+async function resetPresetsEditor() {
+  vibrate(20);
+  const defaults = {
+    universal: {
+      play_pause: "space", skip_forward: "right", skip_back: "left", fullscreen: "f",
+      subtitles: "c", theater_mode: "t", miniplayer: "i", speed_up: ["shift", ">"], speed_down: ["shift", "<"]
+    },
+    youtube_hotstar: {
+      play_pause: "space", skip_forward: "l", skip_back: "j", fullscreen: "f",
+      subtitles: "c", theater_mode: "t", miniplayer: "i", speed_up: ["shift", ">"], speed_down: ["shift", "<"]
+    },
+    vlc: {
+      play_pause: "space", skip_forward: "right", skip_back: "left", fullscreen: "f",
+      subtitles: "c", theater_mode: "t", miniplayer: "i", speed_up: "]", speed_down: "["
+    }
+  };
+  editorPresets = defaults;
+  renderPresetEditorActions();
+  await savePresetsEditor();
 }
 
 // Popovers management (Speed popover and Present menu)
@@ -410,4 +682,27 @@ function showToast(msg) {
     t.classList.add('opacity-0');
     t.classList.remove('show');
   }, 1500);
+}
+
+if (typeof window !== 'undefined') {
+  window.openPresetsModal = openPresetsModal;
+  window.closePresetsModal = closePresetsModal;
+  window.selectEditorPreset = selectEditorPreset;
+  window.savePresetsEditor = savePresetsEditor;
+  window.resetPresetsEditor = resetPresetsEditor;
+  window.toggleTheme = toggleTheme;
+  window.setTheme = setTheme;
+  window.toggleScrollDirection = toggleScrollDirection;
+  window.revokeSingleDevice = revokeSingleDevice;
+  window.loadPairedDevices = loadPairedDevices;
+  window.openSettingsModal = openSettingsModal;
+  window.closeSettingsModal = closeSettingsModal;
+  window.openHelpModal = openHelpModal;
+  window.closeHelpModal = closeHelpModal;
+  window.openKeysSheet = openKeysSheet;
+  window.closeKeysSheet = closeKeysSheet;
+  window.openKeysSheetWithSearch = openKeysSheetWithSearch;
+  window.setPreset = setPreset;
+  window.toggleSpeedPopover = toggleSpeedPopover;
+  window.togglePresentMenu = togglePresentMenu;
 }

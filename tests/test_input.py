@@ -338,3 +338,24 @@ class TestHandleMouseClickActions:
         assert calls == [("down", "left"), ("up", "left")]
 
 
+class TestScreenBoundsAndWayland:
+    def test_get_screen_bounds_structure(self):
+        min_x, min_y, max_x, max_y = inp.get_screen_bounds()
+        assert isinstance(min_x, int)
+        assert isinstance(min_y, int)
+        assert isinstance(max_x, int)
+        assert isinstance(max_y, int)
+        assert max_x > min_x
+        assert max_y > min_y
+
+    def test_is_wayland_missing_daemon_not_wayland(self, monkeypatch):
+        monkeypatch.setattr(inp, "IS_WAYLAND", False)
+        assert inp.is_wayland_missing_daemon() is False
+
+    def test_is_wayland_missing_daemon_without_tool(self, monkeypatch):
+        monkeypatch.setattr(inp, "IS_WAYLAND", True)
+        monkeypatch.setattr(inp, "WAYLAND_TOOL_PATH", None)
+        assert inp.is_wayland_missing_daemon() is True
+
+
+
