@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import re
 import time
+import threading
 
 IS_WINDOWS = sys.platform.startswith('win')
 IS_MAC = sys.platform.startswith('darwin')
@@ -13,6 +14,7 @@ try:
 except Exception:
     pyautogui = None
 
+audio_lock = threading.Lock()
 _last_known_volume = 50
 _last_known_muted = False
 
@@ -20,9 +22,9 @@ _last_known_muted = False
 def _get_volume_windows():
     global _last_known_volume, _last_known_muted
     try:
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
         from ctypes import cast, POINTER
-        from comtypes import CLSCTX_ALL
+        from comtypes import CLSCTX_ALL  # type: ignore
 
         devices = AudioUtilities.GetSpeakers()
         interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
@@ -44,9 +46,9 @@ def _set_volume_windows(pct):
     except (ValueError, TypeError):
         pct = _last_known_volume
     try:
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
         from ctypes import cast, POINTER
-        from comtypes import CLSCTX_ALL
+        from comtypes import CLSCTX_ALL  # type: ignore
 
         devices = AudioUtilities.GetSpeakers()
         interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
@@ -63,9 +65,9 @@ def _set_volume_windows(pct):
 def _toggle_mute_windows():
     global _last_known_muted
     try:
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
         from ctypes import cast, POINTER
-        from comtypes import CLSCTX_ALL
+        from comtypes import CLSCTX_ALL  # type: ignore
 
         devices = AudioUtilities.GetSpeakers()
         interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
@@ -223,66 +225,95 @@ def _toggle_mute_mac():
 
 def get_volume():
     """Returns a dict {'volume': int (0-100), 'muted': bool} representing current OS audio state."""
-    if IS_WINDOWS:
-        res = _get_volume_windows()
-        if res is not None:
-            return res
-    elif IS_LINUX:
-        res = _get_volume_linux()
-        if res is not None:
-            return res
-    elif IS_MAC:
-        res = _get_volume_mac()
-        if res is not None:
-            return res
+    with audio_lock:
+        if IS_WINDOWS:
+            res = _get_volume_windows()
+            if res is not None:
+                return res
+        elif IS_LINUX:
+            res = _get_volume_linux()
+            if res is not None:
+                return res
+        elif IS_MAC:
+            res = _get_volume_mac()
+            if res is not None:
+                return res
 
-    return {'volume': _last_known_volume, 'muted': _last_known_muted}
+        return {'volume': _last_known_volume, 'muted': _last_known_muted}
 
 
 def set_volume(pct):
     """Set system master volume to pct (0-100)."""
     global _last_known_volume
-    try:
-        pct = max(0, min(100, int(round(float(pct)))))
-    except (ValueError, TypeError):
-        pct = _last_known_volume
-    success = False
-    if IS_WINDOWS:
-        success = _set_volume_windows(pct)
-    elif IS_LINUX:
-        success = _set_volume_linux(pct)
-    elif IS_MAC:
-        success = _set_volume_mac(pct)
+    with audio_lock:
+        try:
+            pct = max(0, min(100, int(round(float(pct)))))
+        except (ValueError, TypeError):
+            pct = _last_known_volume
+        success = False
+        if IS_WINDOWS:
+            success = _set_volume_windows(pct)
+        elif IS_LINUX:
+            success = _set_volume_linux(pct)
+        elif IS_MAC:
+            success = _set_volume_mac(pct)
 
-    if not success and pyautogui:
-        # Fallback to relative keypresses
-        diff = pct - _last_known_volume
-        steps = int(round(abs(diff) / 5))
-        key = 'volumeup' if diff > 0 else 'volumedown'
-        for _ in range(steps):
-            pyautogui.press(key)
-        success = True
+        if not success and pyautogui:
+            # Fallback to relative keypresses
+            diff = pct - _last_known_volume
+            steps = int(round(abs(diff) / 5))
+            key = 'volumeup' if diff > 0 else 'volumedown'
+            for _ in range(steps):
+                pyautogui.press(key)
+            success = True
 
-    _last_known_volume = pct
-    info = get_volume()
-    info['ok'] = success
-    return info
+        _last_known_volume = pct
+        info = {'volume': _last_known_volume, 'muted': _last_known_muted}
+        if IS_WINDOWS:
+            live = _get_volume_windows()
+            if live:
+                info = live
+        elif IS_LINUX:
+            live = _get_volume_linux()
+            if live:
+                info = live
+        elif IS_MAC:
+            live = _get_volume_mac()
+            if live:
+                info = live
+        info['ok'] = success
+        return info
 
 
 def toggle_mute():
     """Toggle system mute state."""
-    success = False
-    if IS_WINDOWS:
-        success = _toggle_mute_windows()
-    elif IS_LINUX:
-        success = _toggle_mute_linux()
-    elif IS_MAC:
-        success = _toggle_mute_mac()
+    global _last_known_muted
+    with audio_lock:
+        success = False
+        if IS_WINDOWS:
+            success = _toggle_mute_windows()
+        elif IS_LINUX:
+            success = _toggle_mute_linux()
+        elif IS_MAC:
+            success = _toggle_mute_mac()
 
-    if not success and pyautogui:
-        pyautogui.press('volumemute')
-        success = True
+        if not success and pyautogui:
+            pyautogui.press('volumemute')
+            _last_known_muted = not _last_known_muted
+            success = True
 
-    info = get_volume()
-    info['ok'] = success
-    return info
+        info = {'volume': _last_known_volume, 'muted': _last_known_muted}
+        if IS_WINDOWS:
+            live = _get_volume_windows()
+            if live:
+                info = live
+        elif IS_LINUX:
+            live = _get_volume_linux()
+            if live:
+                info = live
+        elif IS_MAC:
+            live = _get_volume_mac()
+            if live:
+                info = live
+        info['ok'] = success
+        return info

@@ -65,7 +65,7 @@ class TestHandleMouseMoveBounds:
         monkeypatch.setattr(inp, "get_cursor_position", lambda: (100, 100))
         monkeypatch.setattr(inp, "get_screen_bounds", lambda: (0, 0, 1919, 1079))
         # Should not raise on garbage sensitivity.
-        inp.handle_mouse_move(5, 5, sens="not-a-number")
+        inp.handle_mouse_move(5, 5, sens="not-a-number")  # type: ignore
         assert "x" in captured
 
 
@@ -101,7 +101,7 @@ class TestYdotoolSocketPaths:
     def test_always_includes_tmp_fallback(self, monkeypatch):
         monkeypatch.delenv("YDOTOOL_SOCKET", raising=False)
         monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
-        assert "/tmp/.ydotool_socket" in inp._ydotool_socket_paths()
+        assert "/tmp/.ydotool_socket" in inp._ydotool_socket_paths()  # noqa: S108
 
     @UNIX_SOCKET
     def test_detects_datagram_socket(self, monkeypatch):
@@ -128,7 +128,7 @@ class TestYdotoolSocketPaths:
         monkeypatch.setenv("YDOTOOL_SOCKET", str(tmp_path / "missing.sock"))
         monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
         # Also ensure the /tmp fallback doesn't accidentally exist.
-        assert inp._ydotoold_socket() in (None, "/tmp/.ydotool_socket")
+        assert inp._ydotoold_socket() in (None, "/tmp/.ydotool_socket")  # noqa: S108
 
 
 @LINUX_ONLY
@@ -286,4 +286,40 @@ class TestSemanticActionsAndRateLimiting:
         assert r2.get("ok") is True
         assert "throttled" not in r2
         assert len(sent) == 2
+
+    def test_macro_copy_paste_app_switch(self, monkeypatch):
+        sent = []
+        monkeypatch.setattr(inp.InputBackend, "send_keys", lambda k: sent.append(k))
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+
+        r_copy = inp.handle_key("copy")
+        assert r_copy.get("ok") is True
+        assert sent[-1] == (["command", "c"] if inp.IS_MAC else ["ctrl", "c"])
+
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+        r_paste = inp.handle_key("paste")
+        assert r_paste.get("ok") is True
+        assert sent[-1] == (["command", "v"] if inp.IS_MAC else ["ctrl", "v"])
+
+        monkeypatch.setattr(inp, "_last_key_press_time", 0.0)
+        r_app = inp.handle_key("app_switch")
+        assert r_app.get("ok") is True
+        assert sent[-1] == (["command", "tab"] if inp.IS_MAC else ["alt", "tab"])
+
+
+class TestHandleMouseClickActions:
+    def test_mouse_click_default(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "click_mouse", lambda b: calls.append(("click", b)))
+        inp.handle_mouse_click("left")
+        assert calls == [("click", "left")]
+
+    def test_mouse_down_and_up_for_drag_lock(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "mouse_down", lambda b: calls.append(("down", b)))
+        monkeypatch.setattr(inp.InputBackend, "mouse_up", lambda b: calls.append(("up", b)))
+        inp.handle_mouse_click("left", action="down")
+        inp.handle_mouse_click("left", action="up")
+        assert calls == [("down", "left"), ("up", "left")]
+
 

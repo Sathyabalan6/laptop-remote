@@ -91,6 +91,23 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
+#btnDragLock.active {
+  background-color: rgba(255, 159, 10, 0.22);
+  border-color: rgba(255, 159, 10, 0.6);
+  color: #ff9f0a;
+  box-shadow: 0 0 12px rgba(255, 159, 10, 0.35);
+}
+
+#btnDragLock.active svg {
+  color: #ff9f0a;
+}
+
+.speed-preset-pill.active {
+  background-color: #5e5ce6;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(94, 92, 230, 0.4);
+}
+
 .toast.show {
   opacity: 1 !important;
   transform: translateY(0) !important;

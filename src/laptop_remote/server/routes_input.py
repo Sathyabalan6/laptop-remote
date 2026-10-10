@@ -1,16 +1,18 @@
 """REST endpoints for mouse, keyboard, text, pointer, and volume control."""
 
-from flask import request, jsonify
+from flask import jsonify, request
 
-from ..core.auth import require_auth, auth_lock
 from ..core.audio import get_volume, set_volume, toggle_mute
-from ..core.overlay import SCREEN_W, SCREEN_H
+from ..core.auth import auth_lock, require_auth
 from ..core.input import (
-    handle_mouse_move, handle_mouse_click,
-    handle_mouse_scroll, handle_text_input, handle_key,
+    handle_key,
+    handle_mouse_click,
+    handle_mouse_move,
+    handle_mouse_scroll,
+    handle_text_input,
 )
-
-from ._app import app, socketio, overlay, active_authorized_sids
+from ..core.overlay import SCREEN_H, SCREEN_W
+from ._app import active_authorized_sids, app, overlay, socketio
 
 
 @app.route('/key', methods=['POST'])
@@ -54,7 +56,7 @@ def mouse_stop():
 @require_auth
 def mouse_click():
     data = request.get_json(silent=True) or {}
-    handle_mouse_click(data.get('button', 'left'))
+    handle_mouse_click(data.get('button', 'left'), data.get('action', 'click'))
     return jsonify({'ok': True})
 
 

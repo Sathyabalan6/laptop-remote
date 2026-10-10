@@ -13,6 +13,10 @@ describe('applyInertia', () => {
   it('preserves the direction of velocity', () => {
     expect(applyInertia(-10, 0.82)).toBeCloseTo(-8.2);
   });
+
+  it('returns 0 when initial velocity is 0', () => {
+    expect(applyInertia(0, 0.82)).toBe(0);
+  });
 });
 
 describe('clampSensitivity', () => {
@@ -26,6 +30,12 @@ describe('clampSensitivity', () => {
 
   it('keeps values inside the range unchanged', () => {
     expect(clampSensitivity(1.2)).toBe(1.2);
+  });
+
+  it('respects custom min and max parameters', () => {
+    expect(clampSensitivity(0.2, 0.1, 2.0)).toBe(0.2);
+    expect(clampSensitivity(0.05, 0.1, 2.0)).toBe(0.1);
+    expect(clampSensitivity(3.0, 0.1, 2.0)).toBe(2.0);
   });
 });
 
@@ -57,10 +67,15 @@ describe('classifyGesture', () => {
 
     expect(classifyGesture(previous, current, 1)).toBe('tap');
   });
+
   it('treats movement at the threshold as tap', () => {
     const previous = [{ x: 100, y: 100 }];
     const current = [{ x: 102, y: 100 }];
 
     expect(classifyGesture(previous, current, 2)).toBe('tap');
+  });
+
+  it('handles empty touch lists gracefully', () => {
+    expect(classifyGesture([], [])).toBe('tap');
   });
 });

@@ -31,10 +31,48 @@ const PRESET_ACTIONS = {
   vlc: ['audio_track_cycle', 'speed_up', 'speed_down']
 };
 
+let currentPlaybackSpeed = '1.0';
+
+function setPlaybackSpeed(target) {
+  vibrate(15);
+  currentPlaybackSpeed = target;
+  document.querySelectorAll('.speed-preset-pill').forEach(pill => {
+    const isActive = pill.getAttribute('data-speed') === target;
+    pill.classList.toggle('active', isActive);
+    pill.classList.toggle('bg-secondary-container', isActive);
+    pill.classList.toggle('text-on-secondary-container', isActive);
+  });
+  if (target === '0.75' || target === '0.5') {
+    send_key_action('speed_down');
+  } else if (target === '1.25' || target === '1.5' || target === '2.0') {
+    send_key_action('speed_up');
+  }
+  if (typeof showToast === 'function') {
+    showToast('Playback Speed: ' + target + 'x');
+  }
+}
+
+function stepVolume(delta) {
+  vibrate(12);
+  const newVol = Math.max(0, Math.min(100, volumeLevel + delta));
+  volumeLevel = newVol;
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumePctText = document.getElementById('volumePct');
+  const volFill = document.getElementById('volume-fill');
+  const volThumb = document.getElementById('volume-thumb');
+  if (volumeSlider) volumeSlider.value = newVol;
+  if (volFill) volFill.style.width = newVol + '%';
+  if (volThumb) volThumb.style.left = `calc(${newVol}% - 12px)`;
+  if (volumePctText) volumePctText.textContent = newVol + '%';
+  localStorage.setItem('volume_level', newVol);
+  socketSend('volume_set', { volume: newVol });
+}
+
 function updatePresetShortcuts(preset) {
   const allowed = PRESET_ACTIONS[preset] || PRESET_ACTIONS.universal;
-  document.querySelectorAll('#mediaShortcutGrid .shortcut-tile').forEach(tile => {
+  document.querySelectorAll('#mediaShortcutGrid .shortcut-tile, .shortcut-tile').forEach(tile => {
     const act = tile.getAttribute('data-action');
+    if (!act) return;
     const isAllowed = allowed.includes(act);
     tile.classList.toggle('opacity-30', !isAllowed);
     tile.classList.toggle('pointer-events-none', !isAllowed);

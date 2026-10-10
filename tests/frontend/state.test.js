@@ -85,6 +85,7 @@ function loadState() {
   vm.runInContext(
     stateSource + `
       this.setPreset = setPreset;
+      this.getTabOrder = getTabOrder;
     `,
     context
   );
@@ -141,5 +142,12 @@ describe('setPreset', () => {
 
     expect(context.navigator.vibrate).not.toHaveBeenCalled();
     expect(toastCalls).toHaveLength(0);
+  });
+});
+
+describe('getTabOrder', () => {
+  it('returns all 4 bottom tabs in canonical order', () => {
+    const { context } = loadState();
+    expect(context.getTabOrder()).toEqual(['mouse', 'media', 'remote', 'present']);
   });
 });

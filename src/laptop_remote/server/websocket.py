@@ -3,15 +3,17 @@
 from flask import request, session
 from flask_socketio import emit
 
-from ..core.auth import VALID_TOKENS, auth_lock, socket_require_auth
 from ..core.audio import set_volume, toggle_mute
-from ..core.overlay import SCREEN_W, SCREEN_H
+from ..core.auth import VALID_TOKENS, auth_lock, socket_require_auth
 from ..core.input import (
-    handle_mouse_move, handle_mouse_click,
-    handle_mouse_scroll, handle_text_input, handle_key,
+    handle_key,
+    handle_mouse_click,
+    handle_mouse_move,
+    handle_mouse_scroll,
+    handle_text_input,
 )
-
-from ._app import socketio, overlay, active_authorized_sids
+from ..core.overlay import SCREEN_H, SCREEN_W
+from ._app import active_authorized_sids, overlay, socketio
 from .state import build_state
 
 
@@ -26,7 +28,7 @@ def on_connect(auth):
         valid = bool(token and token in VALID_TOKENS)
         session['token'] = token if valid else None
         if session['token']:
-            active_authorized_sids.add(request.sid)
+            active_authorized_sids.add(request.sid)  # type: ignore
     emit('state', build_state(session['token']))
 
 
@@ -35,7 +37,7 @@ def on_disconnect():
     token = session.get('token')
     if token:
         with auth_lock:
-            active_authorized_sids.discard(request.sid)
+            active_authorized_sids.discard(request.sid)  # type: ignore
 
 
 @socketio.on('get_battery')
@@ -88,7 +90,8 @@ def ws_mouse_stop(data=None):
 @socketio.on('mouse_click')
 @socket_require_auth
 def ws_mouse_click(data):
-    handle_mouse_click((data or {}).get('button', 'left'))
+    data = data or {}
+    handle_mouse_click(data.get('button', 'left'), data.get('action', 'click'))
 
 
 @socketio.on('mouse_scroll')

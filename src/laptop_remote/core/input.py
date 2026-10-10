@@ -1,22 +1,26 @@
-import sys
+import contextlib
+import importlib.util
 import os
-import time
 import shutil
 import subprocess
+import sys
+import threading
+import time
+from typing import Any
+
+from .config import load_presets
+from .keys import char_to_press, key_name_to_code, split_keys
 
 # Prevent mouseinfo/pymsgbox sys.exit when python3-tk is not installed on Linux
-if 'tkinter' not in sys.modules:
-    try:
-        import tkinter
-    except ImportError:
-        import types
-        mock_tk = types.ModuleType('tkinter')
-        mock_tk.TkVersion = 8.6
-        mock_tk.TclVersion = 8.6
-        mock_tk.ttk = types.ModuleType('ttk')
-        mock_tk.Event = object
-        sys.modules['tkinter'] = mock_tk
-        sys.modules['tkinter.ttk'] = mock_tk.ttk
+if 'tkinter' not in sys.modules and importlib.util.find_spec('tkinter') is None:
+    import types
+    mock_tk = types.ModuleType('tkinter')
+    mock_tk.TkVersion = 8.6  # type: ignore
+    mock_tk.TclVersion = 8.6  # type: ignore
+    mock_tk.ttk = types.ModuleType('ttk')  # type: ignore
+    mock_tk.Event = object  # type: ignore
+    sys.modules['tkinter'] = mock_tk
+    sys.modules['tkinter.ttk'] = mock_tk.ttk
 
 try:
     import pyautogui
@@ -26,8 +30,6 @@ try:
     pyautogui.MINIMUM_SLEEP = 0
 except (Exception, SystemExit):
     pyautogui = None
-from .config import load_presets
-from .keys import key_name_to_code, char_to_press, split_keys
 
 IS_WINDOWS = sys.platform.startswith('win')
 IS_MAC = sys.platform.startswith('darwin')
@@ -68,7 +70,7 @@ def _ydotool_socket_paths():
     xdg = os.environ.get('XDG_RUNTIME_DIR')
     if xdg:
         paths.append(os.path.join(xdg, '.ydotool_socket'))
-    paths.append('/tmp/.ydotool_socket')
+    paths.append('/tmp/.ydotool_socket')  # noqa: S108
     return paths
 
 
@@ -84,14 +86,12 @@ def _ydotoold_socket():
         if not os.path.exists(path):
             continue
         for sock_type in (_socket.SOCK_DGRAM, _socket.SOCK_STREAM):
-            try:
+            with contextlib.suppress(Exception):
                 s = _socket.socket(_socket.AF_UNIX, sock_type)
                 s.settimeout(0.3)
                 s.connect(path)
                 s.close()
                 return path
-            except Exception:
-                continue
     return None
 
 
@@ -112,7 +112,7 @@ def _ensure_wayland_daemon():
         return True
     # Prefer the systemd user service if it exists (Ubuntu/Debian package sets
     # one up with Restart=always). Fall back to spawning the daemon directly.
-    try:
+    with contextlib.suppress(Exception):
         probe = subprocess.run(
             ['systemctl', '--user', 'start', 'ydotool.service'],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5.0,
@@ -122,12 +122,10 @@ def _ensure_wayland_daemon():
                 time.sleep(0.1)
                 if _ydotoold_running():
                     return True
-    except Exception:
-        pass
     daemon = shutil.which('ydotoold')
     if not daemon:
         return False
-    try:
+    with contextlib.suppress(Exception):
         subprocess.Popen(
             [daemon],
             stdout=subprocess.DEVNULL,
@@ -139,18 +137,21 @@ def _ensure_wayland_daemon():
             time.sleep(0.1)
             if _ydotoold_running():
                 return True
-    except Exception:
-        pass
     return False
 
 USE_NATIVE_MOUSE = False
 HAS_WIN32GUI = False
 
+win32api: Any = None
+win32con: Any = None
+win32gui: Any = None
+
 if IS_WINDOWS:
     try:
-        import win32api, win32con
+        import win32api  # type: ignore # noqa: F401
+        import win32con  # type: ignore # noqa: F401
         try:
-            import win32gui
+            import win32gui  # type: ignore # noqa: F401
             HAS_WIN32GUI = True
         except ImportError:
             pass
@@ -165,18 +166,39 @@ if IS_WINDOWS:
                 win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
                 time.sleep(0.04)
                 win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
+        def _mouse_down(button='left'):
+            if button == 'left':
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+            else:
+                win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
+        def _mouse_up(button='left'):
+            if button == 'left':
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+            else:
+                win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
         USE_NATIVE_MOUSE = True
     except ImportError:
         pass
 
 elif IS_MAC:
     try:
-        from Quartz.CoreGraphics import CGEventCreateMouseEvent, CGEventPost, kCGEventMouseMoved, kCGEventLeftMouseDown, kCGEventLeftMouseUp, kCGEventRightMouseDown, kCGEventRightMouseUp, kCGMouseButtonLeft, kCGMouseButtonRight, kCGHIDEventTap
+        from Quartz.CoreGraphics import (  # type: ignore # noqa: F401
+            CGEventCreateMouseEvent,
+            CGEventPost,
+            kCGEventLeftMouseDown,
+            kCGEventLeftMouseUp,
+            kCGEventMouseMoved,
+            kCGEventRightMouseDown,
+            kCGEventRightMouseUp,
+            kCGHIDEventTap,
+            kCGMouseButtonLeft,
+            kCGMouseButtonRight,
+        )
         def _move_mouse(x, y):
             event = CGEventCreateMouseEvent(None, kCGEventMouseMoved, (x, y), kCGMouseButtonLeft)
             CGEventPost(kCGHIDEventTap, event)
         def _click_mouse(button='left'):
-            x, y = pyautogui.position()
+            x, y = pyautogui.position() if pyautogui else (SCREEN_W // 2, SCREEN_H // 2)
             if button == 'left':
                 down = CGEventCreateMouseEvent(None, kCGEventLeftMouseDown, (x, y), kCGMouseButtonLeft)
                 up = CGEventCreateMouseEvent(None, kCGEventLeftMouseUp, (x, y), kCGMouseButtonLeft)
@@ -186,6 +208,18 @@ elif IS_MAC:
             CGEventPost(kCGHIDEventTap, down)
             time.sleep(0.04)
             CGEventPost(kCGHIDEventTap, up)
+        def _mouse_down(button='left'):
+            x, y = pyautogui.position() if pyautogui else (SCREEN_W // 2, SCREEN_H // 2)
+            ev_type = kCGEventLeftMouseDown if button == 'left' else kCGEventRightMouseDown
+            btn = kCGMouseButtonLeft if button == 'left' else kCGMouseButtonRight
+            ev = CGEventCreateMouseEvent(None, ev_type, (x, y), btn)
+            CGEventPost(kCGHIDEventTap, ev)
+        def _mouse_up(button='left'):
+            x, y = pyautogui.position() if pyautogui else (SCREEN_W // 2, SCREEN_H // 2)
+            ev_type = kCGEventLeftMouseUp if button == 'left' else kCGEventRightMouseUp
+            btn = kCGMouseButtonLeft if button == 'left' else kCGMouseButtonRight
+            ev = CGEventCreateMouseEvent(None, ev_type, (x, y), btn)
+            CGEventPost(kCGHIDEventTap, ev)
         USE_NATIVE_MOUSE = True
     except ImportError:
         pass
@@ -345,9 +379,8 @@ def _wayland_send_keys(keys):
     # Modifier + key hotkey (e.g. ['ctrl','l']).
     mods = [k for k, is_mod in items if is_mod]
     non_mods = [k for k, is_mod in items if not is_mod]
-    if mods and len(non_mods) == 1:
-        if _wayland_hotkey(mods, non_mods[0]):
-            return
+    if mods and len(non_mods) == 1 and _wayland_hotkey(mods, non_mods[0]):
+        return
 
     # Fallback: press each key sequentially.
     for name, _ in items:
@@ -387,6 +420,30 @@ if not USE_NATIVE_MOUSE:
         if pyautogui:
             pyautogui.click(button=button)
 
+    def _mouse_down(button='left'):
+        btn = {'left': 'left', 'right': 'right', 'middle': 'middle'}.get(button, 'left')
+        if IS_WAYLAND and WAYLAND_TOOL_PATH:
+            if WAYLAND_TOOL == 'dotool':
+                ok = _run_wayland_tool(['keydown', btn])
+            else:  # ydotool 0x40 = down
+                ok = _run_wayland_tool(['click', {'left': '0x40', 'right': '0x41', 'middle': '0x42'}.get(btn, '0x40')])
+            if ok:
+                return
+        if pyautogui:
+            pyautogui.mouseDown(button=button)
+
+    def _mouse_up(button='left'):
+        btn = {'left': 'left', 'right': 'right', 'middle': 'middle'}.get(button, 'left')
+        if IS_WAYLAND and WAYLAND_TOOL_PATH:
+            if WAYLAND_TOOL == 'dotool':
+                ok = _run_wayland_tool(['keyup', btn])
+            else:  # ydotool 0x80 = up
+                ok = _run_wayland_tool(['click', {'left': '0x80', 'right': '0x81', 'middle': '0x82'}.get(btn, '0x80')])
+            if ok:
+                return
+        if pyautogui:
+            pyautogui.mouseUp(button=button)
+
 class InputBackend:
     @staticmethod
     def move_mouse(x, y):
@@ -395,6 +452,14 @@ class InputBackend:
     @staticmethod
     def click_mouse(button='left'):
         _click_mouse(button)
+
+    @staticmethod
+    def mouse_down(button='left'):
+        _mouse_down(button)
+
+    @staticmethod
+    def mouse_up(button='left'):
+        _mouse_up(button)
 
     @staticmethod
     def send_keys(keys):
@@ -450,37 +515,29 @@ if IS_WAYLAND:
         print("   Alternatively, log into an 'Xorg' session to keep using pyautogui.")
         print("═" * 60)
 
-import threading
 INPUT_LOCK = threading.Lock()
 _last_cursor_pos = (SCREEN_W // 2, SCREEN_H // 2)
 
-if IS_WINDOWS and USE_NATIVE_MOUSE:
-    def get_cursor_position():
-        global _last_cursor_pos
+def get_cursor_position():
+    global _last_cursor_pos
+    if IS_WINDOWS and USE_NATIVE_MOUSE and win32api:
         try:
             _last_cursor_pos = win32api.GetCursorPos()
             return _last_cursor_pos
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 if pyautogui:
                     _last_cursor_pos = pyautogui.position()
-            except Exception:
-                pass
             return _last_cursor_pos
-elif IS_WAYLAND:
-    # Under Wayland, pyautogui.position() reads from Xwayland and returns a
-    # stale value; the real compositor cursor position is not queryable via
-    # Xlib. Track the cursor in software from our own absolute moves instead.
-    def get_cursor_position():
+    elif IS_WAYLAND:
+        # Under Wayland, pyautogui.position() reads from Xwayland and returns a
+        # stale value; the real compositor cursor position is not queryable via
+        # Xlib. Track the cursor in software from our own absolute moves instead.
         return _last_cursor_pos
-else:
-    def get_cursor_position():
-        global _last_cursor_pos
-        try:
+    else:
+        with contextlib.suppress(Exception):
             if pyautogui:
                 _last_cursor_pos = pyautogui.position()
-        except Exception:
-            pass
         return _last_cursor_pos
 
 RESOLUTION_SCALE = max(1.0, SCREEN_W / 1920.0)
@@ -497,15 +554,13 @@ def apply_acceleration(delta, base_speed=BASE_SPEED, accel_power=ACCEL_POWER):
     return sign * (ad ** accel_power) * base_speed
 
 def get_screen_bounds():
-    if IS_WINDOWS and USE_NATIVE_MOUSE:
-        try:
+    if IS_WINDOWS and USE_NATIVE_MOUSE and win32api and win32con:
+        with contextlib.suppress(Exception):
             min_x = win32api.GetSystemMetrics(win32con.SM_XVIRTUALSCREEN)
             min_y = win32api.GetSystemMetrics(win32con.SM_YVIRTUALSCREEN)
             max_x = min_x + win32api.GetSystemMetrics(win32con.SM_CXVIRTUALSCREEN) - 1
             max_y = min_y + win32api.GetSystemMetrics(win32con.SM_CYVIRTUALSCREEN) - 1
             return min_x, min_y, max_x, max_y
-        except Exception:
-            pass
     return 0, 0, SCREEN_W - 1, SCREEN_H - 1
 
 def handle_mouse_move(dx, dy, sens=1.0):
@@ -530,8 +585,13 @@ def handle_mouse_move(dx, dy, sens=1.0):
         _last_cursor_pos = (nx, ny)
 
 
-def handle_mouse_click(button='left'):
-    InputBackend.click_mouse(button)
+def handle_mouse_click(button='left', action='click'):
+    if action == 'down':
+        InputBackend.mouse_down(button)
+    elif action == 'up':
+        InputBackend.mouse_up(button)
+    else:
+        InputBackend.click_mouse(button)
 
 
 def handle_mouse_scroll(dy):
@@ -558,14 +618,11 @@ def handle_mouse_scroll(dy):
         pyautogui.scroll(clicks)
 
 def presentation_start_key():
-    if IS_WINDOWS and HAS_WIN32GUI:
-        try:
-            import win32gui
+    if IS_WINDOWS and HAS_WIN32GUI and win32gui:
+        with contextlib.suppress(Exception):
             title = win32gui.GetWindowText(win32gui.GetForegroundWindow()).lower()
             if any(k in title for k in ('slides', 'canva', 'prezi', 'docs.google')):
                 return ['ctrl', 'f5']
-        except Exception:
-            pass
     return ['f5']
 
 def _log_action(msg):
@@ -575,10 +632,8 @@ def _log_action(msg):
     """
     if os.environ.get('LAPTOP_REMOTE_QUIET'):
         return
-    try:
+    with contextlib.suppress(Exception):
         print(f"[input] {msg}", flush=True)
-    except Exception:
-        pass
 
 
 def handle_text_input(text, press_enter=False):
@@ -600,18 +655,16 @@ def handle_text_input(text, press_enter=False):
                 return {'ok': True}
 
             typed = False
-            try:
+            with contextlib.suppress(Exception):
                 import pyperclip
                 pyperclip.copy(text)
                 if pyautogui:
                     pyautogui.hotkey('ctrl', 'v')
                     typed = True
-            except Exception:
-                pass
 
             if not typed and pyautogui:
                 pyautogui.write(text, interval=0)
-            
+
             if press_enter and pyautogui:
                 pyautogui.press('enter')
             return {'ok': True}
@@ -692,6 +745,16 @@ def handle_key(action, preset='universal'):
             'prev_tab': ['command', 'option', 'left'] if IS_MAC else ['ctrl', 'shift', 'tab'],
             'browser_reload': ['command', 'r'] if IS_MAC else 'f5',
             'reload': ['command', 'r'] if IS_MAC else 'f5',
+            'copy': [mod_cmd, 'c'],
+            'paste': [mod_cmd, 'v'],
+            'undo': [mod_cmd, 'z'],
+            'redo': ['command', 'shift', 'z'] if IS_MAC else ['ctrl', 'y'],
+            'select_all': [mod_cmd, 'a'],
+            'app_switch': ['command', 'tab'] if IS_MAC else ['alt', 'tab'],
+            'screenshot': ['command', 'shift', '4'] if IS_MAC else (['win', 'shift', 's'] if IS_WINDOWS else ['printscreen']),
+            'close_window': ['command', 'w'] if IS_MAC else ['alt', 'f4'],
+            'close_tab': [mod_cmd, 'w'],
+            'lock_screen': ['ctrl', 'command', 'q'] if IS_MAC else (['win', 'l'] if IS_WINDOWS else ['ctrl', 'alt', 'l']),
         }
         if action in direct_keys:
             InputBackend.send_keys(direct_keys[action])

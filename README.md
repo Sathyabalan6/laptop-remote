@@ -107,51 +107,52 @@ Linux users can also use the launcher script:
 
 ## 🛠️ Remote Deck Controls & Tabs
 
-### 🎵 1. Media Tab
-* **Active Profile**: Auto-detects or lets you manually switch between **YouTube / Hotstar**, **VLC Media Player**, and **Universal (Netflix / Prime / Web)**.
-* **Playback Controls**: Play / Pause toggle, Skip Backward 10s (`⏪`), Skip Forward 10s (`⏩`), Fast Skip 30s (`⏭️`).
-* **Navigation & View**: Previous / Next episode/track, Fullscreen toggle (`⛶`).
-* **🔊 OS-Level Audio Controls**: Volume Up, Volume Down, and Mute buttons adjust the host system volume directly — ensuring 100% reliability regardless of browser focus or scrolling.
-* **💬 Subtitles & Tracks**: One-tap toggle for closed captions, subtitle sync delay/advance (`Z` / `Shift+Z` / `G` / `H`), and multi-language audio stream cycling.
-
----
-
-### 🖱️ 2. Mouse & Trackpad Tab
-* **High-Precision Trackpad**: Move cursor with one finger. Backed by native OS cursor calls (`win32api` / macOS Quartz) with DPI-scaled acceleration curves for smooth, responsive movement.
+### 🖱️ 1. Trackpad Tab (Precision Mouse & Drag Lock)
+* **High-Precision Trackpad**: Move cursor with one finger. Backed by native OS cursor calls (`win32api` / macOS Quartz / Linux Wayland & X11) with DPI-scaled acceleration curves for smooth, responsive movement.
+* **Persistent Gesture Guide**: Quick glanceable glyphs (`👆 Move · 👇 Tap · ✌️ Scroll`) for instant discoverability.
 * **Tap-to-Click**: Tap trackpad surface for instant left-click.
-* **Physical Click Buttons**: Dedicated Left Click and Right Click pads.
+* **Tactile Click Buttons**: Dedicated Left Click and Right Click pads.
+* **🔒 Tactile Drag Lock**: Dedicated toggle to keep the left mouse button held down for effortless window moving and text highlighting without finger gymnastics.
 * **2-Finger Momentum Scroll**: Drag with two fingers to scroll web pages, documents, or timelines with natural physics decay.
-* **Sensitivity Slider**: Fine-tune cursor speed and acceleration response directly from your phone.
+* **🎛️ Sensitivity Slider**: Fine-tune cursor speed and acceleration response directly from your phone.
 
 ---
 
-### ⌨️ 3. Keyboard & Keypad Tab
-* **Live Search & Text Typing**: Type queries or URLs on your phone and press **Search** to send them to the active text field on your laptop (supports rapid clipboard pasting).
-* **Targeted Focus**:
-  * `/ Focus Search`: Focuses in-page search bars on YouTube, streaming sites, and web apps.
-  * `Ctrl+L URL Bar`: Immediately jumps focus to the browser's address bar.
-* **5-Way D-Pad & Navigation**: Dedicated `Up`, `Down`, `Left`, `Right`, and `OK` (Enter) buttons, plus `ESC`, `TAB`, `⇧ TAB`, and `Backspace`.
-* **Streaming & Quick Hotkey Grid**:
-  | Hotkey Tile | Shortcut Action | Supported Apps |
+### 🎵 2. Media Remote Tab (Playback & Audio)
+* **Context-Aware Profiles**: Auto-detects or lets you manually switch between **YouTube / Hotstar**, **VLC Media Player**, and **Universal (Netflix / Prime / Web)** with descriptive sub-labels.
+* **Tactile Playback Triad**: Play / Pause toggle, Skip Backward 10s (`⏪`), and Skip Forward 10s (`⏩`).
+* **Direct Playback Rate Pills**: Instantly select discrete playback speeds (`0.75x` · `1.0x` · `1.25x` · `1.5x` · `2.0x`).
+* **🔊 Synchronized OS Audio**: Continuous master volume slider with `-5%` / `+5%` tactile step buttons and instantaneous Mute toggle.
+* **Navigation & View**: Subtitles (`CC`), Fullscreen toggle (`⛶`), Picture-in-Picture (`Miniplayer`), Theater mode, and Audio Track language cycling (VLC).
+
+---
+
+### ⌨️ 3. Dedicated Remote & Keys Tab (D-Pad, Typing & Macros)
+* **Live Typing & Search Dispatch**: Type text or URLs on your phone and press **Send** to stream keystrokes directly to the active text field on your laptop.
+* **One-Touch Focus Pills**:
+  * `/ Find`: Jumps directly to in-page search bars.
+  * `Ctrl+L URL Bar`: Jumps focus to the browser's address bar.
+* **Tactile 5-Way D-Pad**: High-contrast directional buttons (`Up`, `Down`, `Left`, `Right`, `OK / Enter`) with hold-to-repeat support for navigating menus, spreadsheets, and media lists.
+* **Browser Navigation Keys**: Quick buttons for `◀ Back`, `Esc`, `Tab ⇥`, `⌫ Delete`, `⇧ Tab`, `Next Tab`, and `Reload`.
+* **⚡ System Productivity Macros**:
+  | Macro Button | Hotkey Action | Supported OS |
   | :--- | :--- | :--- |
-  | **Skip Intro** (`S`) | Skips intros & recaps | Netflix, Prime, Hotstar |
-  | **Theater Mode** (`T`) | Expands player view | YouTube, Twitch |
-  | **Miniplayer** (`I`) | Picture-in-Picture mode | YouTube, Browsers |
-  | **Audio Dub** (`A`/`B`) | Cycle audio language tracks | VLC, Streaming |
-  | **Speed +/-** (`>`/`<`) | Speed up / slow down playback | YouTube, VLC |
-  | **Sub Sync +/-** | Shift subtitle timing forward/back | VLC, Media Players |
-  | **Next Tab** (`Ctrl+Tab`)| Cycle forward through browser tabs | Chrome, Firefox, Edge |
-  | **Reload** (`F5`) | Refresh current web page | All Browsers |
-  | **Sub Size +/-** | Increase or decrease caption font size | Supported Players |
+  | **Copy** | `Ctrl+C` / `Cmd+C` | Windows, macOS, Linux |
+  | **Paste** | `Ctrl+V` / `Cmd+V` | Windows, macOS, Linux |
+  | **App Switch** | `Alt+Tab` / `Cmd+Tab` | Windows, macOS, Linux |
+  | **Screenshot** | `Win+Shift+S` / `Cmd+Shift+4` | Windows, macOS, Linux |
+  | **Close Window** | `Alt+F4` / `Cmd+W` | Windows, macOS, Linux |
+  | **Lock PC** | `Win+L` / `Ctrl+Cmd+Q` | Windows, macOS, Linux |
 
 ---
 
-### 📊 4. Present Tab
+### 📊 4. Presentation Deck & Laser Pointer Tab
 * **Screen Laser Pointer**: Touch and drag your finger across the pad to project a smooth, hardware-rendered red laser dot over your laptop screen in real time.
-* **Slide Navigation**: Dedicated Next Slide and Previous Slide buttons.
+* **Asymmetric Slide Navigation**: Giant **Next Slide (70%)** and **Prev Slide (30%)** buttons for confident, blind tactile control during speeches.
 * **Auto-Start Presentation**: Mapped to `F5` (or `Ctrl+F5` when Google Slides, Canva, Prezi, or Docs are active).
 * **Blackout Screen**: Blank the laptop display with one tap during presentations or breaks.
 * **Slide Counter & Live Timer**: Track slide numbers and presentation duration automatically from first touch.
+* **❓ Built-in Help Overlay**: Tap `(?)` in the top header anytime to view visual gesture cheat sheets and preset documentation.
 
 ---
 

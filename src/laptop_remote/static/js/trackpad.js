@@ -1,9 +1,33 @@
 // ─────────────────────────────────────────────────────────────────
 //  MOUSE TAB & TRACKPAD TOUCH LOGIC
 // ─────────────────────────────────────────────────────────────────
+let isDragLocked = false;
+
 async function click_btn(btn) {
   vibrate(30);
-  await socketSend('mouse_click', { button: btn });
+  if (btn === 'left' && isDragLocked) {
+    isDragLocked = false;
+    const dragBtn = document.getElementById('btnDragLock');
+    if (dragBtn) {
+      dragBtn.classList.remove('active');
+      dragBtn.setAttribute('aria-pressed', 'false');
+    }
+  }
+  await socketSend('mouse_click', { button: btn, action: 'click' });
+}
+
+async function toggleDragLock() {
+  isDragLocked = !isDragLocked;
+  vibrate(isDragLocked ? [20, 30] : 20);
+  const btn = document.getElementById('btnDragLock');
+  if (btn) {
+    btn.classList.toggle('active', isDragLocked);
+    btn.setAttribute('aria-pressed', isDragLocked ? 'true' : 'false');
+  }
+  if (typeof showToast === 'function') {
+    showToast(isDragLocked ? '🔒 Drag Lock: ON' : '🔓 Drag Lock: OFF');
+  }
+  await socketSend('mouse_click', { button: 'left', action: isDragLocked ? 'down' : 'up' });
 }
 
 async function scroll(dy) {

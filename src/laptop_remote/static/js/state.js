@@ -26,6 +26,11 @@ function setPreset(name, isAuto = false) {
     updatePresetShortcuts(name);
   }
 
+  const descEl = document.getElementById('presetDescription');
+  if (descEl && window.presetLogic?.getPresetDescription) {
+    descEl.textContent = window.presetLogic.getPresetDescription(name);
+  }
+
   if (!isAuto) {
     const displayName = window.presetLogic?.getPresetDisplayName
       ? window.presetLogic.getPresetDisplayName(name)
@@ -66,8 +71,9 @@ function switchTab(name) {
 
   const tabTitles = {
     mouse: 'Trackpad',
-    media: 'Media',
-    present: 'Present'
+    media: 'Media Remote',
+    remote: 'Remote & Keys',
+    present: 'Presentation'
   };
   const titleEl = document.getElementById('headerTitle');
   if (titleEl && tabTitles[name]) {
@@ -95,7 +101,7 @@ function switchTab(name) {
 }
 
 function getTabOrder() {
-  return ['mouse', 'media', 'present'];
+  return ['mouse', 'media', 'remote', 'present'];
 }
 
 function swipeTab(direction) {
@@ -206,6 +212,15 @@ function openSettingsModal() {
 
 function closeSettingsModal() {
   closeOverlay('settingsModal');
+}
+
+function openHelpModal() {
+  vibrate(15);
+  openOverlay('helpModal');
+}
+
+function closeHelpModal() {
+  closeOverlay('helpModal');
 }
 
 // Popovers management (Speed popover and Present menu)

@@ -43,7 +43,7 @@
         <span id="headerTitle" class="sr-only">Trackpad</span>
       </div>
 
-      <!-- Right: Low Battery chip + Keys button + Settings gear -->
+      <!-- Right: Low Battery chip + Help (?) + Settings gear -->
       <div class="flex items-center gap-2 shrink-0">
         <!-- Low Battery (Visible ONLY when <= 20%) -->
         <div id="batteryLowChip" class="hidden items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold animate-pulse" role="status" aria-label="Battery low">
@@ -51,11 +51,9 @@
           <span id="batteryLowText">15%</span>
         </div>
 
-
-        <!-- Keys & Type Trigger Button -->
-        <button id="btnHeaderKeys" class="h-11 px-3.5 min-w-[44px] min-h-[44px] rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1.5 text-xs font-semibold active:scale-95 transition-all border border-white/[0.06]" onclick="openKeysSheet()" aria-label="Open Keys and typing sheet" title="Keys & Type" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="10" y1="12" x2="14" y2="12"></line><line x1="8" y1="16" x2="16" y2="16"></line></svg>
-          <span class="text-xs font-semibold">Keys</span>
+        <!-- Quick Help & Gestures Guide Button -->
+        <button id="btnHeaderHelp" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center justify-center active:scale-95 transition-all border border-white/[0.06]" onclick="openHelpModal()" aria-label="Gestures and shortcuts help" title="Help & Guides" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         </button>
 
         <!-- Settings Gear Button -->
@@ -75,35 +73,45 @@
     </button>
   </div>
 
-  <!-- Main Multi-Tab Viewport (3 Tabs) -->
-  <main class="flex-1 flex flex-col relative w-full pt-[calc(3.5rem+env(safe-area-inset-top,0px))] pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-surface">
+  <!-- Main Multi-Tab Viewport (4 Tabs: Trackpad · Media · Remote · Present) -->
+  <main class="flex-1 flex flex-col relative w-full pt-[calc(3.5rem+env(safe-area-inset-top,0px))] pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] bg-surface">
 
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- TAB 1: PRECISION TRACKPAD                                     -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="tab-panel active flex-col w-full h-full flex-1 px-4 pb-4 gap-y-3 select-none" id="tab-mouse" role="tabpanel" aria-labelledby="tab-btn-mouse">
+    <div class="tab-panel active flex-col w-full h-full flex-1 px-4 pb-4 gap-y-2.5 select-none" id="tab-mouse" role="tabpanel" aria-labelledby="tab-btn-mouse">
       
-      <!-- Top Subheader: Speed Popover pill -->
-      <div class="flex items-center justify-end px-1 relative z-20">
-        <!-- Tracking Speed Toggle Pill -->
+      <!-- Top Subheader: Gesture Cheat Pill + Sensitivity Popover Pill -->
+      <div class="flex items-center justify-between px-1 relative z-20">
+        <!-- Persistent Gesture Cheat Indicator -->
+        <div class="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium bg-surface-container-low/70 px-3 py-1.5 rounded-full border border-white/[0.04]">
+          <span>👆 Move</span>
+          <span class="opacity-40">·</span>
+          <span>👇 Tap</span>
+          <span class="opacity-40">·</span>
+          <span>✌️ Scroll</span>
+        </div>
+
+        <!-- Sensitivity Slider Toggle Pill -->
         <div class="relative">
-          <button id="btnSpeedPill" class="h-11 px-3.5 min-h-[44px] min-w-[44px] rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all border border-white/[0.06] active:scale-95" onclick="toggleSpeedPopover(event)" type="button" aria-expanded="false" aria-controls="speedPopover" aria-label="Adjust tracking speed">
-            <span class="text-outline text-xs">Speed</span>
+          <button id="btnSpeedPill" class="h-10 px-3.5 min-h-[44px] min-w-[44px] rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all border border-white/[0.06] active:scale-95" onclick="toggleSpeedPopover(event)" type="button" aria-expanded="false" aria-controls="speedPopover" aria-label="Adjust pointer sensitivity">
+            <svg class="w-3.5 h-3.5 text-secondary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span class="text-outline text-xs font-medium">Sens</span>
             <span class="text-secondary font-bold" id="sensitivityLabel">1.0x</span>
             <svg class="text-outline/70 w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
 
-          <!-- Speed Slider Popover Card -->
+          <!-- Sensitivity Slider Popover Card -->
           <div id="speedPopover" class="absolute right-0 top-12 z-30 w-64 p-3.5 rounded-2xl bg-surface-container-high/95 backdrop-blur-2xl border border-white/[0.1] shadow-2xl flex flex-col gap-2 transition-all hidden" onclick="event.stopPropagation()">
             <div class="flex items-center justify-between text-xs font-medium text-on-surface">
-              <span>Tracking Speed</span>
+              <span>Pointer Sensitivity</span>
               <span class="text-secondary font-bold" id="speedPopoverLabel">1.0x</span>
             </div>
             <div class="slider-container relative w-full flex items-center h-10">
               <div class="w-full h-2 rounded-full bg-surface-container-highest relative overflow-hidden flex items-center">
                 <div class="h-full bg-secondary rounded-full transition-all duration-75" id="speedSliderFill" style="width: 14.3%;"></div>
               </div>
-              <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-10 z-10" id="sensitivitySlider" max="4.0" min="0.5" step="0.1" type="range" value="1.0" aria-label="Tracking sensitivity"/>
+              <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-10 z-10" id="sensitivitySlider" max="4.0" min="0.5" step="0.1" type="range" value="1.0" aria-label="Pointer sensitivity"/>
               <div class="absolute w-5 h-5 rounded-full bg-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-75 flex items-center justify-center -ml-2.5" id="speedSliderThumb" style="left: 14.3%;">
                 <div class="w-1.5 h-1.5 rounded-full bg-secondary-container"></div>
               </div>
@@ -112,7 +120,7 @@
         </div>
       </div>
 
-      <!-- Large Fluid Trackpad Surface (flex-1 min-h-[240px]) -->
+      <!-- Large Fluid Trackpad Surface -->
       <div class="relative w-full rounded-2xl flex-1 min-h-[240px] bg-gradient-to-b from-surface-container-high/90 via-surface-container/70 to-surface-container-lowest/90 backdrop-blur-2xl p-4 shadow-[0_16px_40px_rgba(0,0,0,0.45)] flex flex-col justify-between overflow-hidden cursor-crosshair touch-none border border-white/[0.08]" id="trackpad" role="application" aria-label="Touch trackpad pointer area">
         <!-- Specular Edge Glow Sheen -->
         <div class="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-on-surface/25 to-transparent pointer-events-none"></div>
@@ -133,19 +141,27 @@
         </div>
       </div>
 
-      <!-- Bottom Tactile Click Buttons Row -->
-      <div class="w-full grid grid-cols-2 gap-3 pt-0.5">
-        <button class="h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant active:bg-surface-bright shadow-md flex items-center justify-between px-4 transition-all active:scale-[0.98] outline-none border border-white/[0.06]" id="btnPrimary" onclick="click_btn('left')" type="button" aria-label="Left click">
-          <span class="font-headline-sm text-base font-semibold text-on-surface">Left Click</span>
-          <div class="w-8 h-8 rounded-full bg-secondary/15 flex items-center justify-center text-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <!-- Bottom Tactile Click Buttons Row with Drag Lock -->
+      <div class="w-full grid grid-cols-12 gap-2 pt-0.5">
+        <!-- Left Click (38%) -->
+        <button class="col-span-5 h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant active:bg-surface-bright shadow-md flex items-center justify-between px-3.5 transition-all active:scale-[0.98] outline-none border border-white/[0.06]" id="btnPrimary" onclick="click_btn('left')" type="button" aria-label="Left click">
+          <span class="font-headline-sm text-sm font-semibold text-on-surface">Left</span>
+          <div class="w-7 h-7 rounded-full bg-secondary/15 flex items-center justify-center text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           </div>
         </button>
 
-        <button class="h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant active:bg-surface-bright shadow-md flex items-center justify-between px-4 transition-all active:scale-[0.98] outline-none border border-white/[0.06]" id="btnSecondary" onclick="click_btn('right')" type="button" aria-label="Right click">
-          <span class="font-headline-sm text-base font-semibold text-on-surface">Right Click</span>
-          <div class="w-8 h-8 rounded-full bg-secondary/15 flex items-center justify-center text-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        <!-- Drag Lock Toggle (24%) -->
+        <button class="col-span-2 h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant text-on-surface flex flex-col items-center justify-center gap-1 shadow-md transition-all active:scale-95 border border-white/[0.06]" id="btnDragLock" onclick="toggleDragLock()" type="button" aria-pressed="false" aria-label="Toggle drag lock" title="Drag Lock">
+          <svg class="w-5 h-5 text-on-surface-variant" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Lock</span>
+        </button>
+
+        <!-- Right Click (38%) -->
+        <button class="col-span-5 h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant active:bg-surface-bright shadow-md flex items-center justify-between px-3.5 transition-all active:scale-[0.98] outline-none border border-white/[0.06]" id="btnSecondary" onclick="click_btn('right')" type="button" aria-label="Right click">
+          <span class="font-headline-sm text-sm font-semibold text-on-surface">Right</span>
+          <div class="w-7 h-7 rounded-full bg-secondary/15 flex items-center justify-center text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
           </div>
         </button>
       </div>
@@ -155,34 +171,26 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- TAB 2: MEDIA REMOTE                                           -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="tab-panel flex-col w-full px-4 pb-4 gap-y-4" id="tab-media" role="tabpanel" aria-labelledby="tab-btn-media">
+    <div class="tab-panel flex-col w-full px-4 pb-4 gap-y-3.5" id="tab-media" role="tabpanel" aria-labelledby="tab-btn-media">
       
-      <!-- Search & URL Dispatch Trigger Pill -->
-      <div class="w-full">
-        <button class="w-full h-12 px-4 rounded-full bg-surface-container-high/80 hover:bg-surface-container-high border border-white/[0.06] flex items-center justify-between shadow-sm transition-all active:scale-[0.98] group" type="button" onclick="openKeysSheetWithSearch()" aria-label="Search or enter URL">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <svg class="text-outline group-hover:text-primary transition-colors shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <span class="text-sm text-on-surface-variant truncate">Search videos, movies, or URLs</span>
-          </div>
-          <span class="px-2.5 py-1 rounded-full bg-surface-variant text-xs font-semibold text-outline group-hover:text-on-surface transition-colors">Type</span>
-        </button>
+      <!-- Preset Picker with Subtext Card -->
+      <div class="w-full flex flex-col gap-1.5">
+        <div class="w-full p-1 rounded-full bg-surface-container-low/90 backdrop-blur-xl flex items-center shadow-inner relative border border-white/[0.05]" id="segmented-group" role="radiogroup" aria-label="Media presets">
+          <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full bg-surface-variant text-primary font-semibold text-xs text-center shadow-[0_2px_8px_rgba(0,0,0,0.45)] transition-all active truncate" id="preset-btn-universal" role="radio" aria-checked="true" onclick="setPreset('universal')" type="button">
+            Universal
+          </button>
+          <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-youtube_hotstar" role="radio" aria-checked="false" onclick="setPreset('youtube_hotstar')" type="button">
+            YouTube / Hotstar
+          </button>
+          <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-vlc" role="radio" aria-checked="false" onclick="setPreset('vlc')" type="button">
+            VLC Player
+          </button>
+        </div>
+        <p class="text-[11px] text-on-surface-variant px-2 text-center" id="presetDescription">Standard web media keys (Space, Arrow keys, F, M, S for intro)</p>
       </div>
 
-      <!-- Segmented Profile Picker -->
-      <div class="w-full p-1 rounded-full bg-surface-container-low/90 backdrop-blur-xl flex items-center shadow-inner relative border border-white/[0.05]" id="segmented-group" role="radiogroup" aria-label="Media presets">
-        <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-3 rounded-full bg-surface-variant text-primary font-semibold text-xs text-center shadow-[0_2px_8px_rgba(0,0,0,0.45)] transition-all active" id="preset-btn-universal" role="radio" aria-checked="true" onclick="setPreset('universal')" type="button">
-          Universal
-        </button>
-        <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-2 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all truncate" id="preset-btn-youtube_hotstar" role="radio" aria-checked="false" onclick="setPreset('youtube_hotstar')" type="button">
-          YouTube / Hotstar
-        </button>
-        <button class="preset-btn flex-1 h-11 min-h-[44px] py-2 px-3 rounded-full text-on-surface-variant font-semibold text-xs text-center hover:text-on-surface transition-all" id="preset-btn-vlc" role="radio" aria-checked="false" onclick="setPreset('vlc')" type="button">
-          VLC
-        </button>
-      </div>
-
-      <!-- Tactile Playback Deck -->
-      <div class="w-full rounded-2xl bg-surface-container/70 backdrop-blur-2xl p-4 flex flex-col items-center gap-y-4 shadow-md border border-white/[0.08]">
+      <!-- Tactile Playback Hub -->
+      <div class="w-full rounded-2xl bg-surface-container/70 backdrop-blur-2xl p-4 flex flex-col items-center gap-y-3.5 shadow-md border border-white/[0.08]">
 
         <!-- Primary Control Triad: ⏪ -10s, ▶ Play/Pause, ⏩ +10s -->
         <div class="flex items-center justify-center gap-6 w-full py-1">
@@ -228,14 +236,18 @@
           </button>
         </div>
 
-        <!-- Merged Volume Row (Mute button at left end of slider) -->
-        <div class="w-full bg-surface-container-low/80 rounded-xl px-3 py-2 flex items-center gap-3 border border-white/[0.04]">
-          <button class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface-variant/60 hover:bg-surface-variant text-secondary flex items-center justify-center transition-all active:scale-90 shrink-0" id="mute-toggle" onclick="send('mute')" type="button" aria-pressed="false" aria-label="Toggle mute">
-            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="22" y1="9" x2="16" y2="15"></line><line x1="16" y1="9" x2="22" y2="15"></line></svg>
+        <!-- Volume Row with Step Buttons (-5% / +5%) & Mute -->
+        <div class="w-full bg-surface-container-low/80 rounded-xl px-2.5 py-2 flex items-center gap-2 border border-white/[0.04]">
+          <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-surface-variant/60 hover:bg-surface-variant text-secondary flex items-center justify-center transition-all active:scale-90 shrink-0" id="mute-toggle" onclick="send('mute')" type="button" aria-pressed="false" aria-label="Toggle mute">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="22" y1="9" x2="16" y2="15"></line><line x1="16" y1="9" x2="22" y2="15"></line></svg>
           </button>
+
+          <!-- -5% Volume Step -->
+          <button class="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-surface-variant hover:bg-surface-bright text-on-surface flex items-center justify-center font-bold text-xs active:scale-90 transition-all shrink-0" onclick="stepVolume(-5)" type="button" aria-label="Decrease volume 5%">-</button>
           
-          <div class="slider-container relative flex-1 flex items-center h-10">
-            <div class="w-full h-2.5 rounded-full bg-surface-container-highest overflow-hidden relative shadow-inner">
+          <!-- Continuous Slider -->
+          <div class="slider-container relative flex-1 flex items-center h-10 min-w-[60px]">
+            <div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden relative shadow-inner">
               <div class="h-full bg-secondary-container transition-all rounded-full" id="volume-fill" style="width: 50%;"></div>
             </div>
             <input aria-label="Speaker Volume slider" class="absolute inset-0 w-full h-10 opacity-0 cursor-pointer" id="volumeSlider" max="100" min="0" type="range" value="50"/>
@@ -243,16 +255,31 @@
               <div class="w-1.5 h-1.5 rounded-full bg-surface-dim"></div>
             </div>
           </div>
+
+          <!-- +5% Volume Step -->
+          <button class="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-surface-variant hover:bg-surface-bright text-on-surface flex items-center justify-center font-bold text-xs active:scale-90 transition-all shrink-0" onclick="stepVolume(5)" type="button" aria-label="Increase volume 5%">+</button>
           
-          <span class="text-xs font-bold text-secondary min-w-[2.5rem] text-right" id="volumePct">50%</span>
+          <span class="text-xs font-bold text-secondary min-w-[2.2rem] text-right" id="volumePct">50%</span>
+        </div>
+
+        <!-- Playback Rate Pill Selector (Discrete Speeds) -->
+        <div class="w-full flex items-center justify-between gap-1.5 pt-0.5">
+          <span class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider shrink-0">Rate:</span>
+          <div class="flex items-center gap-1 overflow-x-auto">
+            <button class="speed-preset-pill px-2.5 h-8 min-h-[32px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-xs font-semibold text-on-surface transition-all" data-speed="0.75" onclick="setPlaybackSpeed('0.75')" type="button">0.75x</button>
+            <button class="speed-preset-pill active bg-secondary-container text-on-secondary-container px-2.5 h-8 min-h-[32px] rounded-full hover:bg-surface-bright active:scale-95 text-xs font-semibold transition-all" data-speed="1.0" onclick="setPlaybackSpeed('1.0')" type="button">1.0x</button>
+            <button class="speed-preset-pill px-2.5 h-8 min-h-[32px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-xs font-semibold text-on-surface transition-all" data-speed="1.25" onclick="setPlaybackSpeed('1.25')" type="button">1.25x</button>
+            <button class="speed-preset-pill px-2.5 h-8 min-h-[32px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-xs font-semibold text-on-surface transition-all" data-speed="1.5" onclick="setPlaybackSpeed('1.5')" type="button">1.5x</button>
+            <button class="speed-preset-pill px-2.5 h-8 min-h-[32px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-xs font-semibold text-on-surface transition-all" data-speed="2.0" onclick="setPlaybackSpeed('2.0')" type="button">2.0x</button>
+          </div>
         </div>
 
       </div>
 
-      <!-- 6-tile 3×2 Shortcut Grid (Preset-Aware) -->
-      <div class="w-full flex flex-col gap-2">
+      <!-- Categorized Shortcuts Grid -->
+      <div class="w-full flex flex-col gap-2.5">
         <div class="flex items-center justify-between px-1">
-          <span class="text-xs font-semibold text-on-surface">Shortcuts</span>
+          <span class="text-xs font-semibold text-on-surface">Playback &amp; Video Actions</span>
           <span class="text-xs text-outline font-medium" id="mediaShortcutHint">Preset Actions</span>
         </div>
 
@@ -275,10 +302,10 @@
             <span class="text-xs font-semibold text-on-surface leading-none">Miniplayer</span>
           </button>
 
-          <!-- 4. Audio Dub -->
+          <!-- 4. Audio Track (VLC) -->
           <button class="shortcut-tile flex flex-col items-center justify-center gap-1.5 p-2 h-16 rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all text-center border border-white/[0.05]" data-action="audio_track_cycle" onclick="send_key_action('audio_track_cycle')" type="button" aria-label="Cycle audio track">
             <svg class="text-secondary w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-            <span class="text-xs font-semibold text-on-surface leading-none">Audio Dub</span>
+            <span class="text-xs font-semibold text-on-surface leading-none">Audio Track</span>
           </button>
 
           <!-- 5. Speed + -->
@@ -298,7 +325,144 @@
     </div>
 
     <!-- ───────────────────────────────────────────────────────────── -->
-    <!-- TAB 3: PRESENTATION MODE                                      -->
+    <!-- TAB 3: DEDICATED REMOTE & KEYS (D-PAD & SYSTEM MACROS)        -->
+    <!-- ───────────────────────────────────────────────────────────── -->
+    <div class="tab-panel flex-col w-full px-4 pb-4 gap-y-3.5" id="tab-remote" role="tabpanel" aria-labelledby="tab-btn-remote">
+      
+      <!-- Section: URL & Keystroke Live Dispatch -->
+      <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-2.5 border border-white/[0.06]">
+        <div class="relative flex items-center w-full">
+          <div class="absolute left-3.5 flex items-center pointer-events-none text-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </div>
+          <input class="w-full h-11 pl-10 pr-12 rounded-full bg-surface-variant/80 text-on-surface text-sm placeholder:text-outline focus:outline-none focus:bg-surface-variant transition-all border border-white/[0.06]" id="searchInput" placeholder="Type text, URL, or search..." type="text" autocomplete="off" autocapitalize="off" spellcheck="false"/>
+          <button class="absolute right-1 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full text-outline hover:text-on-surface flex items-center justify-center transition-transform active:scale-90" id="searchClearBtn" onclick="clearSearchInput()" title="Clear input" type="button" aria-label="Clear input">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 overflow-x-auto min-w-0">
+            <button class="shrink-0 px-3.5 h-10 min-h-[40px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-on-surface text-xs font-medium transition-all flex items-center gap-1 border border-white/[0.04]" onclick="focusSearchSite()" type="button">
+              <span class="text-primary font-bold">/</span>
+              <span>Find</span>
+            </button>
+            <button class="shrink-0 px-3.5 h-10 min-h-[40px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-on-surface text-xs font-medium transition-all flex items-center gap-1 border border-white/[0.04]" onclick="focusAddressBar()" type="button">
+              <span class="text-secondary font-bold">URL</span>
+              <span>Bar</span>
+            </button>
+          </div>
+          <button class="shrink-0 px-4 h-10 min-h-[40px] rounded-full bg-secondary-container hover:opacity-90 active:scale-95 text-on-secondary-container text-xs font-semibold flex items-center gap-1 shadow-sm transition-all" onclick="submitSearch(true)" type="button">
+            <span>Send</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section: Precision D-Pad with Center Disk -->
+      <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col items-center border border-white/[0.06]">
+        <div class="relative w-52 h-52 my-1 flex items-center justify-center">
+          <!-- Outer Track Glow Ring -->
+          <div class="absolute inset-0 rounded-full bg-surface-variant/60 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)] backdrop-blur-md border border-white/[0.05]"></div>
+          
+          <!-- Direction: UP -->
+          <button aria-label="Navigate Up" class="dpad-btn absolute top-1.5 left-1/2 -translate-x-1/2 w-24 h-12 rounded-t-full flex items-start justify-center pt-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="up" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </button>
+          <!-- Direction: DOWN -->
+          <button aria-label="Navigate Down" class="dpad-btn absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-12 rounded-b-full flex items-end justify-center pb-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="down" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <!-- Direction: LEFT -->
+          <button aria-label="Navigate Left" class="dpad-btn absolute left-1.5 top-1/2 -translate-y-1/2 h-24 w-12 rounded-l-full flex items-center justify-start pl-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="left" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <!-- Direction: RIGHT -->
+          <button aria-label="Navigate Right" class="dpad-btn absolute right-1.5 top-1/2 -translate-y-1/2 h-24 w-12 rounded-r-full flex items-center justify-end pr-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="right" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+          <!-- Tactile Center Disk (OK / Select) -->
+          <button aria-label="Confirm Select" class="relative z-10 w-20 h-20 rounded-full bg-surface-bright hover:bg-surface-container-highest active:scale-90 shadow-[0_8px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all group border border-white/[0.08]" id="btn-ok-pad" onclick="send_raw_key('enter')" type="button">
+            <span class="font-headline-md text-base font-bold text-on-surface tracking-wider group-hover:text-primary transition-colors">OK</span>
+          </button>
+        </div>
+
+        <!-- Navigation Pills Row -->
+        <div class="grid grid-cols-4 gap-2 w-full mt-2">
+          <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('browser_back')" type="button" aria-label="Browser Back">
+            <span class="text-xs font-semibold">◀ Back</span>
+          </button>
+          <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('escape')" type="button" aria-label="Escape key">
+            <span class="text-xs font-semibold">esc</span>
+          </button>
+          <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('tab')" type="button" aria-label="Tab key">
+            <span class="text-xs font-semibold">tab ⇥</span>
+          </button>
+          <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('backspace')" type="button" aria-label="Backspace key">
+            <span class="text-xs font-semibold text-error">⌫</span>
+          </button>
+        </div>
+
+        <!-- Additional Quick Keys: Next Tab & Reload -->
+        <div class="grid grid-cols-3 gap-2 w-full mt-2">
+          <button class="h-10 min-h-[40px] rounded-xl bg-surface-variant/60 hover:bg-surface-bright active:scale-95 flex items-center justify-center gap-1 text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('shift_tab')" type="button" aria-label="Shift Tab">
+            <span class="text-xs font-semibold">⇧ Tab</span>
+          </button>
+          <button class="h-10 min-h-[40px] rounded-xl bg-surface-variant/60 hover:bg-surface-bright active:scale-95 flex items-center justify-center gap-1 text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('next_tab')" type="button" aria-label="Next Browser Tab">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="14" rx="2"></rect><path d="M8 3h11a2 2 0 0 1 2 2v11"></path></svg>
+            <span class="text-xs font-semibold">Next Tab</span>
+          </button>
+          <button class="h-10 min-h-[40px] rounded-xl bg-surface-variant/60 hover:bg-surface-bright active:scale-95 flex items-center justify-center gap-1 text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('reload')" type="button" aria-label="Reload Page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+            <span class="text-xs font-semibold">Reload</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section: System Productivity Macros -->
+      <div class="w-full flex flex-col gap-2">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-semibold text-on-surface">Productivity Macros</span>
+          <span class="text-xs text-outline font-medium">OS Shortcuts</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Copy -->
+          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('copy')" type="button" aria-label="Copy">
+            <svg class="w-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span class="text-xs font-semibold">Copy</span>
+          </button>
+          <!-- Paste -->
+          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('paste')" type="button" aria-label="Paste">
+            <svg class="w-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            <span class="text-xs font-semibold">Paste</span>
+          </button>
+          <!-- App Switcher (Alt+Tab) -->
+          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('app_switch')" type="button" aria-label="App Switcher">
+            <svg class="w-4 h-4 text-secondary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 3 8 7"></path></svg>
+            <span class="text-xs font-semibold">App Switch</span>
+          </button>
+          <!-- Screenshot -->
+          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('screenshot')" type="button" aria-label="Screenshot">
+            <svg class="w-4 h-4 text-secondary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span class="text-xs font-semibold">Capture</span>
+          </button>
+          <!-- Close Window -->
+          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('close_window')" type="button" aria-label="Close window">
+            <svg class="w-4 h-4 text-error" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+            <span class="text-xs font-semibold text-error">Close Win</span>
+          </button>
+          <!-- Lock Screen -->
+          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('lock_screen')" type="button" aria-label="Lock screen">
+            <svg class="w-4 h-4 text-warning" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span class="text-xs font-semibold text-warning">Lock PC</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ───────────────────────────────────────────────────────────── -->
+    <!-- TAB 4: PRESENTATION MODE                                      -->
     <!-- ───────────────────────────────────────────────────────────── -->
     <div class="tab-panel flex-col w-full px-4 pb-4 gap-y-3.5" id="tab-present" role="tabpanel" aria-labelledby="tab-btn-present">
       
@@ -404,148 +568,123 @@
   </main>
 
   <!-- ───────────────────────────────────────────────────────────── -->
-  <!-- APPLE HIG TRANSLUCENT DOCK (3 Tabs: Trackpad · Media · Present) -->
+  <!-- APPLE HIG TRANSLUCENT DOCK (4 Tabs: Trackpad · Media · Remote · Present) -->
   <!-- ───────────────────────────────────────────────────────────── -->
   <nav class="fixed bottom-0 inset-x-0 z-50 pb-safe pointer-events-none flex justify-center" role="tablist" aria-label="Main Navigation">
     <div class="pointer-events-auto mb-4 mx-4 px-2 py-1.5 rounded-full bg-surface-container/85 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.60)] flex items-center gap-1 border border-white/[0.1]">
       
       <!-- Tab 1: Trackpad -->
-      <button class="nav-item active flex flex-col items-center justify-center w-16 h-12 min-w-[56px] min-h-[44px] rounded-full transition-all bg-surface-variant text-primary shadow-[0_2px_8px_rgba(0,0,0,0.35)]" id="tab-btn-mouse" role="tab" aria-selected="true" onclick="switchTab('mouse')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="nav-item active flex flex-col items-center justify-center w-16 h-12 min-w-[52px] min-h-[44px] rounded-full transition-all bg-surface-variant text-primary shadow-[0_2px_8px_rgba(0,0,0,0.35)]" id="tab-btn-mouse" role="tab" aria-selected="true" onclick="switchTab('mouse')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="7"></rect>
           <line x1="12" y1="6" x2="12" y2="10"></line>
         </svg>
-        <span class="text-xs font-medium mt-0.5">Trackpad</span>
+        <span class="text-[11px] font-medium mt-0.5">Trackpad</span>
       </button>
 
       <!-- Tab 2: Media -->
-      <button class="nav-item flex flex-col items-center justify-center w-16 h-12 min-w-[56px] min-h-[44px] rounded-full text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-media" role="tab" aria-selected="false" onclick="switchTab('media')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="nav-item flex flex-col items-center justify-center w-16 h-12 min-w-[52px] min-h-[44px] rounded-full text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-media" role="tab" aria-selected="false" onclick="switchTab('media')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
         </svg>
-        <span class="text-xs font-medium mt-0.5">Media</span>
+        <span class="text-[11px] font-medium mt-0.5">Media</span>
       </button>
 
-      <!-- Tab 3: Present -->
-      <button class="nav-item flex flex-col items-center justify-center w-16 h-12 min-w-[56px] min-h-[44px] rounded-full text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-present" role="tab" aria-selected="false" onclick="switchTab('present')">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Tab 3: Remote & Keys -->
+      <button class="nav-item flex flex-col items-center justify-center w-16 h-12 min-w-[52px] min-h-[44px] rounded-full text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-remote" role="tab" aria-selected="false" onclick="switchTab('remote')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+          <line x1="6" y1="8" x2="6" y2="8"></line>
+          <line x1="10" y1="8" x2="10" y2="8"></line>
+          <line x1="14" y1="8" x2="14" y2="8"></line>
+          <line x1="18" y1="8" x2="18" y2="8"></line>
+          <line x1="6" y1="12" x2="6" y2="12"></line>
+          <line x1="18" y1="12" x2="18" y2="12"></line>
+          <line x1="10" y1="12" x2="14" y2="12"></line>
+          <line x1="8" y1="16" x2="16" y2="16"></line>
+        </svg>
+        <span class="text-[11px] font-medium mt-0.5">Remote</span>
+      </button>
+
+      <!-- Tab 4: Present -->
+      <button class="nav-item flex flex-col items-center justify-center w-16 h-12 min-w-[52px] min-h-[44px] rounded-full text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-present" role="tab" aria-selected="false" onclick="switchTab('present')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="14" rx="2"></rect>
           <line x1="8" y1="21" x2="16" y2="21"></line>
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        <span class="text-xs font-medium mt-0.5">Present</span>
+        <span class="text-[11px] font-medium mt-0.5">Present</span>
       </button>
 
     </div>
   </nav>
 
   <!-- ───────────────────────────────────────────────────────────── -->
-  <!-- "KEYS & TYPE" SLIDE-UP SHEET                                  -->
+  <!-- QUICK HELP & GESTURES CHEAT SHEET MODAL                       -->
   <!-- ───────────────────────────────────────────────────────────── -->
-  <div class="overlay-backdrop" id="keysSheetBackdrop" onclick="closeKeysSheet()"></div>
-  <div class="sheet-panel bg-surface-container/95 backdrop-blur-2xl rounded-t-3xl border-t border-white/[0.1] shadow-2xl p-4 flex flex-col gap-4 overflow-y-auto" id="keysSheet" role="dialog" aria-modal="true" aria-labelledby="keysSheetTitle">
-    <!-- Grab bar -->
-    <div class="w-12 h-1.5 rounded-full bg-outline-variant/60 self-center -mt-1 cursor-pointer" onclick="closeKeysSheet()"></div>
-
-    <!-- Sheet Header -->
-    <div class="flex items-center justify-between px-1">
-      <div class="flex items-center gap-2">
-        <svg class="text-primary w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="10" y1="12" x2="14" y2="12"></line><line x1="8" y1="16" x2="16" y2="16"></line></svg>
-        <h2 class="font-headline-sm text-base font-bold text-on-surface" id="keysSheetTitle">Keys &amp; Type</h2>
-      </div>
-      <button class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-surface-variant hover:bg-surface-bright flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-90" onclick="closeKeysSheet()" aria-label="Close sheet" id="keysSheetCloseBtn" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-
-    <!-- Section: URL & Keystroke Live Dispatch -->
-    <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-2.5 border border-white/[0.06]">
-      <div class="relative flex items-center w-full">
-        <div class="absolute left-3.5 flex items-center pointer-events-none text-outline">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+  <div class="overlay-backdrop" id="helpModalBackdrop" onclick="closeHelpModal()"></div>
+  <div class="modal-dialog-container" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="modal-panel w-full max-w-sm bg-surface-container/95 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl border border-white/[0.1] flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <h2 class="font-headline-sm text-base font-bold text-on-surface" id="helpModalTitle">Help &amp; Gestures</h2>
         </div>
-        <input class="w-full h-11 pl-10 pr-12 rounded-full bg-surface-variant/80 text-on-surface text-sm placeholder:text-outline focus:outline-none focus:bg-surface-variant transition-all border border-white/[0.06]" id="searchInput" placeholder="Type text, URL, or search..." type="text" autocomplete="off" autocapitalize="off" spellcheck="false"/>
-        <button class="absolute right-1 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full text-outline hover:text-on-surface flex items-center justify-center transition-transform active:scale-90" id="searchClearBtn" onclick="clearSearchInput()" title="Clear input" type="button" aria-label="Clear input">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+        <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-surface-variant hover:bg-surface-bright flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all active:scale-90" onclick="closeHelpModal()" aria-label="Close help" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 overflow-x-auto min-w-0">
-          <button class="shrink-0 px-3.5 h-11 min-h-[44px] min-w-[44px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-on-surface text-xs font-medium transition-all flex items-center gap-1 border border-white/[0.04]" onclick="focusSearchSite()" type="button">
-            <span class="text-primary font-bold">/</span>
-            <span>Find</span>
-          </button>
-          <button class="shrink-0 px-3.5 h-11 min-h-[44px] min-w-[44px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 text-on-surface text-xs font-medium transition-all flex items-center gap-1 border border-white/[0.04]" onclick="focusAddressBar()" type="button">
-            <span class="text-secondary font-bold">URL</span>
-            <span>Bar</span>
-          </button>
+      <!-- Trackpad Gestures Section -->
+      <div class="bg-surface-container-low rounded-2xl p-3.5 flex flex-col gap-2.5 border border-white/[0.06]">
+        <span class="text-xs font-bold text-primary uppercase tracking-wider">Trackpad Gestures</span>
+        <div class="space-y-2 text-xs text-on-surface-variant">
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">1-Finger Drag</span>
+            <span>Moves cursor</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">1-Finger Tap</span>
+            <span>Left Click</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">2-Finger Drag</span>
+            <span>Smooth Scroll</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">Lock Button</span>
+            <span>Window &amp; Text Drag</span>
+          </div>
         </div>
-        <button class="shrink-0 px-4 h-11 min-h-[44px] min-w-[44px] rounded-full bg-secondary-container hover:opacity-90 active:scale-95 text-on-secondary-container text-xs font-semibold flex items-center gap-1 shadow-sm transition-all" onclick="submitSearch(true)" type="button">
-          <span>Send</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Section: Precision D-Pad with Center Disk -->
-    <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col items-center border border-white/[0.06]">
-      <div class="relative w-56 h-56 my-1 flex items-center justify-center">
-        <!-- Outer Track Glow Ring -->
-        <div class="absolute inset-0 rounded-full bg-surface-variant/60 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)] backdrop-blur-md border border-white/[0.05]"></div>
-        
-        <!-- Direction: UP -->
-        <button aria-label="Navigate Up" class="dpad-btn absolute top-1.5 left-1/2 -translate-x-1/2 w-24 h-12 rounded-t-full flex items-start justify-center pt-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="up" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-        </button>
-        <!-- Direction: DOWN -->
-        <button aria-label="Navigate Down" class="dpad-btn absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-12 rounded-b-full flex items-end justify-center pb-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="down" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-        <!-- Direction: LEFT -->
-        <button aria-label="Navigate Left" class="dpad-btn absolute left-1.5 top-1/2 -translate-y-1/2 h-24 w-12 rounded-l-full flex items-center justify-start pl-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="left" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-        <!-- Direction: RIGHT -->
-        <button aria-label="Navigate Right" class="dpad-btn absolute right-1.5 top-1/2 -translate-y-1/2 h-24 w-12 rounded-r-full flex items-center justify-end pr-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="right" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
-        <!-- Tactile Center Disk (OK / Select) -->
-        <button aria-label="Confirm Select" class="relative z-10 w-24 h-24 rounded-full bg-surface-bright hover:bg-surface-container-highest active:scale-90 shadow-[0_8px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all group border border-white/[0.08]" id="btn-ok-pad" onclick="send_raw_key('enter')" type="button">
-          <span class="font-headline-md text-lg font-bold text-on-surface tracking-wider group-hover:text-primary transition-colors">OK</span>
-        </button>
       </div>
 
-      <!-- Navigation Pills Row -->
-      <div class="grid grid-cols-4 gap-2 w-full mt-3">
-        <button class="h-12 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('browser_back')" type="button" aria-label="Browser Back">
-          <span class="text-xs font-semibold">◀ Back</span>
-        </button>
-        <button class="h-12 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('escape')" type="button" aria-label="Escape key">
-          <span class="text-xs font-semibold">esc</span>
-        </button>
-        <button class="h-12 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('tab')" type="button" aria-label="Tab key">
-          <span class="text-xs font-semibold">tab ⇥</span>
-        </button>
-        <button class="h-12 min-h-[44px] rounded-xl bg-surface-variant/80 hover:bg-surface-bright active:scale-95 flex items-center justify-center text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('backspace')" type="button" aria-label="Backspace key">
-          <span class="text-xs font-semibold text-error">⌫</span>
-        </button>
+      <!-- Presets Explained Section -->
+      <div class="bg-surface-container-low rounded-2xl p-3.5 flex flex-col gap-2.5 border border-white/[0.06]">
+        <span class="text-xs font-bold text-secondary uppercase tracking-wider">Media Presets Guide</span>
+        <div class="space-y-2 text-xs text-on-surface-variant">
+          <div>
+            <span class="text-on-surface font-semibold">Universal:</span>
+            <p class="text-[11px] mt-0.5">Works with Netflix, Prime Video, browsers &amp; standard media players.</p>
+          </div>
+          <div>
+            <span class="text-on-surface font-semibold">YouTube / Hotstar:</span>
+            <p class="text-[11px] mt-0.5">Optimized hotkeys for YouTube &amp; Hotstar web players.</p>
+          </div>
+          <div>
+            <span class="text-on-surface font-semibold">VLC Player:</span>
+            <p class="text-[11px] mt-0.5">Dedicated desktop VLC shortcuts (Audio track cycle, sync adjustments).</p>
+          </div>
+        </div>
       </div>
 
-      <!-- Additional Quick Keys: Next Tab & Reload -->
-      <div class="grid grid-cols-3 gap-2 w-full mt-2">
-        <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/60 hover:bg-surface-bright active:scale-95 flex items-center justify-center gap-1.5 text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('shift_tab')" type="button" aria-label="Shift Tab">
-          <span class="text-xs font-semibold">⇧ Tab</span>
-        </button>
-        <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/60 hover:bg-surface-bright active:scale-95 flex items-center justify-center gap-1.5 text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('next_tab')" type="button" aria-label="Next Browser Tab">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="14" rx="2"></rect><path d="M8 3h11a2 2 0 0 1 2 2v11"></path></svg>
-          <span class="text-xs font-semibold">Next Tab</span>
-        </button>
-        <button class="h-11 min-h-[44px] rounded-xl bg-surface-variant/60 hover:bg-surface-bright active:scale-95 flex items-center justify-center gap-1.5 text-on-surface transition-all border border-white/[0.04]" onclick="send_raw_key('reload')" type="button" aria-label="Reload Page">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-          <span class="text-xs font-semibold">Reload</span>
-        </button>
+      <!-- Wi-Fi Tips -->
+      <div class="bg-surface-container-low rounded-2xl p-3.5 flex flex-col gap-1.5 border border-white/[0.06]">
+        <span class="text-xs font-bold text-tertiary uppercase tracking-wider">Wi-Fi &amp; Performance</span>
+        <p class="text-xs text-on-surface-variant">For ultra-low latency, connect both devices to 5GHz Wi-Fi or your Phone Hotspot.</p>
       </div>
     </div>
   </div>
