@@ -1,18 +1,22 @@
 """Server entry point: ``main()`` plus the standalone CLI argument parser."""
 
+import contextlib
 import sys
 import threading
 
-import laptop_remote.core.auth as _auth
+from .. import __version__
+from ..core import auth as _auth
 from ..core.auth import (
-    VALID_TOKENS, auth_lock, generate_pairing_pin, set_pairing_pin,
+    VALID_TOKENS,
+    auth_lock,
+    generate_pairing_pin,
+    set_pairing_pin,
 )
 from ..core.device import set_custom_device_name
 from ..core.network import get_local_ip, setup_ssl_context
 from ..core.window import detect_active_preset
-
-from ._app import app, socketio, overlay, active_authorized_sids
 from . import discovery
+from ._app import active_authorized_sids, app, overlay, socketio
 
 
 def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
@@ -50,26 +54,24 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
     mdns_url = f"{scheme}://remotedeck.local{port_str}"
 
     print("\n" + "=" * 52)
-    print("  ⚡ LAPTOP REMOTE · TERMINAL EDITION")
+    print(f"  ⚡ LAPTOP REMOTE v{__version__} · TERMINAL EDITION")
     print("=" * 52)
     print(f"  🌐 Local URL      : {url}")
     print(f"  📢 mDNS Discovery : {mdns_url}")
     print(f"  🔒 Pairing PIN    : {_auth.PAIRING_PIN}")
     if ssl_enabled:
-        print(f"  🛡️  Transport      : Encrypted (HTTPS / WSS)")
+        print("  🛡️  Transport      : Encrypted (HTTPS / WSS)")
     else:
-        print(f"  ⚠️  Transport      : Plaintext HTTP (use --ssl for HTTPS)")
+        print("  ⚠️  Transport      : Plaintext HTTP (use --ssl for HTTPS)")
     print("=" * 52 + "\n")
 
     if qrcode:
-        try:
+        with contextlib.suppress(Exception):
             qr = qrcode.QRCode(version=1, box_size=1, border=2)
             qr.add_data(url)
             qr.make(fit=True)
             qr.print_ascii(invert=True)
             print("\n  👉 Scan the QR code above with your phone to connect!\n")
-        except Exception:
-            pass
 
     # Start mDNS registration and the preset-change monitor.
     zeroconf_instance, service_info = discovery.register_mdns(ip, port, ssl_enabled, mdns_url)
@@ -112,7 +114,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
 
     if tray_enabled or '--tray' in sys.argv:
         try:
-            from ..core.tray import SystemTrayManager, HAS_PYSTRAY
+            from ..core.tray import HAS_PYSTRAY, SystemTrayManager
             if HAS_PYSTRAY:
                 tray = SystemTrayManager(
                     get_state_cb=get_companion_state,
@@ -125,7 +127,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
             print(f"⚠️ System tray icon could not be launched: {e}")
 
     run_kwargs = {
-        'host': '0.0.0.0',
+        'host': '0.0.0.0',  # noqa: S104
         'port': port,
         'debug': False,
         # Flask-SocketIO 5.x warns about the Werkzeug dev server being used in

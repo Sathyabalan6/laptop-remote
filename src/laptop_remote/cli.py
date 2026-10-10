@@ -9,9 +9,12 @@ Usage:
 
 import argparse
 
+from . import __version__
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="laptop-remote", description="Laptop Remote - Terminal Edition")
+    parser.add_argument("--version", "-V", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("--pin", default=None, help="Set a custom pairing PIN/password")
     parser.add_argument("--name", "-n", default=None, help="Friendly device name displayed in the remote header (e.g. 'Vivobook')")
     parser.add_argument("--port", type=int, default=5000, help="Port to bind (default: 5000)")
