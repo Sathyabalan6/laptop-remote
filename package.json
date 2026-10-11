@@ -3,7 +3,9 @@
   "version": "1.0.8",
   "private": true,
   "scripts": {
+    "start": "python3 -m laptop_remote",
     "test": "vitest run",
+    "test:watch": "vitest",
     "build:css": "tailwindcss -i src/laptop_remote/static/css/tailwind-input.css -o src/laptop_remote/static/css/tailwind.css --minify"
   },
   "devDependencies": {

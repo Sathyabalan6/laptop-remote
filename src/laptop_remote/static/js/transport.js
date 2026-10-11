@@ -16,6 +16,7 @@ async function post(url, body = {}) {
       signal: controller.signal
     });
     if (r.status === 401) {
+      localStorage.removeItem('session_token');
       showPinOverlay();
       return false;
     }

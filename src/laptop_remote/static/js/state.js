@@ -92,13 +92,24 @@ async function loadPairedDevices() {
         info.appendChild(nameSpan);
         info.appendChild(metaSpan);
 
-        const btn = document.createElement('button');
-        btn.className = 'px-2 py-1 min-h-[32px] rounded-lg bg-error-container/20 hover:bg-error-container/40 text-error text-[11px] font-semibold active:scale-95 transition-all';
-        btn.textContent = 'Revoke';
-        btn.onclick = () => revokeSingleDevice(d.id);
+        const currentToken = localStorage.getItem('session_token') || '';
+        const isCurrent = (d.id === currentToken.slice(0, 8));
 
-        row.appendChild(info);
-        row.appendChild(btn);
+        if (isCurrent) {
+          const badge = document.createElement('span');
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-semibold bg-primary/20 text-primary shrink-0';
+          badge.textContent = 'This device';
+          row.appendChild(info);
+          row.appendChild(badge);
+        } else {
+          const btn = document.createElement('button');
+          btn.className = 'px-2 py-1 min-h-[32px] rounded-lg bg-error-container/20 hover:bg-error-container/40 text-error text-[11px] font-semibold active:scale-95 transition-all';
+          btn.textContent = 'Revoke';
+          btn.onclick = () => revokeSingleDevice(d.id);
+          row.appendChild(info);
+          row.appendChild(btn);
+        }
+
         container.appendChild(row);
       });
     } else {
@@ -129,7 +140,13 @@ async function revokeSingleDevice(deviceId) {
     });
     if (res.ok) {
       showToast('🔒 Device revoked');
-      loadPairedDevices();
+      if (token && token.startsWith(deviceId)) {
+        localStorage.removeItem('session_token');
+        if (typeof showPinOverlay === 'function') showPinOverlay();
+        closeSettingsModal();
+      } else {
+        loadPairedDevices();
+      }
     }
   } catch { }
 }
@@ -298,7 +315,7 @@ function closeOverlay(overlayId, fromPopState = false, skipHistory = false) {
   if (backdrop) backdrop.classList.remove('active');
   if (panel) panel.classList.remove('active');
 
-  if (activeOverlay === targetId) {
+  if (activeOverlay === targetId || !activeOverlay) {
     activeOverlay = null;
     const pinOverlay = document.getElementById('pinOverlay');
     const isPinActive = pinOverlay && pinOverlay.classList.contains('visible');
