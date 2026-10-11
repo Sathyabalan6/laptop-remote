@@ -629,7 +629,7 @@
   <!-- QUICK HELP & GESTURES CHEAT SHEET MODAL                       -->
   <!-- ───────────────────────────────────────────────────────────── -->
   <div class="overlay-backdrop" id="helpModalBackdrop" onclick="closeHelpModal()"></div>
-  <div class="modal-dialog-container" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="modal-dialog-container" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if (event.target === this) closeHelpModal()">
     <div class="modal-panel w-full max-w-sm bg-surface-container/95 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl border border-white/[0.1] flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
       <!-- Header -->
       <div class="flex items-center justify-between">
@@ -698,7 +698,7 @@
   <!-- SETTINGS MODAL DIALOG                                         -->
   <!-- ───────────────────────────────────────────────────────────── -->
   <div class="overlay-backdrop" id="settingsModalBackdrop" onclick="closeSettingsModal()"></div>
-  <div class="modal-dialog-container" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+  <div class="modal-dialog-container" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle" onclick="if (event.target === this) closeSettingsModal()">
     <div class="modal-panel w-full max-w-sm bg-surface-container/95 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl border border-white/[0.1] flex flex-col gap-4">
       <!-- Modal Header -->
       <div class="flex items-center justify-between">
@@ -770,7 +770,7 @@
   <!-- PRESETS MANAGER MODAL DIALOG                                 -->
   <!-- ───────────────────────────────────────────────────────────── -->
   <div class="overlay-backdrop" id="presetsModalBackdrop" onclick="closePresetsModal()"></div>
-  <div class="modal-dialog-container" id="presetsModal" role="dialog" aria-modal="true" aria-labelledby="presetsModalTitle">
+  <div class="modal-dialog-container" id="presetsModal" role="dialog" aria-modal="true" aria-labelledby="presetsModalTitle" onclick="if (event.target === this) closePresetsModal()">
     <div class="modal-panel w-full max-w-sm bg-surface-container/95 backdrop-blur-2xl rounded-3xl p-5 shadow-2xl border border-white/[0.1] flex flex-col gap-4 max-h-[85vh]">
       <!-- Header -->
       <div class="flex items-center justify-between">

@@ -88,7 +88,7 @@ def _ydotoold_socket():
         for sock_type in (_socket.SOCK_DGRAM, _socket.SOCK_STREAM):
             with contextlib.suppress(Exception):
                 s = _socket.socket(_socket.AF_UNIX, sock_type)
-                s.settimeout(0.3)
+                s.settimeout(0.1)
                 s.connect(path)
                 s.close()
                 return path
@@ -459,7 +459,8 @@ if not USE_NATIVE_MOUSE:
             else:
                 code = '0xC4' if clicks > 0 else '0xC5'
                 ok = True
-                for _ in range(abs(clicks)):
+                repeat = min(4, abs(clicks))
+                for _ in range(repeat):
                     if not _run_wayland_tool(['click', code]):
                         ok = False
             if ok:

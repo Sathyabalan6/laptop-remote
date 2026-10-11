@@ -1,4 +1,4 @@
-const CACHE_NAME = 'remote-deck-v1.0.9';
+const CACHE_NAME = 'remote-deck-v1.0.10';
 const PRECACHE_ASSETS = [
   '/',
   '/static/css/tokens.css',

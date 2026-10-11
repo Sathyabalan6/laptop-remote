@@ -158,18 +158,7 @@ const classifyGesture =
     pendingDx = 0;
     pendingDy = 0;
 
-    let ok = false;
-    if (typeof socket !== 'undefined' && socket && socket.connected) {
-      const buffer = new Int16Array([
-        Math.round(dx * 10),
-        Math.round(dy * 10),
-        Math.round(mouseSensitivity * 10)
-      ]);
-      socket.emit('mouse_move', buffer.buffer);
-      ok = true;
-    } else {
-      ok = await socketSend('mouse_move', { dx, dy, sens: mouseSensitivity });
-    }
+    const ok = await socketSend('mouse_move', { dx, dy, sens: mouseSensitivity });
 
     if (!ok) { moveThrottle = null; return; }
     if (pendingDx !== 0 || pendingDy !== 0) {
