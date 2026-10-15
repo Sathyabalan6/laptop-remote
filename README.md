@@ -52,7 +52,22 @@
 
 ## 🚀 Quick Start
 
-### 1. From Prebuilt Executable (Windows — No Python Needed)
+### 1. Fastest Way: Zero-Install with `uv` (Recommended)
+
+If you have [uv](https://docs.astral.sh/uv/) installed (Windows, macOS, Linux):
+
+```bash
+# Run immediately in 1 second (no installation, zero PATH issues):
+uvx laptop-remote
+
+# Or install permanently as a global CLI tool:
+uv tool install laptop-remote
+laptop-remote
+```
+
+---
+
+### 2. From Prebuilt Executable (Windows — No Python Needed)
 
 1. Download **[`LaptopRemote-CLI.exe` from GitHub Releases](https://github.com/Sathyabalan6/laptop-remote/releases/latest)**.
 2. Double-click `LaptopRemote-CLI.exe` (or run it in Command Prompt / PowerShell).
@@ -60,21 +75,21 @@
 
 ---
 
-### 2. Via `pip` or `pipx` (Cross-Platform)
+### 3. Via `pip` or `pipx` (Cross-Platform)
 
 ```bash
 # Standard install (Windows, macOS, Linux):
 pip install laptop-remote
 laptop-remote
 
+# If 'laptop-remote' is not recognized on Windows (Scripts folder not in PATH):
+python -m laptop_remote
+# or using Windows Python launcher:
+py -m laptop_remote
+
 # Modern Linux (Ubuntu/Debian) with pipx:
 pipx install laptop-remote
 laptop-remote
-# Or run without installing:
-pipx run laptop-remote
-
-# Windows with native master volume support:
-pip install "laptop-remote[windows]"
 ```
 
 ---
