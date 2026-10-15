@@ -9,7 +9,10 @@ Usage:
 
 import argparse
 
-from . import __version__
+try:
+    from . import __version__
+except ImportError:
+    from laptop_remote import __version__
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,7 +31,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     args, _ = build_parser().parse_known_args(argv)
 
-    from .server import main as run_server
+    try:
+        from .server import main as run_server
+    except ImportError:
+        from laptop_remote.server import main as run_server
 
     try:
         run_server(
