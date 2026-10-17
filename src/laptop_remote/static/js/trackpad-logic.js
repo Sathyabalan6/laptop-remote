@@ -42,6 +42,39 @@ export function isTwoFingerScrollGesture(touches, startTouches, threshold = 6) {
   return dist >= threshold;
 }
 
+export function classifyTwoFingerIntent(
+  currSpan,
+  startSpan,
+  centroidDist,
+  pinchEnabled = true,
+  spanThreshold = 12,
+  centroidThreshold = 6
+) {
+  if (!pinchEnabled) {
+    return centroidDist >= centroidThreshold ? 'scroll' : null;
+  }
+  const spanChange = Math.abs(currSpan - startSpan);
+  if (spanChange < spanThreshold && centroidDist < centroidThreshold) {
+    return null;
+  }
+  if (spanChange >= spanThreshold && spanChange > centroidDist * 1.2) {
+    return 'zoom';
+  }
+  if (centroidDist >= centroidThreshold) {
+    return 'scroll';
+  }
+  return spanChange > centroidDist ? 'zoom' : 'scroll';
+}
+
+export function computeZoomDelta(spanDelta, zoomSensitivity = 1.0, divisor = 15.0) {
+  const sens = Math.min(3.0, Math.max(0.2, zoomSensitivity));
+  return (spanDelta / divisor) * sens;
+}
+
+export function clampZoomDelta(delta, maxPerFrame = 3.0) {
+  return Math.max(-maxPerFrame, Math.min(maxPerFrame, delta));
+}
+
 export function classifyGesture(
   prevPoints,
   currPoints,
@@ -68,6 +101,9 @@ if (typeof window !== 'undefined') {
     clampScrollDelta,
     applyScrollInertia,
     isTwoFingerScrollGesture,
+    classifyTwoFingerIntent,
+    computeZoomDelta,
+    clampZoomDelta,
     classifyGesture
   };
 }

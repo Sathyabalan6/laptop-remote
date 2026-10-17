@@ -468,6 +468,21 @@ if not USE_NATIVE_MOUSE:
         if pyautogui:
             pyautogui.scroll(clicks)
 
+    def _zoom_mouse(clicks):
+        if IS_WAYLAND and WAYLAND_TOOL_PATH:
+            repeat = max(1, min(4, abs(clicks)))
+            key_target = 'equal' if clicks > 0 else 'minus'
+            for _ in range(repeat):
+                _wayland_hotkey(['ctrl'], key_target)
+            return
+        mod_key = 'command' if sys.platform.startswith('darwin') else 'ctrl'
+        if pyautogui:
+            try:
+                pyautogui.keyDown(mod_key)
+                pyautogui.scroll(clicks)
+            finally:
+                pyautogui.keyUp(mod_key)
+
 class InputBackend:
     @staticmethod
     def move_mouse(x, y):
@@ -488,6 +503,10 @@ class InputBackend:
     @staticmethod
     def scroll_mouse(clicks):
         _scroll_mouse(clicks)
+
+    @staticmethod
+    def zoom_mouse(clicks):
+        _zoom_mouse(clicks)
 
     @staticmethod
     def send_keys(keys):
@@ -664,6 +683,7 @@ def handle_mouse_click(button='left', action='click'):
 
 
 _scroll_accumulator = 0.0
+_zoom_accumulator = 0.0
 
 
 def reset_scroll_accumulator():
@@ -672,8 +692,35 @@ def reset_scroll_accumulator():
         _scroll_accumulator = 0.0
 
 
+def reset_zoom_accumulator():
+    global _zoom_accumulator
+    with INPUT_LOCK:
+        _zoom_accumulator = 0.0
+
+
 def handle_mouse_stop():
     reset_scroll_accumulator()
+    reset_zoom_accumulator()
+
+
+def handle_mouse_zoom(delta):
+    global _zoom_accumulator
+    with INPUT_LOCK:
+        try:
+            delta = float(delta)
+        except (ValueError, TypeError):
+            delta = 0.0
+        if delta == 0.0:
+            return
+        _zoom_accumulator += delta
+        try:
+            clicks = int(_zoom_accumulator)
+        except (ValueError, TypeError, OverflowError):
+            clicks = 0
+        if clicks != 0:
+            _zoom_accumulator -= clicks
+            clicks = max(-5, min(5, clicks))
+            InputBackend.zoom_mouse(clicks)
 
 
 def handle_mouse_scroll(dy):

@@ -11,6 +11,7 @@ from ..core.input import (
     handle_mouse_move,
     handle_mouse_scroll,
     handle_mouse_stop,
+    handle_mouse_zoom,
     handle_text_input,
 )
 from ..core.overlay import SCREEN_H, SCREEN_W
@@ -68,6 +69,18 @@ def mouse_click():
 def mouse_scroll():
     data = request.get_json(silent=True) or {}
     handle_mouse_scroll(data.get('dy', 0.0))
+    return jsonify({'ok': True})
+
+
+@app.route('/mouse/zoom', methods=['POST'])
+@require_auth
+def mouse_zoom():
+    data = request.get_json(silent=True) or {}
+    try:
+        delta = float(data.get('delta', 0.0))
+    except (ValueError, TypeError):
+        delta = 0.0
+    handle_mouse_zoom(delta)
     return jsonify({'ok': True})
 
 

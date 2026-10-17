@@ -11,6 +11,7 @@ let volumeLevel = parseInt(localStorage.getItem('volume_level')) || 50;
 let scrollDirection = localStorage.getItem('scroll_direction') || 'natural';
 let scrollSensitivity = (typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('scroll_sensitivity')) : null) || 1.0;
 let scrollInertia = (typeof localStorage !== 'undefined' ? localStorage.getItem('scroll_inertia') : null) !== 'false';
+let pinchZoomEnabled = (typeof localStorage !== 'undefined' ? localStorage.getItem('pinch_zoom_enabled') : null) !== 'false';
 let currentTheme = (typeof localStorage !== 'undefined' ? localStorage.getItem('app_theme') : null) || 'dark';
 // Set from server state: true only when a transparent laser overlay exists.
 let laserAvailable = false;
@@ -112,6 +113,28 @@ function toggleScrollInertia() {
   syncScrollInertiaUI();
   if (typeof showToast === 'function') {
     showToast('Scroll Momentum: ' + (scrollInertia ? 'Smooth' : 'Instant'));
+  }
+}
+
+function syncPinchZoomUI() {
+  if (typeof document !== 'undefined') {
+    const btn = document.getElementById('pinchZoomToggleBtn');
+    if (btn) {
+      btn.textContent = pinchZoomEnabled ? 'Enabled' : 'Disabled';
+      btn.setAttribute('data-zoom', pinchZoomEnabled ? 'true' : 'false');
+    }
+  }
+}
+
+function togglePinchZoom() {
+  pinchZoomEnabled = !pinchZoomEnabled;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('pinch_zoom_enabled', pinchZoomEnabled ? 'true' : 'false');
+  }
+  vibrate(15);
+  syncPinchZoomUI();
+  if (typeof showToast === 'function') {
+    showToast('Pinch to Zoom: ' + (pinchZoomEnabled ? 'Enabled' : 'Disabled'));
   }
 }
 
@@ -404,6 +427,7 @@ function openSettingsModal() {
   setScrollDirection(scrollDirection);
   setScrollSensitivity(scrollSensitivity);
   syncScrollInertiaUI();
+  syncPinchZoomUI();
   loadPairedDevices();
   openOverlay('settingsModal');
 }
@@ -768,6 +792,8 @@ if (typeof window !== 'undefined') {
   window.setScrollSensitivity = setScrollSensitivity;
   window.toggleScrollInertia = toggleScrollInertia;
   window.syncScrollInertiaUI = syncScrollInertiaUI;
+  window.togglePinchZoom = togglePinchZoom;
+  window.syncPinchZoomUI = syncPinchZoomUI;
   window.revokeSingleDevice = revokeSingleDevice;
   window.loadPairedDevices = loadPairedDevices;
   window.openSettingsModal = openSettingsModal;

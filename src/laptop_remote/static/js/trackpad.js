@@ -107,6 +107,25 @@ document.addEventListener('DOMContentLoaded', () => {
       return Math.hypot(curX - startX, curY - startY) >= threshold;
     });
 
+  const classifyTwoFingerIntent =
+    trackpadLogic.classifyTwoFingerIntent ||
+    ((currSpan, startSpan, centroidDist, pinchEnabled = true, spanThresh = 12, centThresh = 6) => {
+      if (!pinchEnabled) return centroidDist >= centThresh ? 'scroll' : null;
+      const spanChange = Math.abs(currSpan - startSpan);
+      if (spanChange < spanThresh && centroidDist < centThresh) return null;
+      if (spanChange >= spanThresh && spanChange > centroidDist * 1.2) return 'zoom';
+      if (centroidDist >= centThresh) return 'scroll';
+      return spanChange > centroidDist ? 'zoom' : 'scroll';
+    });
+
+  const computeZoomDelta =
+    trackpadLogic.computeZoomDelta ||
+    ((spanDelta, sens = 1.0, div = 15.0) => (spanDelta / div) * sens);
+
+  const clampZoomDelta =
+    trackpadLogic.clampZoomDelta ||
+    ((delta, max = 3.0) => Math.max(-max, Math.min(max, delta)));
+
   const classifyGesture =
     trackpadLogic.classifyGesture ||
     ((prevPoints, currPoints, totalMovement = 0, movementThreshold = 2) => {
@@ -187,23 +206,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const pad = document.getElementById('trackpad');
   const ghost = document.getElementById('cursorGhost');
   const scrollIndicator = document.getElementById('scrollIndicator');
+  const zoomIndicator = document.getElementById('zoomIndicator');
+  const zoomIndicatorText = document.getElementById('zoomIndicatorText');
 
   if (!pad) return;
 
   let lastTouches = [];
   let twoFingerStartTouches = null;
-  let twoFingerScrollActive = false;
+  let twoFingerMode = null; // null | 'scroll' | 'zoom'
+  let twoFingerStartSpan = 0;
+  let twoFingerLastSpan = 0;
   let maxFingers = 0;
   let moveSent = false;
   let scrollSent = false;
+  let zoomSent = false;
   let totalMovement = 0;
   let bufferedDx = 0;
   let bufferedDy = 0;
 
   let pendingDx = 0, pendingDy = 0;
   let pendingScrollDy = 0;
+  let pendingZoomDelta = 0;
   let moveThrottle = null;
   let scrollThrottle = null;
+  let zoomThrottle = null;
+  let zoomHideTimer = null;
 
   let lastScrollVelocity = 0;
   let scrollInertiaId = null;
@@ -253,6 +280,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function flushZoom() {
+    if (pendingZoomDelta === 0) {
+      zoomThrottle = null;
+      return;
+    }
+
+    const delta = clampZoomDelta(pendingZoomDelta, 3.0);
+    pendingZoomDelta -= delta;
+
+    const ok = await socketSend('mouse_zoom', { delta });
+    if (!ok) { zoomThrottle = null; return; }
+    if (Math.abs(pendingZoomDelta) >= 0.1) {
+      zoomThrottle = requestAnimationFrame(flushZoom);
+    } else {
+      pendingZoomDelta = 0;
+      zoomThrottle = null;
+    }
+  }
+
   function runInertia() {
     const inertiaAllowed = typeof scrollInertia !== 'undefined' ? scrollInertia : true;
     if (!inertiaAllowed || inertiaFrames >= MAX_INERTIA_FRAMES) {
@@ -294,7 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
     maxFingers = e.touches.length;
     moveSent = false;
     scrollSent = false;
-    twoFingerScrollActive = false;
+    zoomSent = false;
+    twoFingerMode = null;
     totalMovement = 0;
     bufferedDx = 0;
     bufferedDy = 0;
@@ -303,6 +350,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const rect = pad.getBoundingClientRect();
     lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
     twoFingerStartTouches = e.touches.length === 2 ? [...lastTouches] : null;
+
+    if (e.touches.length === 2) {
+      const t0 = e.touches[0], t1 = e.touches[1];
+      twoFingerStartSpan = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      twoFingerLastSpan = twoFingerStartSpan;
+    } else {
+      twoFingerStartSpan = 0;
+      twoFingerLastSpan = 0;
+    }
 
     if (e.touches.length === 1 && ghost) {
       const x = e.touches[0].clientX - rect.left;
@@ -342,22 +398,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!twoFingerStartTouches) {
         twoFingerStartTouches = currentTwo;
+        twoFingerStartSpan = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+        twoFingerLastSpan = twoFingerStartSpan;
         lastTouches = currentTwo;
         return;
       }
 
-      if (!twoFingerScrollActive) {
-        if (isTwoFingerScrollGesture(currentTwo, twoFingerStartTouches, 6)) {
-          twoFingerScrollActive = true;
-          if (!hasVibratedScroll) {
-            vibrate(10);
-            hasVibratedScroll = true;
-          }
-        } else {
+      const currSpan = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const curCentroidX = (t0.clientX + t1.clientX) / 2;
+      const curCentroidY = (t0.clientY + t1.clientY) / 2;
+      const startCentroidX = (twoFingerStartTouches[0].x + twoFingerStartTouches[1].x) / 2;
+      const startCentroidY = (twoFingerStartTouches[0].y + twoFingerStartTouches[1].y) / 2;
+      const centroidDist = Math.hypot(curCentroidX - startCentroidX, curCentroidY - startCentroidY);
+
+      if (!twoFingerMode) {
+        const isZoomEnabled = typeof pinchZoomEnabled !== 'undefined' ? pinchZoomEnabled : true;
+        const intent = classifyTwoFingerIntent(currSpan, twoFingerStartSpan, centroidDist, isZoomEnabled, 12, 6);
+        if (!intent) {
           return;
+        }
+        twoFingerMode = intent;
+        if (!hasVibratedScroll) {
+          vibrate(10);
+          hasVibratedScroll = true;
         }
       }
 
+      if (twoFingerMode === 'zoom') {
+        const spanDelta = currSpan - twoFingerLastSpan;
+        twoFingerLastSpan = currSpan;
+
+        const zoomDelta = computeZoomDelta(spanDelta, 1.0, 15.0);
+        pendingZoomDelta += zoomDelta;
+        zoomSent = true;
+
+        if (zoomIndicator) {
+          zoomIndicator.classList.remove('opacity-0');
+          if (zoomIndicatorText) {
+            zoomIndicatorText.textContent = spanDelta >= 0 ? '🔍 Zoom In' : '🔍 Zoom Out';
+          }
+          clearTimeout(zoomHideTimer);
+          zoomHideTimer = setTimeout(() => {
+            if (zoomIndicator) zoomIndicator.classList.add('opacity-0');
+          }, 600);
+        }
+
+        if (!zoomThrottle) zoomThrottle = requestAnimationFrame(flushZoom);
+        lastTouches = currentTwo;
+        return;
+      }
+
+      // twoFingerMode === 'scroll':
       if (lastTouches.length < 2) {
         lastTouches = currentTwo;
         return;
@@ -381,7 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } else if (e.touches.length === 1) {
       twoFingerStartTouches = null;
-      twoFingerScrollActive = false;
+      twoFingerMode = null;
+      twoFingerStartSpan = 0;
+      twoFingerLastSpan = 0;
 
       const t = e.touches[0];
       const dx = (t.clientX - lastTouches[0].x);
@@ -425,6 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (moveThrottle) { cancelAnimationFrame(moveThrottle); moveThrottle = null; flushMove(); }
     if (scrollThrottle) { cancelAnimationFrame(scrollThrottle); scrollThrottle = null; flushScroll(); }
+    if (zoomThrottle) { cancelAnimationFrame(zoomThrottle); zoomThrottle = null; flushZoom(); }
 
     socketSend('mouse_stop');
 
@@ -433,8 +527,8 @@ document.addEventListener('DOMContentLoaded', () => {
       click_btn('left');
     }
 
-    // 2-finger tap without scroll -> Right Click
-    if (e.type === 'touchend' && maxFingers === 2 && !scrollSent && !twoFingerScrollActive) {
+    // 2-finger tap without scroll or zoom -> Right Click
+    if (e.type === 'touchend' && maxFingers === 2 && !scrollSent && !zoomSent && !twoFingerMode) {
       click_btn('right');
     }
 
@@ -447,20 +541,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.touches.length === 0) {
       lastTouches = [];
       twoFingerStartTouches = null;
-      twoFingerScrollActive = false;
+      twoFingerMode = null;
+      twoFingerStartSpan = 0;
+      twoFingerLastSpan = 0;
       moveSent = false;
       scrollSent = false;
+      zoomSent = false;
       maxFingers = 0;
       bufferedDx = 0;
       bufferedDy = 0;
       pad.classList.remove('active');
       if (ghost) ghost.classList.remove('visible');
       if (scrollIndicator) scrollIndicator.classList.remove('show');
+      if (zoomIndicator) zoomIndicator.classList.add('opacity-0');
     } else {
       lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
       if (e.touches.length !== 2) {
         twoFingerStartTouches = null;
-        twoFingerScrollActive = false;
+        twoFingerMode = null;
+        twoFingerStartSpan = 0;
+        twoFingerLastSpan = 0;
       }
     }
   };

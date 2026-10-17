@@ -14,6 +14,7 @@ from ..core.input import (
     handle_mouse_move,
     handle_mouse_scroll,
     handle_mouse_stop,
+    handle_mouse_zoom,
     handle_text_input,
 )
 from ..core.overlay import SCREEN_H, SCREEN_W
@@ -110,6 +111,17 @@ def ws_mouse_click(data):
 @socket_require_auth
 def ws_mouse_scroll(data):
     handle_mouse_scroll((data or {}).get('dy', 0.0))
+
+
+@socketio.on('mouse_zoom')
+@socket_require_auth
+def ws_mouse_zoom(data):
+    data = data or {}
+    try:
+        delta = float(data.get('delta', 0.0))
+    except (ValueError, TypeError):
+        delta = 0.0
+    handle_mouse_zoom(delta)
 
 
 @socketio.on('key')

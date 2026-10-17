@@ -152,6 +152,12 @@
           </div>
         </div>
 
+        <!-- Dynamic Pinch Zoom Indicator HUD -->
+        <div id="zoomIndicator" class="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-surface-container-high/90 text-primary border border-primary/30 text-xs font-semibold shadow-lg pointer-events-none opacity-0 transition-opacity duration-150 z-30 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+          <span id="zoomIndicatorText">Zoom</span>
+        </div>
+
         <!-- Center Instructional Hint (Fades out after first touch) -->
         <div class="self-center my-auto flex flex-col items-center gap-1.5 pointer-events-none z-10 opacity-70 transition-opacity duration-300" id="centerPrompt">
           <div class="w-10 h-10 rounded-full bg-surface-bright/30 flex items-center justify-center text-secondary border border-outline-variant/30">
@@ -685,6 +691,10 @@
             <span>Calibrated Scroll</span>
           </div>
           <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">2-Finger Pinch</span>
+            <span>Zoom In / Out</span>
+          </div>
+          <div class="flex items-center justify-between">
             <span class="text-on-surface font-semibold">Lock Button</span>
             <span>Window &amp; Text Drag</span>
           </div>
@@ -768,6 +778,10 @@
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Scroll Momentum</span>
           <button id="scrollInertiaToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleScrollInertia()" type="button">Smooth</button>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Pinch to Zoom</span>
+          <button id="pinchZoomToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="togglePinchZoom()" type="button">Enabled</button>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Shortcut Presets</span>

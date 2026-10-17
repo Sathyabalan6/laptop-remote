@@ -5,8 +5,11 @@ import {
   clampScrollDelta,
   clampScrollSensitivity,
   clampSensitivity,
+  clampZoomDelta,
   classifyGesture,
+  classifyTwoFingerIntent,
   computeScrollDelta,
+  computeZoomDelta,
   isTwoFingerScrollGesture
 } from '../../src/laptop_remote/static/js/trackpad-logic.js';
 
@@ -110,6 +113,53 @@ describe('isTwoFingerScrollGesture', () => {
   it('returns false for invalid touches', () => {
     expect(isTwoFingerScrollGesture([], [], 6)).toBe(false);
     expect(isTwoFingerScrollGesture([{ x: 1, y: 1 }], [{ x: 1, y: 1 }], 6)).toBe(false);
+  });
+});
+
+describe('classifyTwoFingerIntent', () => {
+  it('returns null when touches are within deadband', () => {
+    // startSpan = 100, currSpan = 104 (diff = 4 < 12), centroidDist = 3 < 6
+    expect(classifyTwoFingerIntent(104, 100, 3, true)).toBe(null);
+  });
+
+  it('identifies pinch-to-zoom when span change dominates centroid movement', () => {
+    // startSpan = 100, currSpan = 130 (diff = 30 >= 12), centroidDist = 4 (30 > 4.8)
+    expect(classifyTwoFingerIntent(130, 100, 4, true)).toBe('zoom');
+  });
+
+  it('identifies scroll when centroid movement dominates span change', () => {
+    // startSpan = 100, currSpan = 102 (diff = 2), centroidDist = 25 >= 6
+    expect(classifyTwoFingerIntent(102, 100, 25, true)).toBe('scroll');
+  });
+
+  it('defaults to scroll when pinch zoom is disabled', () => {
+    // Even if span change is large, if pinchEnabled is false, only centroid matters
+    expect(classifyTwoFingerIntent(140, 100, 10, false)).toBe('scroll');
+    expect(classifyTwoFingerIntent(140, 100, 2, false)).toBe(null);
+  });
+});
+
+describe('computeZoomDelta', () => {
+  it('returns positive delta when fingers spread apart (zoom in)', () => {
+    // spanDelta = 30, divisor = 15 -> 2.0
+    expect(computeZoomDelta(30, 1.0, 15.0)).toBeCloseTo(2.0);
+  });
+
+  it('returns negative delta when fingers pinch together (zoom out)', () => {
+    // spanDelta = -30, divisor = 15 -> -2.0
+    expect(computeZoomDelta(-30, 1.0, 15.0)).toBeCloseTo(-2.0);
+  });
+
+  it('scales with zoomSensitivity', () => {
+    expect(computeZoomDelta(30, 1.5, 15.0)).toBeCloseTo(3.0);
+  });
+});
+
+describe('clampZoomDelta', () => {
+  it('clamps zoom delta within maxPerFrame', () => {
+    expect(clampZoomDelta(5.0, 3.0)).toBe(3.0);
+    expect(clampZoomDelta(-5.0, 3.0)).toBe(-3.0);
+    expect(clampZoomDelta(1.5, 3.0)).toBe(1.5);
   });
 });
 

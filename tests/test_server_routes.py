@@ -61,6 +61,7 @@ class TestAuthEnforcement:
         "/mouse/move",
         "/mouse/click",
         "/mouse/scroll",
+        "/mouse/zoom",
         "/key",
         "/text",
         "/pointer/on",

@@ -104,6 +104,41 @@ class TestHandleMouseScroll:
         assert inp._scroll_accumulator == 0.0
 
 
+class TestHandleMouseZoom:
+    def test_fractional_zoom_accumulation(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "zoom_mouse", lambda n: calls.append(n))
+        inp._zoom_accumulator = 0.0
+
+        # Sub-integer moves accumulate across frames
+        inp.handle_mouse_zoom(0.4)
+        assert calls == []
+
+        inp.handle_mouse_zoom(0.7)
+        assert calls == [1]
+
+        inp.handle_mouse_zoom(-1.2)
+        assert calls == [1, -1]
+
+    def test_clamps_extreme_zoom(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "zoom_mouse", lambda n: calls.append(n))
+        inp._zoom_accumulator = 0.0
+        inp.handle_mouse_zoom(9999)
+        assert calls and abs(calls[0]) <= 5
+
+    def test_reset_zoom_accumulator_on_mouse_stop(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "zoom_mouse", lambda n: calls.append(n))
+        inp._zoom_accumulator = 0.0
+        inp.handle_mouse_zoom(0.6)
+        assert calls == []
+        assert inp._zoom_accumulator == pytest.approx(0.6)
+
+        inp.handle_mouse_stop()
+        assert inp._zoom_accumulator == 0.0
+
+
 class TestYdotoolSocketPaths:
     """Regression tests for the Wayland ydotool socket resolution.
 

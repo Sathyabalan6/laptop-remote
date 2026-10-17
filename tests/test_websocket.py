@@ -46,6 +46,14 @@ class TestWsMouseScrollAndStop:
         handler({"dy": 2.5})
         mock_scroll.assert_called_once_with(2.5)
 
+    def test_ws_mouse_zoom_invokes_handle_mouse_zoom(self, monkeypatch):
+        mock_zoom = MagicMock()
+        monkeypatch.setattr(websocket, "handle_mouse_zoom", mock_zoom)
+
+        handler = getattr(websocket.ws_mouse_zoom, "__wrapped__", websocket.ws_mouse_zoom)
+        handler({"delta": 1.5})
+        mock_zoom.assert_called_once_with(1.5)
+
     def test_ws_mouse_stop_invokes_handle_mouse_stop(self, monkeypatch):
         mock_stop = MagicMock()
         monkeypatch.setattr(websocket, "handle_mouse_stop", mock_stop)
