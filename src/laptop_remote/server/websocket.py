@@ -13,6 +13,7 @@ from ..core.input import (
     handle_mouse_click,
     handle_mouse_move,
     handle_mouse_scroll,
+    handle_mouse_stop,
     handle_text_input,
 )
 from ..core.overlay import SCREEN_H, SCREEN_W
@@ -95,7 +96,7 @@ def ws_mouse_move(data):
 @socketio.on('mouse_stop')
 @socket_require_auth
 def ws_mouse_stop(data=None):
-    pass
+    handle_mouse_stop()
 
 
 @socketio.on('mouse_click')

@@ -9,6 +9,8 @@ let mouseSensitivity = parseFloat(localStorage.getItem('mouse_sensitivity')) || 
 let screenW = 1920, screenH = 1080;
 let volumeLevel = parseInt(localStorage.getItem('volume_level')) || 50;
 let scrollDirection = localStorage.getItem('scroll_direction') || 'natural';
+let scrollSensitivity = (typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('scroll_sensitivity')) : null) || 1.0;
+let scrollInertia = (typeof localStorage !== 'undefined' ? localStorage.getItem('scroll_inertia') : null) !== 'false';
 let currentTheme = (typeof localStorage !== 'undefined' ? localStorage.getItem('app_theme') : null) || 'dark';
 // Set from server state: true only when a transparent laser overlay exists.
 let laserAvailable = false;
@@ -60,6 +62,57 @@ function toggleScrollDirection() {
   vibrate(15);
   setScrollDirection(scrollDirection === 'natural' ? 'inverted' : 'natural');
   showToast('Scroll: ' + (scrollDirection === 'inverted' ? 'Inverted' : 'Natural'));
+}
+
+function setScrollSensitivity(val) {
+  const clampFn = (typeof window !== 'undefined' && window.trackpadLogic && window.trackpadLogic.clampScrollSensitivity) ||
+    ((v) => Math.min(3.0, Math.max(0.2, v)));
+  scrollSensitivity = clampFn(typeof val === 'number' ? val : parseFloat(val) || 1.0);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('scroll_sensitivity', scrollSensitivity);
+  }
+  if (typeof document !== 'undefined') {
+    const s1 = document.getElementById('settingsScrollSlider');
+    const l1 = document.getElementById('settingsScrollLabel');
+    if (s1) s1.value = scrollSensitivity;
+    if (l1) l1.textContent = scrollSensitivity.toFixed(1) + 'x';
+
+    const s2 = document.getElementById('scrollSensitivitySlider');
+    const l2 = document.getElementById('scrollPopoverLabel');
+    const f2 = document.getElementById('scrollSliderFill');
+    const t2 = document.getElementById('scrollSliderThumb');
+    if (s2) s2.value = scrollSensitivity;
+    if (l2) l2.textContent = scrollSensitivity.toFixed(1) + 'x';
+    if (f2 && t2 && s2) {
+      const min = parseFloat(s2.min) || 0.2;
+      const max = parseFloat(s2.max) || 3.0;
+      const percent = ((scrollSensitivity - min) / (max - min)) * 100;
+      f2.style.width = percent + '%';
+      t2.style.left = percent + '%';
+    }
+  }
+}
+
+function syncScrollInertiaUI() {
+  if (typeof document !== 'undefined') {
+    const btn = document.getElementById('scrollInertiaToggleBtn');
+    if (btn) {
+      btn.textContent = scrollInertia ? 'Smooth' : 'Instant';
+      btn.setAttribute('data-inertia', scrollInertia ? 'true' : 'false');
+    }
+  }
+}
+
+function toggleScrollInertia() {
+  scrollInertia = !scrollInertia;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('scroll_inertia', scrollInertia ? 'true' : 'false');
+  }
+  vibrate(15);
+  syncScrollInertiaUI();
+  if (typeof showToast === 'function') {
+    showToast('Scroll Momentum: ' + (scrollInertia ? 'Smooth' : 'Instant'));
+  }
 }
 
 async function loadPairedDevices() {
@@ -349,6 +402,8 @@ function openSettingsModal() {
   vibrate(15);
   setTheme(currentTheme);
   setScrollDirection(scrollDirection);
+  setScrollSensitivity(scrollSensitivity);
+  syncScrollInertiaUI();
   loadPairedDevices();
   openOverlay('settingsModal');
 }
@@ -710,6 +765,9 @@ if (typeof window !== 'undefined') {
   window.toggleTheme = toggleTheme;
   window.setTheme = setTheme;
   window.toggleScrollDirection = toggleScrollDirection;
+  window.setScrollSensitivity = setScrollSensitivity;
+  window.toggleScrollInertia = toggleScrollInertia;
+  window.syncScrollInertiaUI = syncScrollInertiaUI;
   window.revokeSingleDevice = revokeSingleDevice;
   window.loadPairedDevices = loadPairedDevices;
   window.openSettingsModal = openSettingsModal;

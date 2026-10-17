@@ -665,6 +665,17 @@ def handle_mouse_click(button='left', action='click'):
 
 _scroll_accumulator = 0.0
 
+
+def reset_scroll_accumulator():
+    global _scroll_accumulator
+    with INPUT_LOCK:
+        _scroll_accumulator = 0.0
+
+
+def handle_mouse_stop():
+    reset_scroll_accumulator()
+
+
 def handle_mouse_scroll(dy):
     global _scroll_accumulator
     with INPUT_LOCK:
@@ -678,7 +689,7 @@ def handle_mouse_scroll(dy):
         clicks = int(_scroll_accumulator)
         if clicks != 0:
             _scroll_accumulator -= clicks
-            clicks = max(-50, min(50, clicks))
+            clicks = max(-15, min(15, clicks))
             InputBackend.scroll_mouse(clicks)
 
 def presentation_start_key():

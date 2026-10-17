@@ -10,6 +10,7 @@ from ..core.input import (
     handle_mouse_click,
     handle_mouse_move,
     handle_mouse_scroll,
+    handle_mouse_stop,
     handle_text_input,
 )
 from ..core.overlay import SCREEN_H, SCREEN_W
@@ -50,6 +51,7 @@ def mouse_move():
 @app.route('/mouse/stop', methods=['POST'])
 @require_auth
 def mouse_stop():
+    handle_mouse_stop()
     return jsonify({'ok': True})
 
 

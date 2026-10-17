@@ -35,3 +35,21 @@ class TestWsMouseMove:
         handler(b"bad")
         # Length < 6 falls back to dict parsing with default 0.0, 0.0, 1.0
         mock_move.assert_called_once_with(0.0, 0.0, 1.0)
+
+
+class TestWsMouseScrollAndStop:
+    def test_ws_mouse_scroll_invokes_handle_mouse_scroll(self, monkeypatch):
+        mock_scroll = MagicMock()
+        monkeypatch.setattr(websocket, "handle_mouse_scroll", mock_scroll)
+
+        handler = getattr(websocket.ws_mouse_scroll, "__wrapped__", websocket.ws_mouse_scroll)
+        handler({"dy": 2.5})
+        mock_scroll.assert_called_once_with(2.5)
+
+    def test_ws_mouse_stop_invokes_handle_mouse_stop(self, monkeypatch):
+        mock_stop = MagicMock()
+        monkeypatch.setattr(websocket, "handle_mouse_stop", mock_stop)
+
+        handler = getattr(websocket.ws_mouse_stop, "__wrapped__", websocket.ws_mouse_stop)
+        handler()
+        mock_stop.assert_called_once()

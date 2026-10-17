@@ -68,27 +68,58 @@ function stopContinuousScroll(e) {
 document.addEventListener('DOMContentLoaded', () => {
   const trackpadLogic = window.trackpadLogic || {};
 
-const applyInertia =
-  trackpadLogic.applyInertia || ((velocity, decay) => velocity * decay);
+  const applyInertia =
+    trackpadLogic.applyInertia || ((velocity, decay) => velocity * decay);
 
-const clampSensitivity =
-  trackpadLogic.clampSensitivity ||
-  ((value, min = 0.5, max = 4.0) =>
-    Math.min(max, Math.max(min, value)));
+  const clampSensitivity =
+    trackpadLogic.clampSensitivity ||
+    ((value, min = 0.5, max = 4.0) =>
+      Math.min(max, Math.max(min, value)));
 
-const classifyGesture =
-  trackpadLogic.classifyGesture ||
-  ((prevPoints, currPoints, totalMovement = 0, movementThreshold = 2) => {
-    if (currPoints.length === 2) {
-      return 'scroll';
-    }
+  const clampScrollSensitivity =
+    trackpadLogic.clampScrollSensitivity ||
+    ((value, min = 0.2, max = 3.0) => Math.min(max, Math.max(min, value)));
 
-    if (currPoints.length === 1 && prevPoints.length === 1) {
-      return totalMovement > movementThreshold ? 'move' : 'tap';
-    }
+  const computeScrollDelta =
+    trackpadLogic.computeScrollDelta ||
+    ((rawDy, sens = 1.0, dir = 'natural', div = 18.0) =>
+      (rawDy / div) * sens * (dir === 'inverted' ? -1 : 1));
 
-    return 'tap';
-  });
+  const clampScrollDelta =
+    trackpadLogic.clampScrollDelta ||
+    ((delta, max = 4.0) => Math.max(-max, Math.min(max, delta)));
+
+  const applyScrollInertia =
+    trackpadLogic.applyScrollInertia ||
+    ((velocity, decay = 0.70, min = 0.35) => {
+      const d = velocity * decay;
+      return Math.abs(d) < min ? 0 : d;
+    });
+
+  const isTwoFingerScrollGesture =
+    trackpadLogic.isTwoFingerScrollGesture ||
+    ((touches, startTouches, threshold = 6) => {
+      if (!touches || !startTouches || touches.length < 2 || startTouches.length < 2) return false;
+      const curY = (touches[0].y + touches[1].y) / 2;
+      const startY = (startTouches[0].y + startTouches[1].y) / 2;
+      const curX = (touches[0].x + touches[1].x) / 2;
+      const startX = (startTouches[0].x + startTouches[1].x) / 2;
+      return Math.hypot(curX - startX, curY - startY) >= threshold;
+    });
+
+  const classifyGesture =
+    trackpadLogic.classifyGesture ||
+    ((prevPoints, currPoints, totalMovement = 0, movementThreshold = 2) => {
+      if (currPoints.length === 2) {
+        return 'scroll';
+      }
+
+      if (currPoints.length === 1 && prevPoints.length === 1) {
+        return totalMovement > movementThreshold ? 'move' : 'tap';
+      }
+
+      return 'tap';
+    });
   const sensSlider = document.getElementById('sensitivitySlider');
   const sensLabel = document.getElementById('sensitivityLabel');
   const speedPopoverLabel = document.getElementById('speedPopoverLabel');
@@ -119,6 +150,40 @@ const classifyGesture =
     });
   }
 
+  const scrollSlider = document.getElementById('scrollSensitivitySlider');
+  const scrollPopoverLabel = document.getElementById('scrollPopoverLabel');
+  const scrollFill = document.getElementById('scrollSliderFill');
+  const scrollThumb = document.getElementById('scrollSliderThumb');
+
+  function updateScrollSpeedUI(val) {
+    if (scrollPopoverLabel) scrollPopoverLabel.textContent = val.toFixed(1) + 'x';
+    const settingsLabel = document.getElementById('settingsScrollLabel');
+    if (settingsLabel) settingsLabel.textContent = val.toFixed(1) + 'x';
+    const settingsSlider = document.getElementById('settingsScrollSlider');
+    if (settingsSlider) settingsSlider.value = val;
+    if (scrollFill && scrollThumb && scrollSlider) {
+      const min = parseFloat(scrollSlider.min) || 0.2;
+      const max = parseFloat(scrollSlider.max) || 3.0;
+      const percent = ((val - min) / (max - min)) * 100;
+      scrollFill.style.width = percent + '%';
+      scrollThumb.style.left = percent + '%';
+    }
+  }
+
+  if (scrollSlider) {
+    const curSens = typeof scrollSensitivity !== 'undefined' ? scrollSensitivity : 1.0;
+    scrollSlider.value = curSens;
+    updateScrollSpeedUI(curSens);
+
+    scrollSlider.addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      if (typeof setScrollSensitivity === 'function') {
+        setScrollSensitivity(val);
+      }
+      updateScrollSpeedUI(val);
+    });
+  }
+
   const pad = document.getElementById('trackpad');
   const ghost = document.getElementById('cursorGhost');
   const scrollIndicator = document.getElementById('scrollIndicator');
@@ -126,6 +191,8 @@ const classifyGesture =
   if (!pad) return;
 
   let lastTouches = [];
+  let twoFingerStartTouches = null;
+  let twoFingerScrollActive = false;
   let maxFingers = 0;
   let moveSent = false;
   let scrollSent = false;
@@ -140,12 +207,10 @@ const classifyGesture =
 
   let lastScrollVelocity = 0;
   let scrollInertiaId = null;
+  let inertiaFrames = 0;
   let hasVibratedScroll = false;
-
-  const SCROLL_SENSITIVITY = Math.min(2.5, Math.max(1.0, (window.devicePixelRatio || 1) * 1.2));
+  const MAX_INERTIA_FRAMES = 8;
   const MOVE_THRESHOLD_PX = 2;
-  const INERTIA_DECAY = 0.82;
-  const INERTIA_MIN = 0.8;
 
   async function flushMove() {
     if (pendingDx === 0 && pendingDy === 0) {
@@ -174,30 +239,43 @@ const classifyGesture =
       return;
     }
 
-    const dy = Math.max(-20, Math.min(20, pendingScrollDy));
-    pendingScrollDy = 0;
+    const dy = clampScrollDelta(pendingScrollDy, 4.0);
+    pendingScrollDy -= dy;
     lastScrollVelocity = dy;
 
     const ok = await socketSend('mouse_scroll', { dy });
     if (!ok) { scrollThrottle = null; return; }
-    if (pendingScrollDy !== 0) {
-      scrollThrottle = setTimeout(flushScroll, 16);
+    if (Math.abs(pendingScrollDy) >= 0.1) {
+      scrollThrottle = requestAnimationFrame(flushScroll);
     } else {
+      pendingScrollDy = 0;
       scrollThrottle = null;
     }
   }
 
   function runInertia() {
-    lastScrollVelocity = applyInertia(lastScrollVelocity, INERTIA_DECAY);
-    if (Math.abs(lastScrollVelocity) < INERTIA_MIN) {
+    const inertiaAllowed = typeof scrollInertia !== 'undefined' ? scrollInertia : true;
+    if (!inertiaAllowed || inertiaFrames >= MAX_INERTIA_FRAMES) {
       cancelAnimationFrame(scrollInertiaId);
       scrollInertiaId = null;
+      lastScrollVelocity = 0;
+      inertiaFrames = 0;
       return;
     }
 
+    lastScrollVelocity = applyScrollInertia(lastScrollVelocity, 0.70, 0.35);
+    if (lastScrollVelocity === 0) {
+      cancelAnimationFrame(scrollInertiaId);
+      scrollInertiaId = null;
+      lastScrollVelocity = 0;
+      inertiaFrames = 0;
+      return;
+    }
+
+    inertiaFrames++;
     pendingScrollDy += lastScrollVelocity;
     if (!scrollThrottle) {
-      scrollThrottle = setTimeout(flushScroll, 16);
+      scrollThrottle = requestAnimationFrame(flushScroll);
     }
 
     scrollInertiaId = requestAnimationFrame(runInertia);
@@ -210,11 +288,13 @@ const classifyGesture =
       cancelAnimationFrame(scrollInertiaId);
       scrollInertiaId = null;
       lastScrollVelocity = 0;
+      inertiaFrames = 0;
     }
 
     maxFingers = e.touches.length;
     moveSent = false;
     scrollSent = false;
+    twoFingerScrollActive = false;
     totalMovement = 0;
     bufferedDx = 0;
     bufferedDy = 0;
@@ -222,6 +302,7 @@ const classifyGesture =
 
     const rect = pad.getBoundingClientRect();
     lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    twoFingerStartTouches = e.touches.length === 2 ? [...lastTouches] : null;
 
     if (e.touches.length === 1 && ghost) {
       const x = e.touches[0].clientX - rect.left;
@@ -254,19 +335,31 @@ const classifyGesture =
       y: t.clientY
     }));
 
-    let gesture = classifyGesture(
-      lastTouches,
-      currentPoints,
-      totalMovement,
-      MOVE_THRESHOLD_PX
-    );
-
     if (e.touches.length === 2) {
       if (ghost) ghost.classList.remove('visible');
       const t0 = e.touches[0], t1 = e.touches[1];
+      const currentTwo = [{ x: t0.clientX, y: t0.clientY }, { x: t1.clientX, y: t1.clientY }];
+
+      if (!twoFingerStartTouches) {
+        twoFingerStartTouches = currentTwo;
+        lastTouches = currentTwo;
+        return;
+      }
+
+      if (!twoFingerScrollActive) {
+        if (isTwoFingerScrollGesture(currentTwo, twoFingerStartTouches, 6)) {
+          twoFingerScrollActive = true;
+          if (!hasVibratedScroll) {
+            vibrate(10);
+            hasVibratedScroll = true;
+          }
+        } else {
+          return;
+        }
+      }
 
       if (lastTouches.length < 2) {
-        lastTouches = [{ x: t0.clientX, y: t0.clientY }, { x: t1.clientX, y: t1.clientY }];
+        lastTouches = currentTwo;
         return;
       }
 
@@ -274,22 +367,22 @@ const classifyGesture =
       const lastYAvg = (lastTouches[0].y + lastTouches[1].y) / 2;
       const dy = curYAvg - lastYAvg;
 
-      if (!hasVibratedScroll && Math.abs(dy) > 4) {
-        vibrate(8);
-        hasVibratedScroll = true;
-      }
+      const curSens = typeof scrollSensitivity !== 'undefined' ? scrollSensitivity : 1.0;
+      const curDir = typeof scrollDirection !== 'undefined' ? scrollDirection : 'natural';
+      const scrollUnit = computeScrollDelta(dy, curSens, curDir, 18.0);
 
-      const dirMultiplier = (typeof scrollDirection !== 'undefined' && scrollDirection === 'inverted') ? -1 : 1;
-      const scrollUnit = dy * SCROLL_SENSITIVITY * 1.8 * dirMultiplier;
       pendingScrollDy += scrollUnit;
       scrollSent = true;
 
-      lastTouches = [{ x: t0.clientX, y: t0.clientY }, { x: t1.clientX, y: t1.clientY }];
+      lastTouches = currentTwo;
       if (scrollIndicator) scrollIndicator.classList.add('show');
 
-      if (!scrollThrottle) scrollThrottle = setTimeout(flushScroll, 16);
+      if (!scrollThrottle) scrollThrottle = requestAnimationFrame(flushScroll);
 
     } else if (e.touches.length === 1) {
+      twoFingerStartTouches = null;
+      twoFingerScrollActive = false;
+
       const t = e.touches[0];
       const dx = (t.clientX - lastTouches[0].x);
       const dy = (t.clientY - lastTouches[0].y);
@@ -297,7 +390,7 @@ const classifyGesture =
       bufferedDx += dx;
       bufferedDy += dy;
       totalMovement += Math.sqrt(dx * dx + dy * dy);
-      gesture = classifyGesture(
+      const gesture = classifyGesture(
         lastTouches,
         [{ x: t.clientX, y: t.clientY }],
         totalMovement,
@@ -331,20 +424,30 @@ const classifyGesture =
     e.preventDefault();
 
     if (moveThrottle) { cancelAnimationFrame(moveThrottle); moveThrottle = null; flushMove(); }
-    if (scrollThrottle) { clearTimeout(scrollThrottle); scrollThrottle = null; flushScroll(); }
+    if (scrollThrottle) { cancelAnimationFrame(scrollThrottle); scrollThrottle = null; flushScroll(); }
 
     socketSend('mouse_stop');
 
+    // 1-finger tap -> Left Click
     if (e.type === 'touchend' && maxFingers === 1 && !moveSent) {
       click_btn('left');
     }
 
-    if (scrollSent && Math.abs(lastScrollVelocity) >= INERTIA_MIN) {
+    // 2-finger tap without scroll -> Right Click
+    if (e.type === 'touchend' && maxFingers === 2 && !scrollSent && !twoFingerScrollActive) {
+      click_btn('right');
+    }
+
+    // Natural momentum if actively scrolling
+    if (scrollSent && Math.abs(lastScrollVelocity) >= 0.5) {
+      inertiaFrames = 0;
       scrollInertiaId = requestAnimationFrame(runInertia);
     }
 
     if (e.touches.length === 0) {
       lastTouches = [];
+      twoFingerStartTouches = null;
+      twoFingerScrollActive = false;
       moveSent = false;
       scrollSent = false;
       maxFingers = 0;
@@ -355,6 +458,10 @@ const classifyGesture =
       if (scrollIndicator) scrollIndicator.classList.remove('show');
     } else {
       lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+      if (e.touches.length !== 2) {
+        twoFingerStartTouches = null;
+        twoFingerScrollActive = false;
+      }
     }
   };
 

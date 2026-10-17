@@ -90,7 +90,18 @@ class TestHandleMouseScroll:
         monkeypatch.setattr(inp.InputBackend, "scroll_mouse", lambda n: calls.append(n))
         inp._scroll_accumulator = 0.0
         inp.handle_mouse_scroll(9999)
-        assert calls and abs(calls[0]) <= 50
+        assert calls and abs(calls[0]) <= 15
+
+    def test_reset_scroll_accumulator_on_mouse_stop(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(inp.InputBackend, "scroll_mouse", lambda n: calls.append(n))
+        inp._scroll_accumulator = 0.0
+        inp.handle_mouse_scroll(0.7)
+        assert calls == []
+        assert inp._scroll_accumulator == pytest.approx(0.7)
+
+        inp.handle_mouse_stop()
+        assert inp._scroll_accumulator == 0.0
 
 
 class TestYdotoolSocketPaths:

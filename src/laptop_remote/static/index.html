@@ -102,18 +102,38 @@
           </button>
 
           <!-- Sensitivity Slider Popover Card -->
-          <div id="speedPopover" class="absolute right-0 top-12 z-30 w-64 p-3.5 rounded-2xl bg-surface-container-high/95 backdrop-blur-2xl border border-white/[0.1] shadow-2xl flex flex-col gap-2 transition-all hidden" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between text-xs font-medium text-on-surface">
-              <span>Pointer Sensitivity</span>
-              <span class="text-secondary font-bold" id="speedPopoverLabel">1.0x</span>
-            </div>
-            <div class="slider-container relative w-full flex items-center h-10">
-              <div class="w-full h-2 rounded-full bg-surface-container-highest relative overflow-hidden flex items-center">
-                <div class="h-full bg-secondary rounded-full transition-all duration-75" id="speedSliderFill" style="width: 14.3%;"></div>
+          <div id="speedPopover" class="absolute right-0 top-12 z-30 w-64 p-3.5 rounded-2xl bg-surface-container-high/95 backdrop-blur-2xl border border-white/[0.1] shadow-2xl flex flex-col gap-3 transition-all hidden" onclick="event.stopPropagation()">
+            <!-- Pointer Speed Row -->
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center justify-between text-xs font-medium text-on-surface">
+                <span>Pointer Speed</span>
+                <span class="text-secondary font-bold" id="speedPopoverLabel">1.0x</span>
               </div>
-              <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-10 z-10" id="sensitivitySlider" max="4.0" min="0.5" step="0.1" type="range" value="1.0" aria-label="Pointer sensitivity"/>
-              <div class="absolute w-5 h-5 rounded-full bg-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-75 flex items-center justify-center -ml-2.5" id="speedSliderThumb" style="left: 14.3%;">
-                <div class="w-1.5 h-1.5 rounded-full bg-secondary-container"></div>
+              <div class="slider-container relative w-full flex items-center h-8">
+                <div class="w-full h-2 rounded-full bg-surface-container-highest relative overflow-hidden flex items-center">
+                  <div class="h-full bg-secondary rounded-full transition-all duration-75" id="speedSliderFill" style="width: 14.3%;"></div>
+                </div>
+                <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-8 z-10" id="sensitivitySlider" max="4.0" min="0.5" step="0.1" type="range" value="1.0" aria-label="Pointer sensitivity"/>
+                <div class="absolute w-4 h-4 rounded-full bg-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-75 flex items-center justify-center -ml-2" id="speedSliderThumb" style="left: 14.3%;">
+                  <div class="w-1 h-1 rounded-full bg-secondary-container"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scroll Speed Row -->
+            <div class="flex flex-col gap-1.5 pt-2 border-t border-white/[0.06]">
+              <div class="flex items-center justify-between text-xs font-medium text-on-surface">
+                <span>Scroll Speed</span>
+                <span class="text-secondary font-bold" id="scrollPopoverLabel">1.0x</span>
+              </div>
+              <div class="slider-container relative w-full flex items-center h-8">
+                <div class="w-full h-2 rounded-full bg-surface-container-highest relative overflow-hidden flex items-center">
+                  <div class="h-full bg-secondary rounded-full transition-all duration-75" id="scrollSliderFill" style="width: 28.6%;"></div>
+                </div>
+                <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-8 z-10" id="scrollSensitivitySlider" max="3.0" min="0.2" step="0.1" type="range" value="1.0" aria-label="Scroll speed"/>
+                <div class="absolute w-4 h-4 rounded-full bg-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-75 flex items-center justify-center -ml-2" id="scrollSliderThumb" style="left: 28.6%;">
+                  <div class="w-1 h-1 rounded-full bg-secondary-container"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -657,8 +677,12 @@
             <span>Left Click</span>
           </div>
           <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">2-Finger Tap</span>
+            <span>Right Click</span>
+          </div>
+          <div class="flex items-center justify-between">
             <span class="text-on-surface font-semibold">2-Finger Drag</span>
-            <span>Smooth Scroll</span>
+            <span>Calibrated Scroll</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-on-surface font-semibold">Lock Button</span>
@@ -733,6 +757,17 @@
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Scroll Direction</span>
           <button id="scrollDirToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleScrollDirection()" type="button">Natural</button>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Scroll Speed</span>
+          <div class="flex items-center gap-1.5">
+            <input class="w-24 h-1.5 accent-primary cursor-pointer" id="settingsScrollSlider" max="3.0" min="0.2" step="0.1" type="range" value="1.0" oninput="setScrollSensitivity(parseFloat(this.value))" aria-label="Scroll speed"/>
+            <span class="text-[11px] font-semibold text-primary font-mono w-8 text-right" id="settingsScrollLabel">1.0x</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Scroll Momentum</span>
+          <button id="scrollInertiaToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleScrollInertia()" type="button">Smooth</button>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Shortcut Presets</span>
