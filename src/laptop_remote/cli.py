@@ -25,6 +25,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ssl-cert", default=None, help="Path to SSL certificate (.pem/.crt)")
     parser.add_argument("--ssl-key", default=None, help="Path to SSL private key (.pem/.key)")
     parser.add_argument("--tray", action="store_true", help="Enable background system tray icon mode")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose debug logging")
+    parser.add_argument("--quiet", "-q", action="store_true", help="Silence non-error output and banners")
     return parser
 
 
@@ -32,9 +34,16 @@ def main(argv=None) -> int:
     args, _ = build_parser().parse_known_args(argv)
 
     try:
-        from .server import main as run_server
+        from .core.logger import configure_logging  # type: ignore
     except ImportError:
-        from laptop_remote.server import main as run_server
+        from laptop_remote.core.logger import configure_logging  # type: ignore
+
+    configure_logging(verbose=args.verbose, quiet=args.quiet)
+
+    try:
+        from .server import main as run_server  # type: ignore
+    except ImportError:
+        from laptop_remote.server import main as run_server  # type: ignore
 
     try:
         run_server(
@@ -45,6 +54,8 @@ def main(argv=None) -> int:
             ssl_key=args.ssl_key,
             port=args.port,
             tray_enabled=args.tray,
+            verbose=args.verbose,  # type: ignore
+            quiet=args.quiet,  # type: ignore
         )
     except KeyboardInterrupt:
         print("\n\n👋 Server stopped by user (Ctrl+C). Goodbye!\n")

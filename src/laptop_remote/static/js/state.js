@@ -12,6 +12,8 @@ let scrollDirection = localStorage.getItem('scroll_direction') || 'natural';
 let scrollSensitivity = (typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('scroll_sensitivity')) : null) || 1.0;
 let scrollInertia = (typeof localStorage !== 'undefined' ? localStorage.getItem('scroll_inertia') : null) !== 'false';
 let pinchZoomEnabled = (typeof localStorage !== 'undefined' ? localStorage.getItem('pinch_zoom_enabled') : null) !== 'false';
+let airSensitivity = (typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('air_sensitivity')) : null) || 1.8;
+let airMode = (typeof localStorage !== 'undefined' ? localStorage.getItem('air_mode') : null) || 'cursor';
 let currentTheme = (typeof localStorage !== 'undefined' ? localStorage.getItem('app_theme') : null) || 'dark';
 // Set from server state: true only when a transparent laser overlay exists.
 let laserAvailable = false;
@@ -136,6 +138,56 @@ function togglePinchZoom() {
   if (typeof showToast === 'function') {
     showToast('Pinch to Zoom: ' + (pinchZoomEnabled ? 'Enabled' : 'Disabled'));
   }
+}
+
+function setAirSensitivity(val) {
+  airSensitivity = Math.min(4.0, Math.max(0.5, typeof val === 'number' ? val : parseFloat(val) || 1.8));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('air_sensitivity', airSensitivity);
+  }
+  if (typeof document !== 'undefined') {
+    const s = document.getElementById('settingsAirSlider');
+    const l = document.getElementById('settingsAirLabel');
+    if (s) s.value = airSensitivity;
+    if (l) l.textContent = airSensitivity.toFixed(1) + 'x';
+  }
+}
+
+function setAirMode(mode) {
+  airMode = mode === 'laser' ? 'laser' : 'cursor';
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('air_mode', airMode);
+  }
+  vibrate(15);
+  syncAirUI();
+  if (typeof showToast === 'function') {
+    showToast(airMode === 'laser' ? 'Air Target: 🔴 Laser Overlay' : 'Air Target: 🖱️ Desktop Cursor');
+  }
+}
+
+function syncAirUI() {
+  if (typeof document === 'undefined') return;
+  const isLaser = (airMode === 'laser');
+  const btnLaser = document.getElementById('airModeLaserBtn');
+  const btnCursor = document.getElementById('airModeCursorBtn');
+  if (btnLaser && btnCursor) {
+    if (isLaser) {
+      btnLaser.classList.add('bg-error', 'text-white', 'shadow-sm');
+      btnLaser.classList.remove('bg-surface-variant', 'text-on-surface-variant');
+      btnCursor.classList.add('bg-surface-variant', 'text-on-surface-variant');
+      btnCursor.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+    } else {
+      btnCursor.classList.add('bg-primary', 'text-white', 'shadow-sm');
+      btnCursor.classList.remove('bg-surface-variant', 'text-on-surface-variant');
+      btnLaser.classList.add('bg-surface-variant', 'text-on-surface-variant');
+      btnLaser.classList.remove('bg-error', 'text-white', 'shadow-sm');
+    }
+  }
+
+  const s = document.getElementById('settingsAirSlider');
+  const l = document.getElementById('settingsAirLabel');
+  if (s) s.value = airSensitivity;
+  if (l) l.textContent = airSensitivity.toFixed(1) + 'x';
 }
 
 async function loadPairedDevices() {
@@ -428,6 +480,7 @@ function openSettingsModal() {
   setScrollSensitivity(scrollSensitivity);
   syncScrollInertiaUI();
   syncPinchZoomUI();
+  syncAirUI();
   loadPairedDevices();
   openOverlay('settingsModal');
 }
@@ -794,6 +847,9 @@ if (typeof window !== 'undefined') {
   window.syncScrollInertiaUI = syncScrollInertiaUI;
   window.togglePinchZoom = togglePinchZoom;
   window.syncPinchZoomUI = syncPinchZoomUI;
+  window.setAirSensitivity = setAirSensitivity;
+  window.setAirMode = setAirMode;
+  window.syncAirUI = syncAirUI;
   window.revokeSingleDevice = revokeSingleDevice;
   window.loadPairedDevices = loadPairedDevices;
   window.openSettingsModal = openSettingsModal;
@@ -806,4 +862,5 @@ if (typeof window !== 'undefined') {
   window.setPreset = setPreset;
   window.toggleSpeedPopover = toggleSpeedPopover;
   window.togglePresentMenu = togglePresentMenu;
+  window.laserAvailable = laserAvailable;
 }

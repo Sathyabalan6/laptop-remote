@@ -13,6 +13,7 @@ from ..core.auth import (
     set_pairing_pin,
 )
 from ..core.device import set_custom_device_name
+from ..core.logger import logger  # type: ignore
 from ..core.network import get_local_ip, setup_ssl_context
 from ..core.window import detect_active_preset
 from . import discovery
@@ -20,7 +21,8 @@ from ._app import active_authorized_sids, app, overlay, socketio
 
 
 def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
-         ssl_key=None, port=5000, tray_enabled=False, name=None):
+         ssl_key=None, port=5000, tray_enabled=False, name=None,
+         verbose=False, quiet=False):
     """Start the Laptop Remote server (terminal/headless).
 
     Args:
@@ -53,25 +55,28 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
     url = f"{scheme}://{ip}{port_str}"
     mdns_url = f"{scheme}://remotedeck.local{port_str}"
 
-    print("\n" + "=" * 52)
-    print(f"  ⚡ LAPTOP REMOTE v{__version__} · TERMINAL EDITION")
-    print("=" * 52)
-    print(f"  🌐 Local URL      : {url}")
-    print(f"  📢 mDNS Discovery : {mdns_url}")
-    print(f"  🔒 Pairing PIN    : {_auth.PAIRING_PIN}")
-    if ssl_enabled:
-        print("  🛡️  Transport      : Encrypted (HTTPS / WSS)")
+    if quiet:
+        logger.info(f"Server started at {url} (PIN: {_auth.PAIRING_PIN})")
     else:
-        print("  ⚠️  Transport      : Plaintext HTTP (use --ssl for HTTPS)")
-    print("=" * 52 + "\n")
+        print("\n" + "=" * 52)
+        print(f"  ⚡ LAPTOP REMOTE v{__version__} · TERMINAL EDITION")
+        print("=" * 52)
+        print(f"  🌐 Local URL      : {url}")
+        print(f"  📢 mDNS Discovery : {mdns_url}")
+        print(f"  🔒 Pairing PIN    : {_auth.PAIRING_PIN}")
+        if ssl_enabled:
+            print("  🛡️  Transport      : Encrypted (HTTPS / WSS)")
+        else:
+            print("  ⚠️  Transport      : Plaintext HTTP (use --ssl for HTTPS)")
+        print("=" * 52 + "\n")
 
-    if qrcode:
-        with contextlib.suppress(Exception):
-            qr = qrcode.QRCode(version=1, box_size=1, border=2)
-            qr.add_data(url)
-            qr.make(fit=True)
-            qr.print_ascii(invert=True)
-            print("\n  👉 Scan the QR code above with your phone to connect!\n")
+        if qrcode:
+            with contextlib.suppress(Exception):
+                qr = qrcode.QRCode(version=1, box_size=1, border=2)
+                qr.add_data(url)
+                qr.make(fit=True)
+                qr.print_ascii(invert=True)
+                print("\n  👉 Scan the QR code above with your phone to connect!\n")
 
     # Start mDNS registration and the preset-change monitor.
     zeroconf_instance, service_info = discovery.register_mdns(ip, port, ssl_enabled, mdns_url)

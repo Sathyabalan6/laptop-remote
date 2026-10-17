@@ -6,23 +6,26 @@ or
 [`help wanted`](https://github.com/Sathyabalan6/laptop-remote/labels/help%20wanted)
 and comment on it.
 
-## Near term
+## Completed in v1.0.x
 
-- [ ] **Automated tests for the web frontend** (trackpad gestures, preset switching)
-- [ ] **Package for PyPI** (`pip install laptop-remote`)
-- [ ] **One-command install script** for Linux/macOS
-- [ ] **Configurable port + bind address** via a config file / env vars
-- [ ] **Better Wayland onboarding** — detect missing `ydotool` and surface a clear in-app banner
-- [ ] **Docker image** for advanced users
+- [x] **Zero-install launch**: Run directly without installing via `uvx laptop-remote`
+- [x] **PyPI Package**: Available globally via `pipx install laptop-remote` or `pip install laptop-remote`
+- [x] **Standalone Windows executable**: Automated PyInstaller builds (`LaptopRemote-CLI.exe`) with smoke test verification
+- [x] **Full test suites**: Comprehensive Pytest (backend) and Vitest (frontend touch physics & gestures)
+- [x] **Two-finger gestures**: Calibrated natural/inverted scroll with inertia dampening and two-finger pinch-to-zoom
+- [x] **Multi-device session isolation**: PIN pairing, active device list, individual device revocation with self-revoke protection
+- [x] **OLED Pitch Black & Dark Glass themes**: High contrast and pure black themes inspired by Apple HIG
+- [x] **Presets Customizer**: Web UI editor to customize media and navigation hotkeys stored in `presets.json`
+- [x] **Multi-monitor virtual screen bounds**: Seamless cursor bounds handling across Windows virtual screen, macOS AppKit, and Linux X11/Wayland
+- [x] **Standardized Python logging**: Clean terminal output with `--verbose` (`-v`) and `--quiet` (`-q`) flags
+- [x] **PWA Service Worker Precaching**: Full offline asset precaching with release-versioned cache invalidation
 
-## Medium term
+## Next Up
 
-- [ ] **Continuous discovery** — auto-reconnect when Wi-Fi changes
-- [ ] **Presets editor** — a web UI (served by the app) to edit key mappings without touching `presets.json`
-- [ ] **Multi-monitor support** for the laser pointer
-- [ ] **Screen mirroring / preview** (thumbnail of the laptop screen)
-- [ ] **Bluetooth / USB tethering transport** as an alternative to Wi-Fi
-- [ ] **iOS/Android native wrapper** (Capacitor) for a more app-like feel
+- [ ] **Hardware Gyroscope Air Mouse**: Tilt and wave the phone in the air to control the cursor or presentation laser
+- [ ] **Screen Thumbnail / Slide Preview**: Low-fps, low-bandwidth compressed snapshot of slides in Presentation Mode
+- [ ] **Docker image**: Containerized setup for headless Linux workstations
+- [ ] **Bluetooth / USB tethering transport**: Direct transport fallback when Wi-Fi router isolation is active
 
 ## Longer term
 

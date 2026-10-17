@@ -35,19 +35,18 @@ let restartConfirmTimeout = null;
 
 function resetPresentation() {
   const btn = document.getElementById('restartBtn');
+  const label = btn ? btn.querySelector('span') : null;
   if (btn && !btn.classList.contains('confirming')) {
     btn.classList.add('confirming');
     btn.setAttribute('title', 'Tap again to reset to Slide 1');
-    const origHtml = btn.innerHTML;
-    btn.dataset.origHtml = origHtml;
-    btn.innerHTML = '<span class="text-xs font-bold text-amber-400">⚠️ Tap again to confirm restart to Slide 1</span>';
+    if (label) label.textContent = '⚠️ Tap again to confirm restart';
     vibrate(20);
     if (typeof showToast === 'function') showToast('⚠️ Tap again to reset to Slide 1');
     
     clearTimeout(restartConfirmTimeout);
     restartConfirmTimeout = setTimeout(() => {
       btn.classList.remove('confirming');
-      if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+      if (label) label.textContent = 'Restart from Slide 1';
       btn.setAttribute('title', 'Restart from Slide 1');
     }, 3000);
     return;
@@ -55,7 +54,7 @@ function resetPresentation() {
 
   if (btn) {
     btn.classList.remove('confirming');
-    if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+    if (label) label.textContent = 'Restart from Slide 1';
     btn.setAttribute('title', 'Restart from Slide 1');
   }
   clearTimeout(restartConfirmTimeout);
@@ -80,24 +79,20 @@ function toggleBlackout() {
   vibrate(15);
 }
 
-const PRESENT_ON_HTML =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19 8 5"/></svg>' +
-  '<span>Start Presentation</span>';
-const PRESENT_OFF_HTML =
-  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>' +
-  '<span>Exit Presentation</span>';
-
 let presenting = false;
 
 function togglePresentation() {
   presenting = !presenting;
   const btn = document.getElementById('presentLaunchBtn');
+  const label = btn ? btn.querySelector('span') : null;
   if (presenting) {
     send('present_start');
-    if (btn) { btn.classList.add('active'); btn.innerHTML = PRESENT_OFF_HTML; }
+    if (btn) btn.classList.add('active');
+    if (label) label.textContent = 'Exit Presentation';
   } else {
     send('present_exit');
-    if (btn) { btn.classList.remove('active'); btn.innerHTML = PRESENT_ON_HTML; }
+    if (btn) btn.classList.remove('active');
+    if (label) label.textContent = 'Play Slideshow';
   }
 }
 
@@ -120,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let pendingPointer = null;
   let pointerThrottle = null;
+  let lastPresentTouch = null;
 
   function queuePointerMove(e) {
     if (e.touches.length === 0) return;
@@ -140,41 +136,218 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ── Hardware Gyroscope / Air Motion Implementation ─────────────────────
+  let isAimingAir = false;
+  let prevAirGamma = null;
+  let prevAirBeta = null;
+  let airThrottle = null;
+  const pendingAirDelta = { dx: 0, dy: 0 };
+  const currentLaserPos = { x: screenW / 2, y: screenH / 2 };
+
+  async function requestOrientationPermission() {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const resp = await DeviceOrientationEvent.requestPermission();
+        return resp === 'granted';
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function handleOrientationEvent(e) {
+    if (!isAimingAir) return;
+    const currGamma = e.gamma;
+    const currBeta = e.beta;
+    if (typeof currGamma !== 'number' || typeof currBeta !== 'number') return;
+
+    if (prevAirGamma === null || prevAirBeta === null) {
+      prevAirGamma = currGamma;
+      prevAirBeta = currBeta;
+      return;
+    }
+
+    const computeAir = (window.trackpadLogic && window.trackpadLogic.computeAirDelta) ||
+      ((cg, cb, pg, pb) => ({ dx: (cg - pg) * 2.0, dy: (cb - pb) * 2.0 }));
+
+    const sens = (typeof airSensitivity !== 'undefined' ? airSensitivity : 1.8);
+    const delta = computeAir(currGamma, currBeta, prevAirGamma, prevAirBeta, sens, 0.22);
+    prevAirGamma = currGamma;
+    prevAirBeta = currBeta;
+
+    if (delta.dx === 0 && delta.dy === 0) return;
+
+    pendingAirDelta.dx += delta.dx;
+    pendingAirDelta.dy += delta.dy;
+
+    if (!airThrottle) {
+      airThrottle = requestAnimationFrame(flushAirMotion);
+    }
+  }
+
+  function flushAirMotion() {
+    airThrottle = null;
+    if (pendingAirDelta.dx === 0 && pendingAirDelta.dy === 0) return;
+
+    const dx = pendingAirDelta.dx;
+    const dy = pendingAirDelta.dy;
+    pendingAirDelta.dx = 0;
+    pendingAirDelta.dy = 0;
+
+    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
+    if (currentMode === 'cursor') {
+      socketSend('mouse_move', { dx, dy, sens: 1.0 });
+    } else if (laserAvailable) {
+      currentLaserPos.x = Math.max(0, Math.min(screenW, currentLaserPos.x + dx * 2.5));
+      currentLaserPos.y = Math.max(0, Math.min(screenH, currentLaserPos.y + dy * 2.5));
+      socketSend('pointer_move', currentLaserPos);
+    }
+  }
+
+  async function startAirAim() {
+    const granted = await requestOrientationPermission();
+    if (!granted) {
+      if (typeof showToast === 'function') showToast('⚠️ Gyroscope permission denied');
+      return;
+    }
+    isAimingAir = true;
+    prevAirGamma = null;
+    prevAirBeta = null;
+    pendingAirDelta.dx = 0;
+    pendingAirDelta.dy = 0;
+    vibrate(20);
+
+    const btn = document.getElementById('btnAirAim');
+    if (btn) {
+      btn.classList.add('border-primary', 'bg-primary/20');
+      const label = document.getElementById('airAimLabel');
+      if (label) label.textContent = '🎯 Aiming... Tilt Phone in Air';
+    }
+
+    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
+    if (currentMode === 'laser' && laserAvailable) {
+      socketSend('pointer_on');
+    }
+
+    window.addEventListener('deviceorientation', handleOrientationEvent, { passive: true });
+  }
+
+  function stopAirAim() {
+    if (!isAimingAir) return;
+    isAimingAir = false;
+    window.removeEventListener('deviceorientation', handleOrientationEvent);
+
+    if (airThrottle) {
+      cancelAnimationFrame(airThrottle);
+      flushAirMotion();
+    }
+
+    const btn = document.getElementById('btnAirAim');
+    if (btn) {
+      btn.classList.remove('border-primary', 'bg-primary/20');
+      const label = document.getElementById('airAimLabel');
+      if (label) label.textContent = 'Hold to Aim (Air Pointer)';
+    }
+
+    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
+    if (currentMode === 'laser' && laserAvailable) {
+      socketSend('pointer_off');
+    } else {
+      socketSend('mouse_stop');
+    }
+  }
+
+  const btnAir = document.getElementById('btnAirAim');
+  if (btnAir) {
+    btnAir.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      startAirAim();
+    });
+    btnAir.addEventListener('pointerup', stopAirAim);
+    btnAir.addEventListener('pointercancel', stopAirAim);
+    btnAir.addEventListener('pointerleave', stopAirAim);
+  }
+
   presentPad.addEventListener('touchstart', e => {
     e.preventDefault();
     vibrate(15);
     startPresentationTimer();
-    if (!laserAvailable) return;   // no server overlay on this platform
-    laserDot.style.display = 'block';
-    updateLaserDot(e);
-    socketSend('pointer_on');
-    queuePointerMove(e);
+    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
+    if (currentMode === 'laser') {
+      if (!laserAvailable) return;
+      laserDot.style.display = 'block';
+      updateLaserDot(e);
+      socketSend('pointer_on');
+      queuePointerMove(e);
+    } else {
+      lastPresentTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
   }, { passive: false });
 
   presentPad.addEventListener('touchmove', e => {
     e.preventDefault();
-    if (!laserAvailable) return;
-    updateLaserDot(e);
-    queuePointerMove(e);
+    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
+    if (currentMode === 'laser') {
+      if (!laserAvailable) return;
+      updateLaserDot(e);
+      queuePointerMove(e);
+    } else if (lastPresentTouch && e.touches[0]) {
+      const dx = e.touches[0].clientX - lastPresentTouch.x;
+      const dy = e.touches[0].clientY - lastPresentTouch.y;
+      lastPresentTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      socketSend('mouse_move', { dx, dy, sens: 1.0 });
+    }
   }, { passive: false });
 
   presentPad.addEventListener('touchend', e => {
     e.preventDefault();
-    if (!laserAvailable) return;
-    if (pointerThrottle) { clearTimeout(pointerThrottle); flushPointer(); }
-    if (e.touches.length === 0) {
-      laserDot.style.display = 'none';
-      socketSend('pointer_off');
+    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
+    if (currentMode === 'laser') {
+      if (!laserAvailable) return;
+      if (pointerThrottle) { clearTimeout(pointerThrottle); flushPointer(); }
+      if (e.touches.length === 0) {
+        laserDot.style.display = 'none';
+        socketSend('pointer_off');
+      }
+    } else {
+      lastPresentTouch = null;
+      socketSend('mouse_stop');
     }
   }, { passive: false });
 
   applyLaserAvailability();
 });
 
-// Show or hide the laser pad depending on server overlay availability.
+// Show or hide the laser controls depending on server overlay availability.
 function applyLaserAvailability() {
   const section = document.getElementById('presentLaserSection');
   if (section) {
-    section.style.display = laserAvailable ? 'flex' : 'none';
+    section.style.display = 'flex';
   }
+  const btnLaser = document.getElementById('airModeLaserBtn');
+  if (btnLaser) {
+    if (!laserAvailable) {
+      btnLaser.classList.add('opacity-50', 'cursor-not-allowed');
+      btnLaser.title = 'Laser overlay unavailable on this desktop compositor';
+      if (typeof airMode !== 'undefined' && airMode === 'laser' && typeof setAirMode === 'function') {
+        setAirMode('cursor');
+      }
+    } else {
+      btnLaser.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnLaser.removeAttribute('title');
+    }
+  }
+  if (typeof syncAirUI === 'function') {
+    syncAirUI();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.slideCtrl = slideCtrl;
+  window.resetPresentation = resetPresentation;
+  window.toggleBlackout = toggleBlackout;
+  window.togglePresentation = togglePresentation;
+  window.startPresentationTimer = startPresentationTimer;
+  window.applyLaserAvailability = applyLaserAvailability;
 }

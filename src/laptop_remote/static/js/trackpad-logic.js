@@ -75,6 +75,36 @@ export function clampZoomDelta(delta, maxPerFrame = 3.0) {
   return Math.max(-maxPerFrame, Math.min(maxPerFrame, delta));
 }
 
+export function computeAirDelta(
+  currGamma,
+  currBeta,
+  prevGamma,
+  prevBeta,
+  sensitivity = 2.0,
+  deadband = 0.25,
+  maxPerEvent = 25.0
+) {
+  if (prevGamma === null || prevBeta === null || typeof currGamma !== 'number' || typeof currBeta !== 'number') {
+    return { dx: 0, dy: 0 };
+  }
+  let dGamma = currGamma - prevGamma;
+  let dBeta = currBeta - prevBeta;
+
+  if (dGamma > 180) dGamma -= 360;
+  if (dGamma < -180) dGamma += 360;
+  if (dBeta > 180) dBeta -= 360;
+  if (dBeta < -180) dBeta += 360;
+
+  const mag = Math.hypot(dGamma, dBeta);
+  if (mag < deadband) {
+    return { dx: 0, dy: 0 };
+  }
+
+  const dx = Math.max(-maxPerEvent, Math.min(maxPerEvent, dGamma * sensitivity));
+  const dy = Math.max(-maxPerEvent, Math.min(maxPerEvent, dBeta * sensitivity));
+  return { dx, dy };
+}
+
 export function classifyGesture(
   prevPoints,
   currPoints,
@@ -104,6 +134,7 @@ if (typeof window !== 'undefined') {
     classifyTwoFingerIntent,
     computeZoomDelta,
     clampZoomDelta,
+    computeAirDelta,
     classifyGesture
   };
 }

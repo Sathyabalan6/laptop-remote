@@ -8,6 +8,7 @@ import {
   clampZoomDelta,
   classifyGesture,
   classifyTwoFingerIntent,
+  computeAirDelta,
   computeScrollDelta,
   computeZoomDelta,
   isTwoFingerScrollGesture
@@ -160,6 +161,29 @@ describe('clampZoomDelta', () => {
     expect(clampZoomDelta(5.0, 3.0)).toBe(3.0);
     expect(clampZoomDelta(-5.0, 3.0)).toBe(-3.0);
     expect(clampZoomDelta(1.5, 3.0)).toBe(1.5);
+  });
+});
+
+describe('computeAirDelta', () => {
+  it('returns zero deltas when previous orientation is null', () => {
+    expect(computeAirDelta(10, 20, null, null)).toEqual({ dx: 0, dy: 0 });
+  });
+
+  it('filters out micro-movements within the deadband', () => {
+    // Movement of 0.1 deg is < 0.25 deadband
+    expect(computeAirDelta(10.1, 20.0, 10.0, 20.0, 2.0, 0.25)).toEqual({ dx: 0, dy: 0 });
+  });
+
+  it('scales angular deltas above deadband', () => {
+    // dGamma = 2.0 deg, dBeta = -3.0 deg -> dx = 2.0 * 2.0 = 4.0, dy = -3.0 * 2.0 = -6.0
+    const res = computeAirDelta(12.0, 17.0, 10.0, 20.0, 2.0, 0.25);
+    expect(res.dx).toBeCloseTo(4.0);
+    expect(res.dy).toBeCloseTo(-6.0);
+  });
+
+  it('clamps extreme deltas to maxPerEvent', () => {
+    const res = computeAirDelta(50.0, 0.0, 0.0, 0.0, 2.0, 0.25, 25.0);
+    expect(res.dx).toBe(25.0);
   });
 });
 

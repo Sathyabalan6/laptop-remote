@@ -10,6 +10,7 @@ from typing import Any
 
 from .config import load_presets
 from .keys import char_to_press, key_name_to_code, split_keys
+from .logger import logger  # type: ignore
 
 # Prevent mouseinfo/pymsgbox sys.exit when python3-tk is not installed on Linux
 if 'tkinter' not in sys.modules and importlib.util.find_spec('tkinter') is None:
@@ -748,14 +749,8 @@ def presentation_start_key():
     return ['f5']
 
 def _log_action(msg):
-    """Print a concise line for user-initiated input actions (helps debugging).
-
-    Set LAPTOP_REMOTE_QUIET=1 to silence.
-    """
-    if os.environ.get('LAPTOP_REMOTE_QUIET'):
-        return
-    with contextlib.suppress(Exception):
-        print(f"[input] {msg}", flush=True)
+    """Log user-initiated input actions at DEBUG level."""
+    logger.debug(f"[input] {msg}")
 
 
 def handle_text_input(text, press_enter=False):

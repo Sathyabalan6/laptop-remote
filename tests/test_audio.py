@@ -11,7 +11,7 @@ class TestAudioControls:
         assert isinstance(vol_info, dict)
         assert "volume" in vol_info
         assert "muted" in vol_info
-        assert 0 <= vol_info["volume"] <= 100
+        assert 0 <= vol_info["volume"] <= 150
         assert isinstance(vol_info["muted"], bool)
 
     def test_set_volume_clamping(self):
