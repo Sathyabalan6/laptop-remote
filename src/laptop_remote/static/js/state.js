@@ -154,13 +154,19 @@ function setAirSensitivity(val) {
 }
 
 function setAirMode(mode) {
+  if (mode === 'laser' && typeof laserAvailable !== 'undefined' && !laserAvailable) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Laser overlay unavailable on Wayland — using Cursor mode');
+    }
+    mode = 'cursor';
+  }
   airMode = mode === 'laser' ? 'laser' : 'cursor';
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('air_mode', airMode);
   }
   vibrate(15);
   syncAirUI();
-  if (typeof showToast === 'function') {
+  if (typeof showToast === 'function' && (typeof laserAvailable === 'undefined' || laserAvailable)) {
     showToast(airMode === 'laser' ? 'Air Target: 🔴 Laser Overlay' : 'Air Target: 🖱️ Desktop Cursor');
   }
 }

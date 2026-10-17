@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let prevAirGamma = null;
   let prevAirBeta = null;
   let airThrottle = null;
+  let sensorWatchdogTimer = null;
   const pendingAirDelta = { dx: 0, dy: 0 };
   const currentLaserPos = { x: screenW / 2, y: screenH / 2 };
 
@@ -158,6 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleOrientationEvent(e) {
     if (!isAimingAir) return;
+    if (sensorWatchdogTimer) {
+      clearTimeout(sensorWatchdogTimer);
+      sensorWatchdogTimer = null;
+    }
     const currGamma = e.gamma;
     const currBeta = e.beta;
     if (typeof currGamma !== 'number' || typeof currBeta !== 'number') return;
@@ -211,6 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof showToast === 'function') showToast('⚠️ Gyroscope permission denied');
       return;
     }
+
+    if (typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      if (typeof showToast === 'function') {
+        showToast('🔒 HTTPS required for sensors: restart with laptop-remote --ssl');
+      }
+    }
+
     isAimingAir = true;
     prevAirGamma = null;
     prevAirBeta = null;
@@ -230,6 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
       socketSend('pointer_on');
     }
 
+    clearTimeout(sensorWatchdogTimer);
+    sensorWatchdogTimer = setTimeout(() => {
+      if (isAimingAir && prevAirGamma === null) {
+        if (typeof showToast === 'function') {
+          showToast('⚠️ No sensor events. Browsers block motion on plain HTTP (use --ssl)');
+        }
+      }
+    }, 1200);
+
     window.addEventListener('deviceorientation', handleOrientationEvent, { passive: true });
   }
 
@@ -237,6 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isAimingAir) return;
     isAimingAir = false;
     window.removeEventListener('deviceorientation', handleOrientationEvent);
+
+    if (sensorWatchdogTimer) {
+      clearTimeout(sensorWatchdogTimer);
+      sensorWatchdogTimer = null;
+    }
 
     if (airThrottle) {
       cancelAnimationFrame(airThrottle);
@@ -262,11 +288,23 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnAir) {
     btnAir.addEventListener('pointerdown', e => {
       e.preventDefault();
+      try {
+        if (typeof btnAir.setPointerCapture === 'function') {
+          btnAir.setPointerCapture(e.pointerId);
+        }
+      } catch {}
       startAirAim();
     });
-    btnAir.addEventListener('pointerup', stopAirAim);
+    btnAir.addEventListener('pointerup', e => {
+      e.preventDefault();
+      try {
+        if (typeof btnAir.releasePointerCapture === 'function') {
+          btnAir.releasePointerCapture(e.pointerId);
+        }
+      } catch {}
+      stopAirAim();
+    });
     btnAir.addEventListener('pointercancel', stopAirAim);
-    btnAir.addEventListener('pointerleave', stopAirAim);
   }
 
   presentPad.addEventListener('touchstart', e => {
