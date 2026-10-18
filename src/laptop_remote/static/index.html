@@ -536,36 +536,26 @@
         <span class="font-headline-sm text-sm font-semibold text-on-secondary-container">Play Slideshow</span>
       </button>
 
-      <!-- Laser & Air Pointer Section -->
-      <div class="flex flex-col gap-2" id="presentLaserSection">
+      <!-- Laser Pointer Pad (Only shown when laserAvailable is true) -->
+      <div class="flex flex-col gap-1.5" id="presentLaserSection" style="display:none;">
         <div class="flex items-center justify-between px-1">
           <div class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-primary" id="airIndicatorDot"></span>
-            <span class="text-xs font-semibold text-on-surface">Air Pointer &amp; Laser</span>
+            <span class="w-2 h-2 rounded-full bg-error"></span>
+            <span class="text-xs font-semibold text-on-surface">Laser Pointer</span>
           </div>
-          <!-- Mode Switcher Pill: Cursor vs Laser -->
-          <div class="flex items-center p-0.5 rounded-xl bg-surface-container-highest border border-white/[0.06] text-[11px]">
-            <button id="airModeCursorBtn" class="px-2.5 py-1 rounded-lg font-semibold bg-primary text-white shadow-sm transition-all" onclick="setAirMode('cursor')" type="button">🖱️ Cursor</button>
-            <button id="airModeLaserBtn" class="px-2.5 py-1 rounded-lg font-semibold text-on-surface-variant hover:text-on-surface transition-all" onclick="setAirMode('laser')" type="button">🔴 Laser</button>
-          </div>
+          <span class="text-xs text-on-surface-variant">Drag to project</span>
         </div>
-
-        <!-- Tactile Hold to Aim Button (Air Mouse) -->
-        <button id="btnAirAim" class="w-full h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant border border-white/[0.08] shadow-md flex items-center justify-center gap-2.5 transition-all text-on-surface font-semibold text-xs active:scale-[0.98] select-none touch-none" type="button" aria-label="Hold to aim air pointer">
-          <svg class="w-5 h-5 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
-          <span id="airAimLabel">Hold to Aim (Air Pointer)</span>
-        </button>
         
-        <div class="relative w-full h-48 min-h-[190px] rounded-2xl bg-surface-container-low overflow-hidden cursor-crosshair touch-none select-none flex items-center justify-center shadow-inner border border-white/[0.06]" id="presentPad" role="application" aria-label="Laser pointer surface">
+        <div class="relative w-full h-72 min-h-[280px] sm:h-96 sm:min-h-[360px] rounded-2xl bg-surface-container-low overflow-hidden cursor-crosshair touch-none select-none flex items-center justify-center shadow-inner border border-white/[0.06]" id="presentPad" role="application" aria-label="Laser pointer surface">
           <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
             <div class="w-full h-[1px] bg-outline"></div>
             <div class="absolute h-full w-[1px] bg-outline"></div>
           </div>
           <div class="pointer-events-none flex flex-col items-center gap-1.5 transition-opacity duration-300" id="laserInstruction">
-            <div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="3" fill="currentColor"></circle></svg>
+            <div class="w-10 h-10 rounded-full bg-error/15 flex items-center justify-center text-error">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3" fill="currentColor"></circle></svg>
             </div>
-            <span class="text-[11px] text-on-surface-variant font-medium">Or touch &amp; drag on surface</span>
+            <span class="text-xs text-on-surface-variant font-medium">Touch &amp; hold to point</span>
           </div>
           <div class="laser-dot absolute w-7 h-7 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden items-center justify-center" id="laserDot">
             <div class="absolute w-8 h-8 rounded-full bg-error/30 animate-ping"></div>
@@ -705,10 +695,6 @@
             <span>Zoom In / Out</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-on-surface font-semibold">Air Pointer</span>
-            <span>Hold aim button &amp; tilt phone</span>
-          </div>
-          <div class="flex items-center justify-between">
             <span class="text-on-surface font-semibold">Lock Button</span>
             <span>Window &amp; Text Drag</span>
           </div>
@@ -796,13 +782,6 @@
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Pinch to Zoom</span>
           <button id="pinchZoomToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="togglePinchZoom()" type="button">Enabled</button>
-        </div>
-        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
-          <span class="text-on-surface-variant font-medium">Air Mouse Speed</span>
-          <div class="flex items-center gap-1.5">
-            <input class="w-24 h-1.5 accent-primary cursor-pointer" id="settingsAirSlider" max="4.0" min="0.5" step="0.1" type="range" value="1.8" oninput="setAirSensitivity(parseFloat(this.value))" aria-label="Air mouse sensitivity"/>
-            <span class="text-[11px] font-semibold text-primary font-mono w-8 text-right" id="settingsAirLabel">1.8x</span>
-          </div>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Shortcut Presets</span>

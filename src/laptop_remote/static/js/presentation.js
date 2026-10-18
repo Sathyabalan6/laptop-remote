@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let pendingPointer = null;
   let pointerThrottle = null;
-  let lastPresentTouch = null;
 
   function queuePointerMove(e) {
     if (e.touches.length === 0) return;
@@ -136,221 +135,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ── Hardware Gyroscope / Air Motion Implementation ─────────────────────
-  let isAimingAir = false;
-  let prevAirGamma = null;
-  let prevAirBeta = null;
-  let airThrottle = null;
-  let sensorWatchdogTimer = null;
-  const pendingAirDelta = { dx: 0, dy: 0 };
-  const currentLaserPos = { x: screenW / 2, y: screenH / 2 };
-
-  async function requestOrientationPermission() {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
-        const resp = await DeviceOrientationEvent.requestPermission();
-        return resp === 'granted';
-      } catch {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function handleOrientationEvent(e) {
-    if (!isAimingAir) return;
-    if (sensorWatchdogTimer) {
-      clearTimeout(sensorWatchdogTimer);
-      sensorWatchdogTimer = null;
-    }
-    const currGamma = e.gamma;
-    const currBeta = e.beta;
-    if (typeof currGamma !== 'number' || typeof currBeta !== 'number') return;
-
-    if (prevAirGamma === null || prevAirBeta === null) {
-      prevAirGamma = currGamma;
-      prevAirBeta = currBeta;
-      return;
-    }
-
-    const computeAir = (window.trackpadLogic && window.trackpadLogic.computeAirDelta) ||
-      ((cg, cb, pg, pb) => ({ dx: (cg - pg) * 2.0, dy: (cb - pb) * 2.0 }));
-
-    const sens = (typeof airSensitivity !== 'undefined' ? airSensitivity : 1.8);
-    const delta = computeAir(currGamma, currBeta, prevAirGamma, prevAirBeta, sens, 0.22);
-    prevAirGamma = currGamma;
-    prevAirBeta = currBeta;
-
-    if (delta.dx === 0 && delta.dy === 0) return;
-
-    pendingAirDelta.dx += delta.dx;
-    pendingAirDelta.dy += delta.dy;
-
-    if (!airThrottle) {
-      airThrottle = requestAnimationFrame(flushAirMotion);
-    }
-  }
-
-  function flushAirMotion() {
-    airThrottle = null;
-    if (pendingAirDelta.dx === 0 && pendingAirDelta.dy === 0) return;
-
-    const dx = pendingAirDelta.dx;
-    const dy = pendingAirDelta.dy;
-    pendingAirDelta.dx = 0;
-    pendingAirDelta.dy = 0;
-
-    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
-    if (currentMode === 'cursor') {
-      socketSend('mouse_move', { dx, dy, sens: 1.0 });
-    } else if (laserAvailable) {
-      currentLaserPos.x = Math.max(0, Math.min(screenW, currentLaserPos.x + dx * 2.5));
-      currentLaserPos.y = Math.max(0, Math.min(screenH, currentLaserPos.y + dy * 2.5));
-      socketSend('pointer_move', currentLaserPos);
-    }
-  }
-
-  async function startAirAim() {
-    const granted = await requestOrientationPermission();
-    if (!granted) {
-      if (typeof showToast === 'function') showToast('⚠️ Gyroscope permission denied');
-      return;
-    }
-
-    if (typeof window !== 'undefined' && !window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      if (typeof showToast === 'function') {
-        showToast('🔒 HTTPS required for sensors: restart with laptop-remote --ssl');
-      }
-    }
-
-    isAimingAir = true;
-    prevAirGamma = null;
-    prevAirBeta = null;
-    pendingAirDelta.dx = 0;
-    pendingAirDelta.dy = 0;
-    vibrate(20);
-
-    const btn = document.getElementById('btnAirAim');
-    if (btn) {
-      btn.classList.add('border-primary', 'bg-primary/20');
-      const label = document.getElementById('airAimLabel');
-      if (label) label.textContent = '🎯 Aiming... Tilt Phone in Air';
-    }
-
-    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
-    if (currentMode === 'laser' && laserAvailable) {
-      socketSend('pointer_on');
-    }
-
-    clearTimeout(sensorWatchdogTimer);
-    sensorWatchdogTimer = setTimeout(() => {
-      if (isAimingAir && prevAirGamma === null) {
-        if (typeof showToast === 'function') {
-          showToast('⚠️ No sensor events. Browsers block motion on plain HTTP (use --ssl)');
-        }
-      }
-    }, 1200);
-
-    window.addEventListener('deviceorientation', handleOrientationEvent, { passive: true });
-  }
-
-  function stopAirAim() {
-    if (!isAimingAir) return;
-    isAimingAir = false;
-    window.removeEventListener('deviceorientation', handleOrientationEvent);
-
-    if (sensorWatchdogTimer) {
-      clearTimeout(sensorWatchdogTimer);
-      sensorWatchdogTimer = null;
-    }
-
-    if (airThrottle) {
-      cancelAnimationFrame(airThrottle);
-      flushAirMotion();
-    }
-
-    const btn = document.getElementById('btnAirAim');
-    if (btn) {
-      btn.classList.remove('border-primary', 'bg-primary/20');
-      const label = document.getElementById('airAimLabel');
-      if (label) label.textContent = 'Hold to Aim (Air Pointer)';
-    }
-
-    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
-    if (currentMode === 'laser' && laserAvailable) {
-      socketSend('pointer_off');
-    } else {
-      socketSend('mouse_stop');
-    }
-  }
-
-  const btnAir = document.getElementById('btnAirAim');
-  if (btnAir) {
-    btnAir.addEventListener('pointerdown', e => {
-      e.preventDefault();
-      try {
-        if (typeof btnAir.setPointerCapture === 'function') {
-          btnAir.setPointerCapture(e.pointerId);
-        }
-      } catch {}
-      startAirAim();
-    });
-    btnAir.addEventListener('pointerup', e => {
-      e.preventDefault();
-      try {
-        if (typeof btnAir.releasePointerCapture === 'function') {
-          btnAir.releasePointerCapture(e.pointerId);
-        }
-      } catch {}
-      stopAirAim();
-    });
-    btnAir.addEventListener('pointercancel', stopAirAim);
-  }
-
   presentPad.addEventListener('touchstart', e => {
     e.preventDefault();
     vibrate(15);
     startPresentationTimer();
-    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
-    if (currentMode === 'laser') {
-      if (!laserAvailable) return;
-      laserDot.style.display = 'block';
-      updateLaserDot(e);
-      socketSend('pointer_on');
-      queuePointerMove(e);
-    } else {
-      lastPresentTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
+    if (!laserAvailable) return;
+    laserDot.style.display = 'block';
+    updateLaserDot(e);
+    socketSend('pointer_on');
+    queuePointerMove(e);
   }, { passive: false });
 
   presentPad.addEventListener('touchmove', e => {
     e.preventDefault();
-    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
-    if (currentMode === 'laser') {
-      if (!laserAvailable) return;
-      updateLaserDot(e);
-      queuePointerMove(e);
-    } else if (lastPresentTouch && e.touches[0]) {
-      const dx = e.touches[0].clientX - lastPresentTouch.x;
-      const dy = e.touches[0].clientY - lastPresentTouch.y;
-      lastPresentTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      socketSend('mouse_move', { dx, dy, sens: 1.0 });
-    }
+    if (!laserAvailable) return;
+    updateLaserDot(e);
+    queuePointerMove(e);
   }, { passive: false });
 
   presentPad.addEventListener('touchend', e => {
     e.preventDefault();
-    const currentMode = (typeof airMode !== 'undefined' ? airMode : 'cursor');
-    if (currentMode === 'laser') {
-      if (!laserAvailable) return;
-      if (pointerThrottle) { clearTimeout(pointerThrottle); flushPointer(); }
-      if (e.touches.length === 0) {
-        laserDot.style.display = 'none';
-        socketSend('pointer_off');
-      }
-    } else {
-      lastPresentTouch = null;
-      socketSend('mouse_stop');
+    if (!laserAvailable) return;
+    if (pointerThrottle) { clearTimeout(pointerThrottle); flushPointer(); }
+    if (e.touches.length === 0) {
+      laserDot.style.display = 'none';
+      socketSend('pointer_off');
     }
   }, { passive: false });
 
@@ -361,23 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function applyLaserAvailability() {
   const section = document.getElementById('presentLaserSection');
   if (section) {
-    section.style.display = 'flex';
-  }
-  const btnLaser = document.getElementById('airModeLaserBtn');
-  if (btnLaser) {
-    if (!laserAvailable) {
-      btnLaser.classList.add('opacity-50', 'cursor-not-allowed');
-      btnLaser.title = 'Laser overlay unavailable on this desktop compositor';
-      if (typeof airMode !== 'undefined' && airMode === 'laser' && typeof setAirMode === 'function') {
-        setAirMode('cursor');
-      }
-    } else {
-      btnLaser.classList.remove('opacity-50', 'cursor-not-allowed');
-      btnLaser.removeAttribute('title');
-    }
-  }
-  if (typeof syncAirUI === 'function') {
-    syncAirUI();
+    section.style.display = laserAvailable ? 'flex' : 'none';
   }
 }
 

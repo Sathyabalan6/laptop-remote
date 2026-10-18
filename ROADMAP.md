@@ -22,7 +22,6 @@ and comment on it.
 
 ## Next Up
 
-- [ ] **Hardware Gyroscope Air Mouse**: Tilt and wave the phone in the air to control the cursor or presentation laser
 - [ ] **Screen Thumbnail / Slide Preview**: Low-fps, low-bandwidth compressed snapshot of slides in Presentation Mode
 - [ ] **Docker image**: Containerized setup for headless Linux workstations
 - [ ] **Bluetooth / USB tethering transport**: Direct transport fallback when Wi-Fi router isolation is active
