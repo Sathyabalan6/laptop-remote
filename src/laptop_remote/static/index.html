@@ -180,7 +180,7 @@
         <!-- Drag Lock Toggle (24%) -->
         <button class="col-span-2 h-14 min-h-[44px] rounded-2xl bg-surface-container-high hover:bg-surface-variant text-on-surface flex flex-col items-center justify-center gap-1 shadow-md transition-all active:scale-95 border border-white/[0.06]" id="btnDragLock" onclick="toggleDragLock()" type="button" aria-pressed="false" aria-label="Toggle drag lock" title="Drag Lock">
           <svg class="w-5 h-5 text-on-surface-variant" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Lock</span>
+          <span class="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Lock</span>
         </button>
 
         <!-- Right Click (38%) -->
@@ -267,17 +267,14 @@
           </button>
         </div>
 
-        <!-- Volume Row with Step Buttons (-5% / +5%) & Mute -->
-        <div class="w-full bg-surface-container-low/80 rounded-xl px-2.5 py-2 flex items-center gap-2 border border-white/[0.04]">
+        <!-- Volume Row with Wide Slider & Mute -->
+        <div class="w-full bg-surface-container-low/80 rounded-xl px-3 py-2 flex items-center gap-3 border border-white/[0.04]">
           <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-surface-variant/60 hover:bg-surface-variant text-secondary flex items-center justify-center transition-all active:scale-90 shrink-0" id="mute-toggle" onclick="send('mute')" type="button" aria-pressed="false" aria-label="Toggle mute">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="22" y1="9" x2="16" y2="15"></line><line x1="16" y1="9" x2="22" y2="15"></line></svg>
           </button>
-
-          <!-- -5% Volume Step -->
-          <button class="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-surface-variant hover:bg-surface-bright text-on-surface flex items-center justify-center font-bold text-xs active:scale-90 transition-all shrink-0" onclick="stepVolume(-5)" type="button" aria-label="Decrease volume 5%">-</button>
           
-          <!-- Continuous Slider -->
-          <div class="slider-container relative flex-1 flex items-center h-10 min-w-[60px]">
+          <!-- Wide Continuous Slider -->
+          <div class="slider-container relative flex-1 flex items-center h-10">
             <div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden relative shadow-inner">
               <div class="h-full bg-secondary-container transition-all rounded-full" id="volume-fill" style="width: 50%;"></div>
             </div>
@@ -287,10 +284,7 @@
             </div>
           </div>
 
-          <!-- +5% Volume Step -->
-          <button class="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-surface-variant hover:bg-surface-bright text-on-surface flex items-center justify-center font-bold text-xs active:scale-90 transition-all shrink-0" onclick="stepVolume(5)" type="button" aria-label="Increase volume 5%">+</button>
-          
-          <span class="text-xs font-bold text-secondary min-w-[2.2rem] text-right" id="volumePct">50%</span>
+          <span class="text-xs font-bold text-secondary min-w-[2.4rem] text-right font-mono" id="volumePct">50%</span>
         </div>
 
         <!-- Playback Rate Pill Selector (Discrete Speeds) -->
@@ -873,16 +867,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
       </div>
       <h2 class="font-headline-sm text-lg font-bold text-on-surface" id="pinTitle">Enter Pairing PIN</h2>
-      <p class="text-xs text-on-surface-variant mt-1.5" id="pinSubtitle">Check your laptop terminal window for the 6-digit passcode.</p>
+      <p class="text-xs text-on-surface-variant mt-1.5" id="pinSubtitle">Check your laptop terminal window for the 4-digit passcode.</p>
       
       <div class="pin-boxes flex gap-2.5 my-6 relative cursor-text">
         <div class="pin-box w-10 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-lg font-bold text-on-surface border border-white/[0.08]"></div>
         <div class="pin-box w-10 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-lg font-bold text-on-surface border border-white/[0.08]"></div>
         <div class="pin-box w-10 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-lg font-bold text-on-surface border border-white/[0.08]"></div>
         <div class="pin-box w-10 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-lg font-bold text-on-surface border border-white/[0.08]"></div>
-        <div class="pin-box w-10 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-lg font-bold text-on-surface border border-white/[0.08]"></div>
-        <div class="pin-box w-10 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-lg font-bold text-on-surface border border-white/[0.08]"></div>
-        <input type="text" pattern="[0-9]*" inputmode="numeric" class="pin-input-hidden absolute inset-0 opacity-0 cursor-text w-full h-full" id="pinInputHidden" autocomplete="off" aria-label="6-digit pairing PIN">
+        <input type="text" pattern="[0-9]*" inputmode="numeric" maxlength="4" autofocus class="pin-input-hidden absolute inset-0 opacity-0 cursor-text w-full h-full" id="pinInputHidden" autocomplete="off" aria-describedby="pinSubtitle" aria-label="4-digit pairing PIN">
       </div>
 
       <div class="pin-error text-error text-xs font-semibold mb-3 hidden" id="pinError">Invalid pairing PIN</div>

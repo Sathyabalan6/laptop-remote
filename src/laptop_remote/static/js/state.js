@@ -162,7 +162,7 @@ async function loadPairedDevices() {
         nameSpan.textContent = d.device_name || 'Device';
 
         const metaSpan = document.createElement('span');
-        metaSpan.className = 'text-[10px] text-on-surface-variant font-mono';
+        metaSpan.className = 'text-[11px] text-on-surface-variant font-mono';
         metaSpan.textContent = `${d.ip} · ID: ${d.id}`;
 
         info.appendChild(nameSpan);
@@ -173,7 +173,7 @@ async function loadPairedDevices() {
 
         if (isCurrent) {
           const badge = document.createElement('span');
-          badge.className = 'px-2 py-0.5 rounded text-[10px] font-semibold bg-primary/20 text-primary shrink-0';
+          badge.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-primary/20 text-primary shrink-0';
           badge.textContent = 'This device';
           row.appendChild(info);
           row.appendChild(badge);
