@@ -24,6 +24,21 @@ from .state import build_state
 
 @socketio.on('connect')
 def on_connect(auth):
+    """Handle incoming WebSocket client connections.
+
+    Design rationale:
+      Unauthenticated clients are permitted to establish the initial connection
+      so they receive an initial state payload (`authorized: False`, plus display
+      geometry `screen_w`, `screen_h`) which signals the client PWA to open the
+      pairing PIN overlay.
+
+    Security & disclosure safeguards:
+      - `build_state(None)` redacts 100% of sensitive fields (hostname, battery,
+        audio, active preset, device names, tokens, and PIN are completely hidden).
+      - All control handlers (@socket_require_auth) reject unauthenticated commands.
+      - Active push broadcasts (preset change, battery, audio) only target
+        `active_authorized_sids`, preventing unauthenticated socket data leakage.
+    """
     token = None
     if isinstance(auth, dict):
         token = auth.get('token')

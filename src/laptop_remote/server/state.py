@@ -7,8 +7,8 @@ from ..core.device import get_device_display_name
 from ..core.input import is_wayland_missing_daemon
 from ..core.overlay import SCREEN_H, SCREEN_W
 from ..core.power import get_battery_percent
-from ..core.window import detect_active_preset
 from ._app import overlay
+from .discovery import get_cached_preset
 
 
 def build_state(token):
@@ -24,7 +24,7 @@ def build_state(token):
         'overlay_available': overlay.available,
         'blackout': overlay.blackout and overlay.available,
         'battery': get_battery_percent() if is_auth else None,
-        'detected_preset': detect_active_preset() if is_auth else None,
+        'detected_preset': get_cached_preset() if is_auth else None,
         'audio': get_volume() if is_auth else None,
         'wayland_warning': is_wayland_missing_daemon() if is_auth else False,
     }
