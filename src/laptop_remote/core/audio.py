@@ -1,8 +1,8 @@
-import sys
+import contextlib
+import re
 import shutil
 import subprocess
-import re
-import time
+import sys
 import threading
 
 IS_WINDOWS = sys.platform.startswith('win')
@@ -17,74 +17,76 @@ except Exception:
 audio_lock = threading.Lock()
 _last_known_volume = 50
 _last_known_muted = False
+_win_volume_ctrl = None
+
+
+def _get_win_volume_ctrl():
+    global _win_volume_ctrl
+    if _win_volume_ctrl is not None:
+        return _win_volume_ctrl
+    with contextlib.suppress(Exception):
+        from ctypes import POINTER, cast
+        from comtypes import CLSCTX_ALL  # type: ignore
+        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
+
+        devices = AudioUtilities.GetSpeakers()
+        if devices:
+            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+            _win_volume_ctrl = cast(interface, POINTER(IAudioEndpointVolume))
+    return _win_volume_ctrl
 
 
 def _get_volume_windows():
-    global _last_known_volume, _last_known_muted
-    try:
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
-        from ctypes import cast, POINTER
-        from comtypes import CLSCTX_ALL  # type: ignore
-
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume_ctrl = cast(interface, POINTER(IAudioEndpointVolume))
-        current_vol = int(round(volume_ctrl.GetMasterVolumeLevelScalar() * 100))
-        muted = bool(volume_ctrl.GetMute())
-        _last_known_volume = current_vol
-        _last_known_muted = muted
-        return {'volume': current_vol, 'muted': muted}
-    except Exception:
-        pass
+    global _last_known_volume, _last_known_muted, _win_volume_ctrl
+    volume_ctrl = _get_win_volume_ctrl()
+    if volume_ctrl:
+        try:
+            current_vol = int(round(volume_ctrl.GetMasterVolumeLevelScalar() * 100))
+            muted = bool(volume_ctrl.GetMute())
+            _last_known_volume = current_vol
+            _last_known_muted = muted
+            return {'volume': current_vol, 'muted': muted}
+        except Exception:
+            _win_volume_ctrl = None
     return None
 
 
 def _set_volume_windows(pct):
-    global _last_known_volume
+    global _last_known_volume, _win_volume_ctrl
     try:
         pct = max(0, min(100, int(round(float(pct)))))
     except (ValueError, TypeError):
         pct = _last_known_volume
-    try:
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
-        from ctypes import cast, POINTER
-        from comtypes import CLSCTX_ALL  # type: ignore
-
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume_ctrl = cast(interface, POINTER(IAudioEndpointVolume))
-        target_scalar = max(0.0, min(1.0, pct / 100.0))
-        volume_ctrl.SetMasterVolumeLevelScalar(target_scalar, None)
-        _last_known_volume = pct
-        return True
-    except Exception:
-        pass
+    volume_ctrl = _get_win_volume_ctrl()
+    if volume_ctrl:
+        try:
+            target_scalar = max(0.0, min(1.0, pct / 100.0))
+            volume_ctrl.SetMasterVolumeLevelScalar(target_scalar, None)
+            _last_known_volume = pct
+            return True
+        except Exception:
+            _win_volume_ctrl = None
     return False
 
 
 def _toggle_mute_windows():
-    global _last_known_muted
-    try:
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume  # type: ignore
-        from ctypes import cast, POINTER
-        from comtypes import CLSCTX_ALL  # type: ignore
-
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume_ctrl = cast(interface, POINTER(IAudioEndpointVolume))
-        new_state = not bool(volume_ctrl.GetMute())
-        volume_ctrl.SetMute(new_state, None)
-        _last_known_muted = new_state
-        return True
-    except Exception:
-        pass
+    global _last_known_muted, _win_volume_ctrl
+    volume_ctrl = _get_win_volume_ctrl()
+    if volume_ctrl:
+        try:
+            new_state = not bool(volume_ctrl.GetMute())
+            volume_ctrl.SetMute(new_state, None)
+            _last_known_muted = new_state
+            return True
+        except Exception:
+            _win_volume_ctrl = None
     return False
 
 
 def _get_volume_linux():
     global _last_known_volume, _last_known_muted
     if shutil.which('wpctl'):
-        try:
+        with contextlib.suppress(Exception):
             out = subprocess.check_output(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], stderr=subprocess.DEVNULL).decode()
             muted = '[MUTED]' in out
             match = re.search(r'Volume:\s*([\d\.]+)', out)
@@ -93,11 +95,9 @@ def _get_volume_linux():
                 _last_known_volume = vol
                 _last_known_muted = muted
                 return {'volume': vol, 'muted': muted}
-        except Exception:
-            pass
 
     if shutil.which('amixer'):
-        try:
+        with contextlib.suppress(Exception):
             out = subprocess.check_output(['amixer', 'get', 'Master'], stderr=subprocess.DEVNULL).decode()
             vol_match = re.search(r'\[(\d+)%\]', out)
             mute_match = re.search(r'\[(on|off)\]', out)
@@ -107,11 +107,9 @@ def _get_volume_linux():
                 _last_known_volume = vol
                 _last_known_muted = muted
                 return {'volume': vol, 'muted': muted}
-        except Exception:
-            pass
 
     if shutil.which('pactl'):
-        try:
+        with contextlib.suppress(Exception):
             out = subprocess.check_output(['pactl', 'get-sink-volume', '@DEFAULT_SINK@'], stderr=subprocess.DEVNULL).decode()
             match = re.search(r'(\d+)%', out)
             mute_out = subprocess.check_output(['pactl', 'get-sink-mute', '@DEFAULT_SINK@'], stderr=subprocess.DEVNULL).decode()
@@ -121,8 +119,6 @@ def _get_volume_linux():
                 _last_known_volume = vol
                 _last_known_muted = muted
                 return {'volume': vol, 'muted': muted}
-        except Exception:
-            pass
 
     return None
 
@@ -134,29 +130,23 @@ def _set_volume_linux(pct):
     except (ValueError, TypeError):
         pct = _last_known_volume
     if shutil.which('wpctl'):
-        try:
+        with contextlib.suppress(Exception):
             val = pct / 100.0
             subprocess.run(['wpctl', 'set-volume', '@DEFAULT_AUDIO_SINK@', f"{val:.2f}"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             _last_known_volume = pct
             return True
-        except Exception:
-            pass
 
     if shutil.which('amixer'):
-        try:
+        with contextlib.suppress(Exception):
             subprocess.run(['amixer', 'sset', 'Master', f"{pct}%"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             _last_known_volume = pct
             return True
-        except Exception:
-            pass
 
     if shutil.which('pactl'):
-        try:
+        with contextlib.suppress(Exception):
             subprocess.run(['pactl', 'set-sink-volume', '@DEFAULT_SINK@', f"{pct}%"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             _last_known_volume = pct
             return True
-        except Exception:
-            pass
 
     return False
 
@@ -164,32 +154,26 @@ def _set_volume_linux(pct):
 def _toggle_mute_linux():
     global _last_known_muted
     if shutil.which('wpctl'):
-        try:
+        with contextlib.suppress(Exception):
             subprocess.run(['wpctl', 'set-mute', '@DEFAULT_AUDIO_SINK@', 'toggle'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return True
-        except Exception:
-            pass
 
     if shutil.which('amixer'):
-        try:
+        with contextlib.suppress(Exception):
             subprocess.run(['amixer', 'sset', 'Master', 'toggle'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return True
-        except Exception:
-            pass
 
     if shutil.which('pactl'):
-        try:
+        with contextlib.suppress(Exception):
             subprocess.run(['pactl', 'set-sink-mute', '@DEFAULT_SINK@', 'toggle'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return True
-        except Exception:
-            pass
 
     return False
 
 
 def _get_volume_mac():
     global _last_known_volume, _last_known_muted
-    try:
+    with contextlib.suppress(Exception):
         vol_out = subprocess.check_output(['osascript', '-e', 'output volume of (get volume settings)'], stderr=subprocess.DEVNULL).decode().strip()
         mute_out = subprocess.check_output(['osascript', '-e', 'output muted of (get volume settings)'], stderr=subprocess.DEVNULL).decode().strip()
         vol = int(vol_out)
@@ -197,29 +181,23 @@ def _get_volume_mac():
         _last_known_volume = vol
         _last_known_muted = muted
         return {'volume': vol, 'muted': muted}
-    except Exception:
-        pass
     return None
 
 
 def _set_volume_mac(pct):
     global _last_known_volume
     pct = max(0, min(100, int(pct)))
-    try:
+    with contextlib.suppress(Exception):
         subprocess.run(['osascript', '-e', f'set volume output volume {pct}'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         _last_known_volume = pct
         return True
-    except Exception:
-        pass
     return False
 
 
 def _toggle_mute_mac():
-    try:
+    with contextlib.suppress(Exception):
         subprocess.run(['osascript', '-e', 'set volume output muted not (output muted of (get volume settings))'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
-    except Exception:
-        pass
     return False
 
 

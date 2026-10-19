@@ -25,7 +25,7 @@ from .state import build_state
 @socketio.on('connect')
 def on_connect(auth):
     token = None
-    if auth:
+    if isinstance(auth, dict):
         token = auth.get('token')
         if isinstance(token, str) and token.startswith('Bearer '):
             token = token[7:]

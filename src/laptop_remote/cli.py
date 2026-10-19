@@ -31,7 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
-    args, _ = build_parser().parse_known_args(argv)
+    args = build_parser().parse_args(argv)
 
     try:
         from .core.logger import configure_logging  # type: ignore

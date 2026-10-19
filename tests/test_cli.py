@@ -36,6 +36,12 @@ class TestCliArguments:
         assert args.port == 8080
         assert args.name == "DeskTop"
 
+    def test_unknown_argument_raises(self):
+        import pytest
+        parser = build_parser()
+        with pytest.raises(SystemExit):
+            parser.parse_args(["--sssl"])
+
 
 class TestConfigureLogging:
     def test_configure_logging_verbose(self):

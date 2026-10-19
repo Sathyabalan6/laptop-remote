@@ -55,8 +55,28 @@ def unregister_mdns(zeroconf_instance, service_info):
         zeroconf_instance.close()
 
 
+_cached_preset = None
+_cached_preset_time = 0.0
+
+
+def get_cached_preset(max_age: float = 4.0):
+    """Return the cached active preset, refreshing only if stale."""
+    global _cached_preset, _cached_preset_time
+    now = time.time()
+    if _cached_preset is not None and (now - _cached_preset_time) < max_age:
+        return _cached_preset
+    try:
+        p = detect_active_preset()
+        _cached_preset = p
+        _cached_preset_time = now
+        return p
+    except Exception:
+        return _cached_preset
+
+
 def preset_monitor():
     """Poll the active-window preset and battery status, broadcasting changes to authorized clients."""
+    global _cached_preset, _cached_preset_time
     last_preset = None
     last_battery = None
     battery_poll_counter = 0
@@ -69,6 +89,8 @@ def preset_monitor():
             continue
         try:
             p = detect_active_preset()
+            _cached_preset = p
+            _cached_preset_time = time.time()
             if p and p != last_preset:
                 last_preset = p
                 for sid in authorized_sids:

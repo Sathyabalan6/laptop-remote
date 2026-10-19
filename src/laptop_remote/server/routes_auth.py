@@ -5,7 +5,7 @@ import secrets
 
 from flask import Response, jsonify, request, send_from_directory
 
-import laptop_remote.core.auth as _auth
+from ..core import auth as _auth
 from ..core.auth import (
     VALID_TOKENS,
     auth_lock,
@@ -20,8 +20,8 @@ from ..core.auth import (
 )
 from ..core.network import get_local_ip
 from ..core.overlay import SCREEN_H, SCREEN_W
-from ..core.window import detect_active_preset
 from ._app import active_authorized_sids, app, overlay, socketio
+from .discovery import get_cached_preset
 from .state import build_state
 
 
@@ -50,7 +50,7 @@ def ping():
     with auth_lock:
         is_auth = bool(token and token in VALID_TOKENS)
 
-    detected = detect_active_preset() if is_auth else None
+    detected = get_cached_preset() if is_auth else None
     return jsonify({
         'ok': True,
         'authorized': is_auth,
@@ -105,11 +105,10 @@ def revoke():
     if token and token.startswith('Bearer '):
         token = token[7:]
 
-    localhost_caller = is_localhost(request.remote_addr)
     with auth_lock:
         is_auth = bool(token and token in VALID_TOKENS)
 
-    if not (localhost_caller or is_auth):
+    if not is_auth:
         return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
     data = request.get_json(silent=True) or {}
@@ -142,11 +141,10 @@ def list_devices():
     if token and token.startswith('Bearer '):
         token = token[7:]
 
-    localhost_caller = is_localhost(request.remote_addr)
     with auth_lock:
         is_auth = bool(token and token in VALID_TOKENS)
 
-    if not (localhost_caller or is_auth):
+    if not is_auth:
         return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
     return jsonify({'ok': True, 'devices': get_active_sessions()})

@@ -74,6 +74,14 @@ class TestAuthEnforcement:
         resp = client.post(route, json={})
         assert resp.status_code == 401
 
+    def test_devices_rejects_unauthenticated(self, client):
+        resp = client.get("/devices")
+        assert resp.status_code == 401
+
+    def test_revoke_rejects_unauthenticated(self, client):
+        resp = client.post("/revoke")
+        assert resp.status_code == 401
+
     def test_pair_with_wrong_pin_returns_401(self, client):
         resp = client.post("/pair", json={"pin": "000000"})
         assert resp.status_code in (401, 429)

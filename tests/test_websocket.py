@@ -61,3 +61,19 @@ class TestWsMouseScrollAndStop:
         handler = getattr(websocket.ws_mouse_stop, "__wrapped__", websocket.ws_mouse_stop)
         handler()
         mock_stop.assert_called_once()
+
+
+class TestWsConnect:
+    def test_on_connect_handles_non_dict_auth_safely(self, monkeypatch):
+        mock_emit = MagicMock()
+        monkeypatch.setattr(websocket, "emit", mock_emit)
+        monkeypatch.setattr(websocket, "session", {})
+        monkeypatch.setattr(websocket, "request", MagicMock(sid="test_sid"))
+
+        # Should not raise AttributeError when auth is string or number
+        websocket.on_connect("not-a-dict")
+        mock_emit.assert_called_once()
+
+        mock_emit.reset_mock()
+        websocket.on_connect(12345)
+        mock_emit.assert_called_once()
