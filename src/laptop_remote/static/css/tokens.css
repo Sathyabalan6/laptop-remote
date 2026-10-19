@@ -37,9 +37,9 @@
   
   /* Text & Labels (Apple SF Hierarchy) */
   --label-primary: #ffffff;
-  --label-secondary: rgba(235, 235, 245, 0.72);
-  --label-tertiary: rgba(235, 235, 245, 0.48);
-  --label-quaternary: rgba(235, 235, 245, 0.22);
+  --label-secondary: rgba(235, 235, 245, 0.6);
+  --label-tertiary: rgba(235, 235, 245, 0.38);
+  --label-quaternary: rgba(235, 235, 245, 0.18);
 
   /* Bridge aliases for backward compatibility */
   --on-surface: var(--label-primary);
@@ -60,8 +60,8 @@
   --outline: var(--apple-blue);
 
   /* Borders & Specular Hairlines */
-  --separator: rgba(255, 255, 255, 0.12);
-  --separator-subtle: rgba(255, 255, 255, 0.08);
+  --separator: rgba(255, 255, 255, 0.1);
+  --separator-subtle: rgba(255, 255, 255, 0.06);
   --specular-stroke: inset 0 1px 0.5px rgba(255, 255, 255, 0.18);
   --specular-border: 1px solid rgba(255, 255, 255, 0.08);
 

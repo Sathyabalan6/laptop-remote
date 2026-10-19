@@ -139,11 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     vibrate(15);
     startPresentationTimer();
-    const hint = document.getElementById('laserInstruction');
-    if (hint && !hint.classList.contains('opacity-0')) {
-      hint.classList.add('opacity-0', 'pointer-events-none');
-      setTimeout(() => { hint.style.display = 'none'; }, 300);
-    }
     if (!laserAvailable) return;
     laserDot.style.display = 'block';
     updateLaserDot(e);

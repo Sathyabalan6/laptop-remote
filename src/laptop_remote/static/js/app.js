@@ -16,12 +16,7 @@ function showPinOverlay() {
     pinOverlay.classList.add('visible');
   }
   if (hiddenInput) {
-    hiddenInput.value = '';
-    setTimeout(() => {
-      try {
-        hiddenInput.focus();
-      } catch {}
-    }, 50);
+    setTimeout(() => hiddenInput.focus(), 50);
   }
 }
 
