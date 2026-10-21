@@ -130,6 +130,16 @@
   z-index: 30;
 }
 
+/* ── NESTED FLOATING QUICK DECK ── */
+#quickMediaDeck.collapsed > div:first-child {
+  display: none;
+}
+#quickMediaDeck.collapsed {
+  width: auto;
+  align-self: flex-end;
+  padding: 4px 8px;
+}
+
 /* ── DESTRUCTIVE CONFIRMATION BUTTON ── */
 .forget-device-btn.confirming {
   background-color: rgba(239, 68, 68, 0.35) !important;

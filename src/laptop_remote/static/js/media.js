@@ -3,17 +3,17 @@
 // ─────────────────────────────────────────────────────────────────
 async function send_text(text, press_enter = false) {
   if (!text && !press_enter) return;
-  vibrate(10);
+  if (typeof window !== 'undefined' && window.haptic) window.haptic.tap(); else vibrate(10);
   return socketSend('text', { text, press_enter });
 }
 
 async function send_raw_key(keyName) {
-  vibrate(12);
+  if (typeof window !== 'undefined' && window.haptic) window.haptic.tap(); else vibrate(15);
   return socketSend('key', { action: keyName, preset: currentPreset });
 }
 
 async function send_key_action(actionName) {
-  vibrate(15);
+  if (typeof window !== 'undefined' && window.haptic) window.haptic.tap(); else vibrate(15);
   return socketSend('key', { action: actionName, preset: currentPreset });
 }
 
@@ -182,8 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (volThumb) volThumb.style.left = `calc(${val}% - 12px)`;
       localStorage.setItem('volume_level', val);
 
+      if (val % 10 === 0 || val === 0 || val === 100) {
+        if (typeof window !== 'undefined' && window.haptic) window.haptic.detent(); else vibrate(5);
+      }
+
       if (!volumeThrottle) {
-        vibrate(8);
         volumeThrottle = setTimeout(() => {
           volumeThrottle = null;
           socketSend('volume_set', { volume: volumeLevel });

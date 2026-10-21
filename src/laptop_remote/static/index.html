@@ -113,7 +113,7 @@
                 <div class="w-full h-2 rounded-full bg-surface-container-highest relative overflow-hidden flex items-center">
                   <div class="h-full bg-secondary rounded-full transition-all duration-75" id="speedSliderFill" style="width: 14.3%;"></div>
                 </div>
-                <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-8 z-10" id="sensitivitySlider" max="4.0" min="0.5" step="0.1" type="range" value="1.0" aria-label="Pointer sensitivity"/>
+                <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-8 z-10" id="sensitivitySlider" max="4.0" min="0.5" step="0.1" type="range" value="1.0" style="touch-action: none;" aria-label="Pointer sensitivity"/>
                 <div class="absolute w-4 h-4 rounded-full bg-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-75 flex items-center justify-center -ml-2" id="speedSliderThumb" style="left: 14.3%;">
                   <div class="w-1 h-1 rounded-full bg-secondary-container"></div>
                 </div>
@@ -130,7 +130,7 @@
                 <div class="w-full h-2 rounded-full bg-surface-container-highest relative overflow-hidden flex items-center">
                   <div class="h-full bg-secondary rounded-full transition-all duration-75" id="scrollSliderFill" style="width: 28.6%;"></div>
                 </div>
-                <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-8 z-10" id="scrollSensitivitySlider" max="3.0" min="0.2" step="0.1" type="range" value="1.0" aria-label="Scroll speed"/>
+                <input class="absolute inset-0 w-full opacity-0 cursor-pointer h-8 z-10" id="scrollSensitivitySlider" max="3.0" min="0.2" step="0.1" type="range" value="1.0" style="touch-action: none;" aria-label="Scroll speed"/>
                 <div class="absolute w-4 h-4 rounded-full bg-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-75 flex items-center justify-center -ml-2" id="scrollSliderThumb" style="left: 28.6%;">
                   <div class="w-1 h-1 rounded-full bg-secondary-container"></div>
                 </div>
@@ -164,6 +164,36 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path></svg>
           </div>
           <span class="text-xs text-on-surface-variant font-medium">Two fingers scroll · Tap to click</span>
+        </div>
+      </div>
+
+      <!-- Floating Quick Media Deck (Proposal 1: Nested Floating Deck) -->
+      <div id="quickMediaDeck" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-2xl bg-surface-container-high/85 backdrop-blur-xl border border-white/[0.08] shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition-all duration-200">
+        <div class="flex items-center gap-1.5">
+          <!-- ⏪ -10s -->
+          <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface-variant/70 hover:bg-surface-bright active:scale-90 transition-all flex items-center justify-center text-on-surface" onclick="send('skip_back')" type="button" aria-label="Skip back 10 seconds">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
+          </button>
+          <!-- ⏯ Play/Pause -->
+          <button class="h-10 px-3.5 min-h-[40px] rounded-xl bg-primary text-white font-semibold text-xs active:scale-95 transition-all flex items-center gap-1.5 shadow-sm" onclick="send('play_pause')" type="button" aria-label="Play or pause">
+            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Play/Pause</span>
+          </button>
+          <!-- ⏩ +10s -->
+          <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface-variant/70 hover:bg-surface-bright active:scale-90 transition-all flex items-center justify-center text-on-surface" onclick="send('skip_forward')" type="button" aria-label="Skip forward 10 seconds">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <!-- 🔇 Mute -->
+          <button class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface-variant/70 hover:bg-surface-bright active:scale-90 transition-all flex items-center justify-center text-secondary" onclick="send('mute')" type="button" aria-label="Toggle mute">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="22" y1="9" x2="16" y2="15"></line><line x1="16" y1="9" x2="22" y2="15"></line></svg>
+          </button>
+          <!-- Minimize / Expand Quick Deck -->
+          <button class="w-8 h-8 min-w-[32px] min-h-[32px] rounded-lg text-outline hover:text-on-surface flex items-center justify-center transition-all" id="btnToggleQuickDeck" onclick="toggleQuickDeck()" type="button" aria-label="Toggle Quick Deck" title="Minimize / Expand Media Deck">
+            <svg class="w-3.5 h-3.5 transition-transform duration-200" id="quickDeckChevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
         </div>
       </div>
 
@@ -281,7 +311,7 @@
             <div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden relative shadow-inner">
               <div class="h-full bg-secondary-container transition-all rounded-full" id="volume-fill" style="width: 50%;"></div>
             </div>
-            <input aria-label="Speaker Volume slider" class="absolute inset-0 w-full h-10 opacity-0 cursor-pointer" id="volumeSlider" max="100" min="0" type="range" value="50"/>
+            <input aria-label="Speaker Volume slider" class="absolute inset-0 w-full h-10 opacity-0 cursor-pointer" id="volumeSlider" max="100" min="0" type="range" value="50" style="touch-action: none;"/>
             <div class="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-on-secondary-container shadow-[0_2px_8px_rgba(0,0,0,0.6)] pointer-events-none transition-all flex items-center justify-center -ml-2.5" id="volume-thumb" style="left: 50%;">
               <div class="w-1.5 h-1.5 rounded-full bg-surface-dim"></div>
             </div>
@@ -771,7 +801,7 @@
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Scroll Speed</span>
           <div class="flex items-center gap-1.5">
-            <input class="w-24 h-1.5 accent-primary cursor-pointer" id="settingsScrollSlider" max="3.0" min="0.2" step="0.1" type="range" value="1.0" oninput="setScrollSensitivity(parseFloat(this.value))" aria-label="Scroll speed"/>
+            <input class="w-24 h-1.5 accent-primary cursor-pointer" id="settingsScrollSlider" max="3.0" min="0.2" step="0.1" type="range" value="1.0" style="touch-action: none;" oninput="setScrollSensitivity(parseFloat(this.value))" aria-label="Scroll speed"/>
             <span class="text-[11px] font-semibold text-primary font-mono w-8 text-right" id="settingsScrollLabel">1.0x</span>
           </div>
         </div>

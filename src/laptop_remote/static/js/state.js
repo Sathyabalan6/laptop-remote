@@ -259,8 +259,48 @@ function setPreset(name, isAuto = false) {
   }
 }
 
-function vibrate(ms = 20) {
-  if (navigator.vibrate) navigator.vibrate(ms);
+function vibrate(pattern = 15) {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(pattern);
+    } catch { }
+  }
+}
+
+const haptic = {
+  tap: () => vibrate(15),
+  heavy: () => vibrate(30),
+  release: () => vibrate([15, 40, 15]),
+  rightClick: () => vibrate([20, 30, 20]),
+  detent: () => vibrate(5),
+  error: () => vibrate([50, 50, 50, 50, 50])
+};
+
+let quickDeckCollapsed = (typeof localStorage !== 'undefined' ? localStorage.getItem('quick_deck_collapsed') : null) === 'true';
+
+function syncQuickDeckUI() {
+  if (typeof document === 'undefined') return;
+  const deck = document.getElementById('quickMediaDeck');
+  const btn = document.getElementById('btnToggleQuickDeck');
+  if (deck) {
+    deck.classList.toggle('collapsed', quickDeckCollapsed);
+  }
+  if (btn) {
+    btn.setAttribute('aria-expanded', quickDeckCollapsed ? 'false' : 'true');
+    const chevron = document.getElementById('quickDeckChevron');
+    if (chevron) {
+      chevron.style.transform = quickDeckCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+  }
+}
+
+function toggleQuickDeck() {
+  quickDeckCollapsed = !quickDeckCollapsed;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('quick_deck_collapsed', quickDeckCollapsed ? 'true' : 'false');
+  }
+  vibrate(15);
+  syncQuickDeckUI();
 }
 
 let wakeLock = null;
@@ -807,4 +847,7 @@ if (typeof window !== 'undefined') {
   window.toggleSpeedPopover = toggleSpeedPopover;
   window.togglePresentMenu = togglePresentMenu;
   window.laserAvailable = laserAvailable;
+  window.haptic = haptic;
+  window.toggleQuickDeck = toggleQuickDeck;
+  window.syncQuickDeckUI = syncQuickDeckUI;
 }

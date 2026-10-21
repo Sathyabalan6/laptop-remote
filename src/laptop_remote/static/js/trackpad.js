@@ -4,7 +4,7 @@
 let isDragLocked = false;
 
 async function click_btn(btn) {
-  vibrate(30);
+  if (typeof window !== 'undefined' && window.haptic) window.haptic.tap(); else vibrate(15);
   if (btn === 'left' && isDragLocked) {
     isDragLocked = false;
     const dragBtn = document.getElementById('btnDragLock');
@@ -18,7 +18,11 @@ async function click_btn(btn) {
 
 async function toggleDragLock() {
   isDragLocked = !isDragLocked;
-  vibrate(isDragLocked ? [20, 30] : 20);
+  if (typeof window !== 'undefined' && window.haptic) {
+    if (isDragLocked) window.haptic.heavy(); else window.haptic.release();
+  } else {
+    vibrate(isDragLocked ? 30 : [15, 40, 15]);
+  }
   const btn = document.getElementById('btnDragLock');
   if (btn) {
     btn.classList.toggle('active', isDragLocked);
@@ -529,6 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2-finger tap without scroll or zoom -> Right Click
     if (e.type === 'touchend' && maxFingers === 2 && !scrollSent && !zoomSent && !twoFingerMode) {
+      if (typeof window !== 'undefined' && window.haptic) window.haptic.rightClick(); else vibrate([20, 30, 20]);
       click_btn('right');
     }
 
