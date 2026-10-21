@@ -48,8 +48,10 @@
 ### 2. 🖱️ High-Precision Touch Trackpad (`static/js/trackpad.js`, `core/input.py`)
 - **Velocity Acceleration Engine**: Applies sub-linear acceleration (`ad ** 1.35`) for pixel-exact fine positioning during slow finger movement, while enabling fast cursor snaps across multi-monitor setups.
 - **Zero-Latency Processing**: PyAutoGUI parameters configured (`PAUSE = 0`, `MINIMUM_DURATION = 0`) to eliminate frame delays and provide instantaneous response.
-- **Continuous Tactile Scroll**: Vertical scroll column with press-and-hold tactile buttons, plus two-finger continuous trackpad swipe scrolling.
-- **Left & Right Click Buttons**: Dedicated tactile click buttons and tap-to-click gesture support.
+- **Continuous Tactile Scroll**: Vertical scroll column with press-and-hold tactile buttons, plus two-finger continuous trackpad swipe scrolling with momentum decay.
+- **Two-Finger Pinch-to-Zoom**: Automatic gesture intent lock that allows pinching to zoom in/out with zero conflict against scrolling.
+- **Nested Floating Media Deck**: Thumb-accessible quick playback bar (`-10s`, `Play/Pause`, `+10s`, `Mute`) directly on the trackpad, eliminating tab switching.
+- **Left & Right Click Buttons**: Dedicated tactile click buttons and tap-to-click gesture support (1-finger tap for left click, 2-finger tap for right click).
 
 ---
 
@@ -131,8 +133,10 @@ laptop-remote/
 │       │   ├── audio.py      # Cross-platform master audio controller
 │       │   ├── auth.py       # Security, rate-limiting & PIN authentication
 │       │   ├── config.py     # Presets loader & storage
+│       │   ├── device.py     # Friendly device naming
 │       │   ├── input.py      # Mouse & keyboard backend (Win/macOS/X11/Wayland)
 │       │   ├── keys.py       # Key-name → Linux input-event keycode mapping
+│       │   ├── logger.py     # Centralized logging configuration
 │       │   ├── network.py    # IP discovery & TLS certificate generator
 │       │   ├── overlay.py    # Platform selection and Windows overlay
 │       │   ├── overlay_x11.py # Linux X11 SHAPE overlay
@@ -141,6 +145,7 @@ laptop-remote/
 │       │   └── window.py     # Active window & auto-preset detector
 │       └── static/
 │           ├── index.html    # Semantic HTML5 PWA single-page interface
+│           ├── sw.js         # Service worker offline precaching
 │           ├── css/
 │           │   ├── tokens.css      # OLED dark design tokens & typography
 │           │   ├── base.css        # Layout structure & sticky headers
@@ -149,6 +154,8 @@ laptop-remote/
 │               ├── state.js        # App state, presets & wake lock
 │               ├── transport.js    # Socket.IO & HTTP network client
 │               ├── media.js        # Media player, search & shortcuts
+│               ├── preset-logic.js # Pure preset formatting & lookup logic
+│               ├── trackpad-logic.js # Pure gesture & touch physics math
 │               ├── trackpad.js     # Gesture math & sensitivity scaling
 │               ├── presentation.js # Laser pointer pad & presentation timer
 │               └── app.js          # DOM binding & service worker initialization
@@ -160,14 +167,23 @@ laptop-remote/
 ## 🚀 Quick Execution Commands
 
 ```bash
-# Standard Launch
+# Zero-install launch via uv (Fastest, cross-platform)
+uvx laptop-remote
+
+# Global install via pipx
+pipx install laptop-remote
+
+# Standard local repo launch
 ./run.sh
 
+# Run with verbose debug logging
+laptop-remote --verbose
+
 # Run in background system tray mode
-./run.sh --tray
+laptop-remote --tray
 
 # Enable HTTPS encryption
-./run.sh --ssl
+laptop-remote --ssl
 ```
 
 ## 🐧 Linux & Wayland: Mouse Input Setup
