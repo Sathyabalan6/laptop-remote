@@ -158,6 +158,13 @@
           <span id="zoomIndicatorText">Zoom</span>
         </div>
 
+        <!-- Right-Edge 1-Thumb Scroll Rail (Option A) -->
+        <div id="scrollRail" class="absolute top-0 right-0 bottom-0 w-11 z-20 flex flex-col items-center justify-between py-5 select-none touch-none bg-surface-container-high/30 hover:bg-surface-container-high/50 active:bg-surface-container-high/75 border-l border-white/[0.06] transition-colors" role="scrollbar" aria-orientation="vertical" aria-label="One-thumb vertical scroll bar">
+          <svg class="w-3.5 h-3.5 text-on-surface-variant opacity-60 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          <div id="scrollRailThumb" class="w-1.5 h-12 rounded-full bg-secondary-container opacity-60 pointer-events-none transition-all shadow-sm"></div>
+          <svg class="w-3.5 h-3.5 text-on-surface-variant opacity-60 pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+
         <!-- Center Instructional Hint (Fades out after first touch) -->
         <div class="self-center my-auto flex flex-col items-center gap-1.5 pointer-events-none z-10 opacity-70 transition-opacity duration-300" id="centerPrompt">
           <div class="w-10 h-10 rounded-full bg-surface-bright/30 flex items-center justify-center text-secondary border border-outline-variant/30">
@@ -723,6 +730,10 @@
           <div class="flex items-center justify-between">
             <span class="text-on-surface font-semibold">2-Finger Pinch</span>
             <span>Zoom In / Out</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">Right Rail</span>
+            <span>1-Thumb Scroll</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-on-surface font-semibold">Lock Button</span>

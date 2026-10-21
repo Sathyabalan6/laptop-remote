@@ -8,6 +8,7 @@ import {
   clampZoomDelta,
   classifyGesture,
   classifyTwoFingerIntent,
+  computeRailThumbPosition,
   computeScrollDelta,
   computeZoomDelta,
   isTwoFingerScrollGesture
@@ -160,6 +161,24 @@ describe('clampZoomDelta', () => {
     expect(clampZoomDelta(5.0, 3.0)).toBe(3.0);
     expect(clampZoomDelta(-5.0, 3.0)).toBe(-3.0);
     expect(clampZoomDelta(1.5, 3.0)).toBe(1.5);
+  });
+});
+
+describe('computeRailThumbPosition', () => {
+  it('centers thumb on touch position', () => {
+    // clientY = 124, railTop = 100, railHeight = 300, thumbHeight = 48
+    // relativeY = 124 - 100 - 24 = 0
+    expect(computeRailThumbPosition(124, 100, 300, 48)).toBe(0);
+  });
+
+  it('clamps thumb position at top boundary', () => {
+    // clientY = 80 (< railTop 100) -> clamped to 0
+    expect(computeRailThumbPosition(80, 100, 300, 48)).toBe(0);
+  });
+
+  it('clamps thumb position at bottom boundary', () => {
+    // clientY = 450 (> railTop 100 + railHeight 300) -> clamped to 300 - 48 = 252
+    expect(computeRailThumbPosition(450, 100, 300, 48)).toBe(252);
   });
 });
 

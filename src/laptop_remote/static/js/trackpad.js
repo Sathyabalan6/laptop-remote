@@ -130,6 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
     trackpadLogic.clampZoomDelta ||
     ((delta, max = 3.0) => Math.max(-max, Math.min(max, delta)));
 
+  const computeRailThumbPosition =
+    trackpadLogic.computeRailThumbPosition ||
+    ((clientY, railTop, railHeight, thumbHeight = 48) => {
+      const maxTop = Math.max(0, railHeight - thumbHeight);
+      const relativeY = clientY - railTop - thumbHeight / 2;
+      return Math.min(maxTop, Math.max(0, relativeY));
+    });
+
   const classifyGesture =
     trackpadLogic.classifyGesture ||
     ((prevPoints, currPoints, totalMovement = 0, movementThreshold = 2) => {
@@ -390,10 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     maxFingers = Math.max(maxFingers, e.touches.length);
     const rect = pad.getBoundingClientRect();
-    const currentPoints = Array.from(e.touches).map(t => ({
-      x: t.clientX,
-      y: t.clientY
-    }));
 
     if (e.touches.length === 2) {
       if (ghost) ghost.classList.remove('visible');
@@ -572,4 +576,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
   pad.addEventListener('touchend', handleTouchEndOrCancel, { passive: false });
   pad.addEventListener('touchcancel', handleTouchEndOrCancel, { passive: false });
+
+  // ── 1-Thumb Right-Edge Scroll Rail ────────────────────────────────────
+  const scrollRail = document.getElementById('scrollRail');
+  const scrollRailThumb = document.getElementById('scrollRailThumb');
+
+  let railLastY = 0;
+  let railAccumulatedPixels = 0;
+
+  if (scrollRail) {
+    scrollRail.addEventListener('touchstart', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.touches.length === 0) return;
+      railLastY = e.touches[0].clientY;
+      railAccumulatedPixels = 0;
+      if (typeof window !== 'undefined' && window.haptic) {
+        window.haptic.tap();
+      } else {
+        vibrate(15);
+      }
+      if (scrollRailThumb) {
+        scrollRailThumb.classList.remove('opacity-60');
+        scrollRailThumb.classList.add('opacity-100', 'bg-primary');
+      }
+    }, { passive: false });
+
+    scrollRail.addEventListener('touchmove', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.touches.length === 0) return;
+
+      const currentY = e.touches[0].clientY;
+      const dy = currentY - railLastY;
+      railLastY = currentY;
+
+      const curSens = typeof scrollSensitivity !== 'undefined' ? scrollSensitivity : 1.0;
+      const curDir = typeof scrollDirection !== 'undefined' ? scrollDirection : 'natural';
+      const scrollUnit = computeScrollDelta(dy, curSens, curDir, 16.0);
+
+      pendingScrollDy += scrollUnit;
+      if (!scrollThrottle) {
+        scrollThrottle = requestAnimationFrame(flushScroll);
+      }
+
+      railAccumulatedPixels += Math.abs(dy);
+      if (railAccumulatedPixels >= 16) {
+        railAccumulatedPixels = 0;
+        if (typeof window !== 'undefined' && window.haptic) {
+          window.haptic.detent();
+        } else {
+          vibrate(5);
+        }
+      }
+
+      if (scrollRailThumb) {
+        const railRect = scrollRail.getBoundingClientRect();
+        const thumbTop = computeRailThumbPosition(currentY, railRect.top, railRect.height, 48);
+        scrollRailThumb.style.transform = `translateY(${thumbTop}px)`;
+      }
+    }, { passive: false });
+
+    const handleRailEnd = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      railAccumulatedPixels = 0;
+      if (scrollRailThumb) {
+        scrollRailThumb.classList.remove('opacity-100', 'bg-primary');
+        scrollRailThumb.classList.add('opacity-60');
+        scrollRailThumb.style.transform = '';
+      }
+      socketSend('mouse_stop');
+    };
+
+    scrollRail.addEventListener('touchend', handleRailEnd, { passive: false });
+    scrollRail.addEventListener('touchcancel', handleRailEnd, { passive: false });
+  }
 });

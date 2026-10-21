@@ -75,6 +75,12 @@ export function clampZoomDelta(delta, maxPerFrame = 3.0) {
   return Math.max(-maxPerFrame, Math.min(maxPerFrame, delta));
 }
 
+export function computeRailThumbPosition(clientY, railTop, railHeight, thumbHeight = 48) {
+  const maxTop = Math.max(0, railHeight - thumbHeight);
+  const relativeY = clientY - railTop - thumbHeight / 2;
+  return Math.min(maxTop, Math.max(0, relativeY));
+}
+
 export function classifyGesture(
   prevPoints,
   currPoints,
@@ -104,6 +110,7 @@ if (typeof window !== 'undefined') {
     classifyTwoFingerIntent,
     computeZoomDelta,
     clampZoomDelta,
+    computeRailThumbPosition,
     classifyGesture
   };
 }
