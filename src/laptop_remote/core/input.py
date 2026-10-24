@@ -43,6 +43,16 @@ except (Exception, SystemExit):
 IS_WINDOWS = sys.platform.startswith('win')
 IS_MAC = sys.platform.startswith('darwin')
 
+if IS_WINDOWS:
+    with contextlib.suppress(Exception):
+        import ctypes
+        windll = getattr(ctypes, 'windll', None)
+        if windll:
+            try:
+                windll.shcore.SetProcessDpiAwareness(2)
+            except Exception:
+                windll.user32.SetProcessDPIAware()
+
 # ── Wayland detection ────────────────────────────────────────────────────────
 # On Linux under a Wayland compositor, pyautogui's XTEST-based mouse injection
 # talks to an Xwayland server and never reaches the real on-screen cursor.
