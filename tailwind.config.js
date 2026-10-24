@@ -2,8 +2,7 @@
 module.exports = {
   darkMode: "class",
   content: [
-    "./src/laptop_remote/static/**/*.{html,js}",
-    "/home/sathybalan/Downloads/stitch_apple_design_system_redesign(1)/stitch_apple_design_system_redesign/**/*.html"
+    "./src/laptop_remote/static/**/*.{html,js}"
   ],
   theme: {
     extend: {
@@ -47,6 +46,10 @@ module.exports = {
         "inverse-surface": "#e4e2e4",
         "on-error": "#690005",
         "error-container": "#93000a",
+        "warning": "#ff9f0a",
+        "on-warning": "#261900",
+        "warning-container": "rgba(255, 159, 10, 0.2)",
+        "on-warning-container": "#ffc470",
         "tertiary-fixed": "#6cff82",
         "surface-container": "#1f1f21",
         "tertiary-container": "#00802d",

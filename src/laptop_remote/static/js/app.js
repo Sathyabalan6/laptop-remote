@@ -79,13 +79,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       if (pinError) pinError.classList.remove('visible');
+      if (wifiHelp) wifiHelp.classList.add('hidden');
       
       if (val.length === 6) {
         hiddenInput.blur();
         vibrate(20);
         const res = await submitPin(val);
         if (!res.ok) {
-          if (wifiHelp) wifiHelp.classList.remove('hidden');
+          if (wifiHelp) {
+            if (res.error === 'Connection failed') {
+              wifiHelp.classList.remove('hidden');
+            } else {
+              wifiHelp.classList.add('hidden');
+            }
+          }
           if (pinError) {
             pinError.textContent = res.error;
             pinError.classList.add('visible');
