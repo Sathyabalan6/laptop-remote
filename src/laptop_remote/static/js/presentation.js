@@ -31,6 +31,27 @@ function slideCtrl(action) {
   updateSlideCounter();
 }
 
+function setSlideIndex(val) {
+  const parsed = Number.parseInt(val, 10);
+  if (!Number.isNaN(parsed) && parsed >= 1) {
+    slideIndex = parsed;
+    updateSlideCounter();
+    vibrate(15);
+    if (typeof showToast === 'function') {
+      showToast('Slide number set to ' + slideIndex);
+    }
+  }
+}
+
+function promptSlideNumber() {
+  vibrate(15);
+  const current = String(slideIndex);
+  const input = prompt('Enter current slide number:', current);
+  if (input !== null) {
+    setSlideIndex(input);
+  }
+}
+
 let restartConfirmTimeout = null;
 
 function resetPresentation() {
@@ -181,4 +202,6 @@ if (typeof window !== 'undefined') {
   window.togglePresentation = togglePresentation;
   window.startPresentationTimer = startPresentationTimer;
   window.applyLaserAvailability = applyLaserAvailability;
+  window.setSlideIndex = setSlideIndex;
+  window.promptSlideNumber = promptSlideNumber;
 }

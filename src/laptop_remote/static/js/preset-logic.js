@@ -7,6 +7,10 @@ export function getPresetDisplayName(name) {
     return 'VLC Player';
   }
 
+  if (name === 'presentation') {
+    return 'Presentation Deck';
+  }
+
   return 'Universal / Netflix';
 }
 
@@ -17,6 +21,10 @@ export function getPresetDescription(name) {
 
   if (name === 'vlc') {
     return 'Full desktop VLC hotkeys (Space, Audio cycle, Aspect ratio)';
+  }
+
+  if (name === 'presentation') {
+    return 'Slideshow controls, laser pointer & presentation stopwatch';
   }
 
   return 'Standard web media keys (Space, Arrow keys, F, M, S for intro)';

@@ -544,9 +544,10 @@
             <div class="flex items-center gap-1.5">
               <span class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Presentation</span>
             </div>
-            <div class="flex items-baseline gap-1 mt-0.5">
+            <div class="flex items-baseline gap-1 mt-0.5 cursor-pointer active:scale-95 transition-transform" onclick="promptSlideNumber()" title="Tap to set slide number">
               <span class="text-xs text-on-surface-variant font-medium">Slide</span>
-              <span class="font-headline-md text-xl font-bold text-on-surface" id="slideCounter">1</span>
+              <span class="font-headline-md text-xl font-bold text-on-surface underline decoration-white/20 underline-offset-4" id="slideCounter">1</span>
+              <svg class="w-3 h-3 text-on-surface-variant opacity-60 ml-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </div>
           </div>
         </div>
@@ -689,6 +690,52 @@
   </nav>
 
   <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- FIRST-RUN ONBOARDING GESTURE TUTORIAL MODAL                   -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div class="overlay-backdrop" id="onboardingModalBackdrop" onclick="closeOnboardingModal()"></div>
+  <div class="modal-dialog-container" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" onclick="if (event.target === this) closeOnboardingModal()">
+    <div class="modal-panel w-full max-w-sm bg-surface-container/95 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl border border-white/[0.1] flex flex-col gap-4 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-primary/20 text-primary mx-auto flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"></rect><line x1="12" y1="6" x2="12" y2="10"></line></svg>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <h2 class="font-headline-sm text-lg font-bold text-on-surface" id="onboardingTitle">Welcome to Remote Deck</h2>
+        <p class="text-xs text-on-surface-variant">Here are 3 power-gestures to master your remote:</p>
+      </div>
+
+      <!-- Feature Highlights -->
+      <div class="space-y-2.5 text-left text-xs bg-surface-container-low/70 rounded-2xl p-4 border border-white/[0.04]">
+        <div class="flex items-start gap-3">
+          <span class="text-base leading-none">👆</span>
+          <div>
+            <span class="font-semibold text-on-surface">Precision Touch</span>
+            <p class="text-[11px] text-on-surface-variant">1-finger tap for Left Click · 2-finger tap for Right Click.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-base leading-none">✌️</span>
+          <div>
+            <span class="font-semibold text-on-surface">Pinch to Zoom</span>
+            <p class="text-[11px] text-on-surface-variant">Pinch or spread 2 fingers anywhere to smoothly zoom in &amp; out.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="text-base leading-none">🖱️</span>
+          <div>
+            <span class="font-semibold text-on-surface">1-Thumb Scroll Rail</span>
+            <p class="text-[11px] text-on-surface-variant">Slide thumb along the right edge rail for tactile notched scrolling.</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-xs active:scale-95 transition-all shadow-md mt-1" onclick="closeOnboardingModal(true)" type="button">
+        Get Started
+      </button>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
   <!-- QUICK HELP & GESTURES CHEAT SHEET MODAL                       -->
   <!-- ───────────────────────────────────────────────────────────── -->
   <div class="overlay-backdrop" id="helpModalBackdrop" onclick="closeHelpModal()"></div>
@@ -766,6 +813,12 @@
         <span class="text-xs font-bold text-tertiary uppercase tracking-wider">Wi-Fi &amp; Performance</span>
         <p class="text-xs text-on-surface-variant">For ultra-low latency, connect both devices to 5GHz Wi-Fi or your Phone Hotspot.</p>
       </div>
+
+      <!-- Interactive Tutorial Replay Button -->
+      <button class="w-full h-11 rounded-xl bg-surface-variant hover:bg-surface-bright text-primary font-semibold text-xs active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/[0.06]" onclick="closeHelpModal(); openOnboardingModal();" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+        <span>Replay Gesture Tutorial</span>
+      </button>
     </div>
   </div>
 
@@ -827,6 +880,10 @@
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Shortcut Presets</span>
           <button class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="openPresetsModal()" type="button">Customize</button>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Auto-Focus (App Sensing)</span>
+          <button id="focusModeToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleFocusMode()" type="button">Off</button>
         </div>
       </div>
 

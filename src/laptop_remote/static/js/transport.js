@@ -124,6 +124,9 @@ function connectSocket(token) {
     if (d && d.preset && d.preset !== currentPreset) {
       setPreset(d.preset, true);
       showToast('🎯 Auto-preset: ' + presetDisplayName(d.preset));
+      if (typeof handlePresetAutoSwitch === 'function') {
+        handlePresetAutoSwitch(d.preset);
+      }
     }
   });
   socket.on('disconnect', () => {
@@ -165,6 +168,9 @@ function onServerState(data) {
     if (data.detected_preset && data.detected_preset !== currentPreset) {
       setPreset(data.detected_preset, true);
       showToast('🎯 Auto-preset: ' + presetDisplayName(data.detected_preset));
+      if (typeof handlePresetAutoSwitch === 'function') {
+        handlePresetAutoSwitch(data.detected_preset);
+      }
     }
     updateBattery(data.battery);
     if (data.audio) {

@@ -1,17 +1,17 @@
-import sys
+import contextlib
 import shutil
 import subprocess
+import sys
 
 IS_WINDOWS = sys.platform.startswith('win')
 IS_LINUX = sys.platform.startswith('linux')
 HAS_WIN32GUI = False
+win32gui = None
 
 if IS_WINDOWS:
-    try:
-        import win32gui
+    with contextlib.suppress(ImportError):
+        import win32gui  # type: ignore
         HAS_WIN32GUI = True
-    except ImportError:
-        pass
 
 PRESET_RULES = [
     ("YouTube", "youtube_hotstar"),
@@ -19,25 +19,26 @@ PRESET_RULES = [
     ("VLC", "vlc"),
     ("Netflix", "universal"),
     ("Prime Video", "universal"),
+    ("PowerPoint", "presentation"),
+    ("Keynote", "presentation"),
+    ("Google Slides", "presentation"),
+    ("Canva", "presentation"),
+    ("Prezi", "presentation"),
 ]
 
 def _get_active_window_title():
-    if IS_WINDOWS and HAS_WIN32GUI:
-        try:
+    if IS_WINDOWS and HAS_WIN32GUI and win32gui:
+        with contextlib.suppress(Exception):
             hwnd = win32gui.GetForegroundWindow()
             return win32gui.GetWindowText(hwnd)
-        except Exception:
-            return None
     elif IS_LINUX and shutil.which('xprop'):
-        try:
+        with contextlib.suppress(Exception):
             out = subprocess.check_output(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stderr=subprocess.DEVNULL).decode()
             parts = out.strip().split()
             win_id = parts[-1]
             if win_id.startswith('0x'):
                 name_out = subprocess.check_output(['xprop', '-id', win_id, 'WM_NAME', '_NET_WM_NAME'], stderr=subprocess.DEVNULL).decode()
                 return name_out
-        except Exception:
-            pass
     return None
 
 def detect_active_preset():

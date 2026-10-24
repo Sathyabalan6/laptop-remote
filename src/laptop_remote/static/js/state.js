@@ -12,6 +12,7 @@ let scrollDirection = localStorage.getItem('scroll_direction') || 'natural';
 let scrollSensitivity = (typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('scroll_sensitivity')) : null) || 1.0;
 let scrollInertia = (typeof localStorage !== 'undefined' ? localStorage.getItem('scroll_inertia') : null) !== 'false';
 let pinchZoomEnabled = (typeof localStorage !== 'undefined' ? localStorage.getItem('pinch_zoom_enabled') : null) !== 'false';
+let focusModeEnabled = (typeof localStorage !== 'undefined' ? localStorage.getItem('focus_mode_enabled') : null) === 'true';
 let currentTheme = (typeof localStorage !== 'undefined' ? localStorage.getItem('app_theme') : null) || 'dark';
 // Set from server state: true only when a transparent laser overlay exists.
 let laserAvailable = false;
@@ -135,6 +136,43 @@ function togglePinchZoom() {
   syncPinchZoomUI();
   if (typeof showToast === 'function') {
     showToast('Pinch to Zoom: ' + (pinchZoomEnabled ? 'Enabled' : 'Disabled'));
+  }
+}
+
+function syncFocusModeUI() {
+  if (typeof document === 'undefined') return;
+  const btn = document.getElementById('focusModeToggleBtn');
+  if (btn) {
+    btn.textContent = focusModeEnabled ? 'Active' : 'Off';
+    btn.setAttribute('data-focus', focusModeEnabled ? 'true' : 'false');
+  }
+}
+
+function toggleFocusMode() {
+  focusModeEnabled = !focusModeEnabled;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('focus_mode_enabled', focusModeEnabled ? 'true' : 'false');
+  }
+  vibrate(15);
+  syncFocusModeUI();
+  if (typeof showToast === 'function') {
+    showToast('Focus Mode: ' + (focusModeEnabled ? '⚡ Auto-Tab Switching Active' : 'Off'));
+  }
+}
+
+function handlePresetAutoSwitch(preset) {
+  if (!focusModeEnabled || !preset) return;
+  if (preset === 'presentation') {
+    if (currentTab !== 'present') {
+      switchTab('present');
+      if (typeof showToast === 'function') showToast('⚡ Focus: Switched to Presentation Deck');
+    }
+  } else if (preset === 'youtube_hotstar' || preset === 'vlc' || preset === 'universal') {
+    if (currentTab !== 'media') {
+      switchTab('media');
+      const name = window.presetLogic?.getPresetDisplayName ? window.presetLogic.getPresetDisplayName(preset) : preset;
+      if (typeof showToast === 'function') showToast('⚡ Focus: Switched to ' + name);
+    }
   }
 }
 
@@ -468,6 +506,7 @@ function openSettingsModal() {
   setScrollSensitivity(scrollSensitivity);
   syncScrollInertiaUI();
   syncPinchZoomUI();
+  syncFocusModeUI();
   loadPairedDevices();
   openOverlay('settingsModal');
 }
@@ -834,6 +873,9 @@ if (typeof window !== 'undefined') {
   window.syncScrollInertiaUI = syncScrollInertiaUI;
   window.togglePinchZoom = togglePinchZoom;
   window.syncPinchZoomUI = syncPinchZoomUI;
+  window.toggleFocusMode = toggleFocusMode;
+  window.syncFocusModeUI = syncFocusModeUI;
+  window.handlePresetAutoSwitch = handlePresetAutoSwitch;
   window.revokeSingleDevice = revokeSingleDevice;
   window.loadPairedDevices = loadPairedDevices;
   window.openSettingsModal = openSettingsModal;

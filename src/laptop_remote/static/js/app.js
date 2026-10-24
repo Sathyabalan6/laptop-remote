@@ -141,4 +141,39 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js').catch(() => {});
   }
+
+  // Check if first-run onboarding tutorial should be shown
+  checkFirstRunOnboarding();
 });
+
+function openOnboardingModal() {
+  if (typeof openOverlay === 'function') {
+    openOverlay('onboardingModal');
+  }
+}
+
+function closeOnboardingModal(markSeen = false) {
+  if (markSeen && typeof localStorage !== 'undefined') {
+    localStorage.setItem('onboarding_seen', 'true');
+  }
+  if (typeof closeOverlay === 'function') {
+    closeOverlay('onboardingModal');
+  }
+}
+
+function checkFirstRunOnboarding() {
+  if (typeof localStorage !== 'undefined' && !localStorage.getItem('onboarding_seen')) {
+    setTimeout(() => {
+      const pinOverlay = document.getElementById('pinOverlay');
+      const isPinActive = pinOverlay && pinOverlay.classList.contains('visible');
+      if (!isPinActive) {
+        openOnboardingModal();
+      }
+    }, 700);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.openOnboardingModal = openOnboardingModal;
+  window.closeOnboardingModal = closeOnboardingModal;
+}

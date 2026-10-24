@@ -24,6 +24,19 @@ class TestWindowPresetDetection:
         monkeypatch.setattr(window, "_get_active_window_title", lambda: "The Boys - Prime Video")
         assert window.detect_active_preset() == "universal"
 
+    def test_presentation_apps_detection(self, monkeypatch):
+        monkeypatch.setattr(window, "_get_active_window_title", lambda: "Quarterly Review.pptx - PowerPoint")
+        assert window.detect_active_preset() == "presentation"
+
+        monkeypatch.setattr(window, "_get_active_window_title", lambda: "Project Pitch - Google Slides - Chrome")
+        assert window.detect_active_preset() == "presentation"
+
+        monkeypatch.setattr(window, "_get_active_window_title", lambda: "Keynote - Architecture Talk")
+        assert window.detect_active_preset() == "presentation"
+
+        monkeypatch.setattr(window, "_get_active_window_title", lambda: "Design Deck - Canva")
+        assert window.detect_active_preset() == "presentation"
+
     def test_unknown_app_returns_none(self, monkeypatch):
         monkeypatch.setattr(window, "_get_active_window_title", lambda: "Visual Studio Code - laptop-remote")
         assert window.detect_active_preset() is None

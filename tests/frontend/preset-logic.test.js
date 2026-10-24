@@ -14,6 +14,10 @@ describe('getPresetDisplayName', () => {
     expect(getPresetDisplayName('vlc')).toBe('VLC Player');
   });
 
+  it('returns the Presentation Deck name', () => {
+    expect(getPresetDisplayName('presentation')).toBe('Presentation Deck');
+  });
+
   it('falls back to the default name for an unknown preset', () => {
     expect(getPresetDisplayName('unknown')).toBe('Universal / Netflix');
   });
@@ -30,5 +34,9 @@ describe('getPresetDescription', () => {
 
   it('returns description for VLC preset', () => {
     expect(getPresetDescription('vlc')).toContain('VLC');
+  });
+
+  it('returns description for presentation preset', () => {
+    expect(getPresetDescription('presentation')).toContain('Slideshow controls');
   });
 });
