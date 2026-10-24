@@ -188,30 +188,20 @@ function onServerState(data) {
 
 async function socketSend(type, payload) {
   if (socket && socket.connected) {
-    socket.emit(type, payload);
+    if (type === 'mouse_move' && socket.volatile) {
+      socket.volatile.emit(type, payload);
+    } else {
+      socket.emit(type, payload);
+    }
     return true;
+  }
+  // High-frequency movements must NOT fall back to slow HTTP POST queues.
+  if (type === 'mouse_move' || type === 'pointer_move') {
+    return false;
   }
   const url = HTTP_MAP[type];
   return url ? post(url, payload || {}) : false;
 }
-
-const labels = {
-  play_pause: '⏯ Play / Pause', 
-  skip_forward: '⏩ +10 sec', 
-  skip_back: '⏪ −10 sec',
-  skip_forward_30: '⏭ +30 sec', 
-  fullscreen: '⛶ Fullscreen',
-  mute: '🔇 Mute', 
-  vol_up: '🔊 Volume +', 
-  vol_down: '🔉 Volume −', 
-  subtitles: '💬 Subtitles',
-  back: '🔙 Go Back',
-  next: '⏭ Next Slide',
-  next_slide: '⏭ Next Slide',
-  prev_slide: '⏪ Previous Slide',
-  present_start: '▶ Presentation started',
-  present_exit: '⏹ Presentation exited'
-};
 
 async function send(action) {
   vibrate(25);
@@ -274,7 +264,15 @@ async function checkConnection() {
     } else {
       throw new Error();
     }
-  } catch (e) {
+  } catch {
     setStatus('offline');
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.socketSend = socketSend;
+  window.send = send;
+  window.disconnectSession = disconnectSession;
+  window.forgetDevice = forgetDevice;
+  window.checkConnection = checkConnection;
 }
