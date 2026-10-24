@@ -245,3 +245,39 @@ function toggleFS() {
   }
   send('fullscreen');
 }
+
+const macroConfirmTimers = new Map();
+
+function confirmMacro(btn, action, labelText) {
+  if (!btn) return;
+  const span = btn.querySelector('span');
+  if (!btn.classList.contains('confirming')) {
+    btn.classList.add('confirming');
+    if (span) span.textContent = 'Confirm?';
+    vibrate(20);
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Tap again to ' + labelText);
+    }
+    const timer = setTimeout(() => {
+      btn.classList.remove('confirming');
+      if (span) span.textContent = labelText;
+      macroConfirmTimers.delete(action);
+    }, 3000);
+    macroConfirmTimers.set(action, timer);
+    return;
+  }
+
+  btn.classList.remove('confirming');
+  if (span) span.textContent = labelText;
+  const existingTimer = macroConfirmTimers.get(action);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+    macroConfirmTimers.delete(action);
+  }
+  vibrate(30);
+  send_raw_key(action);
+}
+
+if (typeof window !== 'undefined') {
+  window.confirmMacro = confirmMacro;
+}

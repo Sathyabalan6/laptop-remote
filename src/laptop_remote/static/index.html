@@ -428,30 +428,30 @@
       </div>
 
       <!-- Section: Precision D-Pad with Center Disk -->
-      <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col items-center border border-white/[0.06]">
-        <div class="relative w-52 h-52 my-1 flex items-center justify-center">
+      <div class="bg-surface-container-low rounded-2xl p-2.5 flex flex-col items-center border border-white/[0.06]">
+        <div class="relative w-44 h-44 my-1 flex items-center justify-center">
           <!-- Outer Track Glow Ring -->
           <div class="absolute inset-0 rounded-full bg-surface-variant/60 shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)] backdrop-blur-md border border-white/[0.05]"></div>
           
           <!-- Direction: UP -->
-          <button aria-label="Navigate Up" class="dpad-btn absolute top-1.5 left-1/2 -translate-x-1/2 w-24 h-12 rounded-t-full flex items-start justify-center pt-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="up" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          <button aria-label="Navigate Up" class="dpad-btn absolute top-1 left-1/2 -translate-x-1/2 w-20 h-10 rounded-t-full flex items-start justify-center pt-1.5 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="up" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
           </button>
           <!-- Direction: DOWN -->
-          <button aria-label="Navigate Down" class="dpad-btn absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-12 rounded-b-full flex items-end justify-center pb-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="down" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          <button aria-label="Navigate Down" class="dpad-btn absolute bottom-1 left-1/2 -translate-x-1/2 w-20 h-10 rounded-b-full flex items-end justify-center pb-1.5 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="down" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
           <!-- Direction: LEFT -->
-          <button aria-label="Navigate Left" class="dpad-btn absolute left-1.5 top-1/2 -translate-y-1/2 h-24 w-12 rounded-l-full flex items-center justify-start pl-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="left" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <button aria-label="Navigate Left" class="dpad-btn absolute left-1 top-1/2 -translate-y-1/2 h-20 w-10 rounded-l-full flex items-center justify-start pl-1.5 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="left" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
           <!-- Direction: RIGHT -->
-          <button aria-label="Navigate Right" class="dpad-btn absolute right-1.5 top-1/2 -translate-y-1/2 h-24 w-12 rounded-r-full flex items-center justify-end pr-2 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="right" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <button aria-label="Navigate Right" class="dpad-btn absolute right-1 top-1/2 -translate-y-1/2 h-20 w-10 rounded-r-full flex items-center justify-end pr-1.5 text-on-surface-variant hover:text-on-surface active:bg-surface-bright/40 active:scale-95 transition-all" data-key="right" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
           <!-- Tactile Center Disk (OK / Select) -->
-          <button aria-label="Confirm Select" class="relative z-10 w-20 h-20 rounded-full bg-surface-bright hover:bg-surface-container-highest active:scale-90 shadow-[0_8px_20px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all group border border-white/[0.08]" id="btn-ok-pad" onclick="send_raw_key('enter')" type="button">
-            <span class="font-headline-md text-base font-bold text-on-surface tracking-wider group-hover:text-primary transition-colors">OK</span>
+          <button aria-label="Confirm Select" class="relative z-10 w-16 h-16 rounded-full bg-surface-bright hover:bg-surface-container-highest active:scale-90 shadow-[0_6px_16px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all group border border-white/[0.08]" id="btn-ok-pad" onclick="send_raw_key('enter')" type="button">
+            <span class="font-headline-md text-sm font-bold text-on-surface tracking-wider group-hover:text-primary transition-colors">OK</span>
           </button>
         </div>
 
@@ -515,12 +515,12 @@
             <span class="text-xs font-semibold">Capture</span>
           </button>
           <!-- Close Window -->
-          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('close_window')" type="button" aria-label="Close window">
+          <button class="macro-btn h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" id="btnCloseWin" onclick="confirmMacro(this, 'close_window', 'Close Win')" type="button" aria-label="Close window">
             <svg class="w-4 h-4 text-error" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
             <span class="text-xs font-semibold text-error">Close Win</span>
           </button>
           <!-- Lock Screen -->
-          <button class="h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" onclick="send_raw_key('lock_screen')" type="button" aria-label="Lock screen">
+          <button class="macro-btn h-12 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-1.5 border border-white/[0.05]" id="btnLockPc" onclick="confirmMacro(this, 'lock_screen', 'Lock PC')" type="button" aria-label="Lock screen">
             <svg class="w-4 h-4 text-warning" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             <span class="text-xs font-semibold text-warning">Lock PC</span>
           </button>
@@ -616,15 +616,16 @@
 
       <!-- Presenter Utility Toolbar: Elapsed Timer & Blank Screen -->
       <div class="bg-surface-container rounded-2xl p-2.5 shadow-sm flex items-center justify-between gap-2 border border-white/[0.06]">
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high shrink-0 border border-white/[0.04]">
+        <!-- Interactive Timer Pill: Tap to Pause/Resume, Double-tap to Reset -->
+        <button class="flex items-center gap-2 px-3.5 py-1.5 min-h-[40px] rounded-full bg-surface-container-high hover:bg-surface-variant active:scale-95 transition-all shrink-0 border border-white/[0.04] cursor-pointer text-left" id="btnElapsedTimer" onclick="togglePresentationTimer()" ondblclick="resetPresentationTimer()" type="button" aria-label="Toggle presentation timer" title="Tap to pause/resume, double-tap to reset">
           <div class="w-7 h-7 rounded-full bg-tertiary-container/30 flex items-center justify-center text-tertiary">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           </div>
           <div class="flex flex-col">
-            <span class="text-xs text-on-surface-variant leading-none font-medium">Elapsed</span>
+            <span class="text-[11px] text-on-surface-variant leading-none font-medium" id="timerLabel">Elapsed</span>
             <span class="font-headline-sm text-sm font-semibold text-tertiary tracking-tight leading-tight" id="elapsedTimer">00:00</span>
           </div>
-        </div>
+        </button>
 
         <button class="h-11 px-5 min-h-[44px] rounded-full bg-surface-variant/80 hover:bg-surface-bright active:scale-95 transition-all flex items-center gap-2 text-on-surface border border-white/[0.04]" id="blackoutBtn" onclick="toggleBlackout()" title="Blackout Display" type="button" aria-label="Blank screen">
           <svg id="blackoutIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
@@ -673,7 +674,7 @@
           <line x1="10" y1="12" x2="14" y2="12"></line>
           <line x1="8" y1="16" x2="16" y2="16"></line>
         </svg>
-        <span class="text-[11px] font-medium mt-0.5">Remote</span>
+        <span class="text-[11px] font-medium mt-0.5">Keys</span>
       </button>
 
       <!-- Tab 4: Present -->
@@ -856,11 +857,11 @@
       <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col gap-2.5 border border-white/[0.06]">
         <div class="flex items-center justify-between text-xs">
           <span class="text-on-surface-variant font-medium">Appearance</span>
-          <button id="themeToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleTheme()" type="button">Dark Glass</button>
+          <button id="themeToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95 flex items-center gap-1" onclick="toggleTheme()" type="button">Dark Glass ›</button>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Scroll Direction</span>
-          <button id="scrollDirToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleScrollDirection()" type="button">Natural</button>
+          <button id="scrollDirToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95 flex items-center gap-1" onclick="toggleScrollDirection()" type="button">Natural ›</button>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Scroll Speed</span>
@@ -871,19 +872,25 @@
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Scroll Momentum</span>
-          <button id="scrollInertiaToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleScrollInertia()" type="button">Smooth</button>
+          <button id="scrollInertiaToggleBtn" class="ios-switch" onclick="toggleScrollInertia()" type="button" role="switch" aria-label="Toggle scroll momentum">
+            <span class="ios-switch-thumb"></span>
+          </button>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Pinch to Zoom</span>
-          <button id="pinchZoomToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="togglePinchZoom()" type="button">Enabled</button>
-        </div>
-        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
-          <span class="text-on-surface-variant font-medium">Shortcut Presets</span>
-          <button class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="openPresetsModal()" type="button">Customize</button>
+          <button id="pinchZoomToggleBtn" class="ios-switch active" onclick="togglePinchZoom()" type="button" role="switch" aria-label="Toggle pinch to zoom">
+            <span class="ios-switch-thumb"></span>
+          </button>
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
           <span class="text-on-surface-variant font-medium">Auto-Focus (App Sensing)</span>
-          <button id="focusModeToggleBtn" class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95" onclick="toggleFocusMode()" type="button">Off</button>
+          <button id="focusModeToggleBtn" class="ios-switch" onclick="toggleFocusMode()" type="button" role="switch" aria-label="Toggle auto-focus app sensing">
+            <span class="ios-switch-thumb"></span>
+          </button>
+        </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/[0.04]">
+          <span class="text-on-surface-variant font-medium">Shortcut Presets</span>
+          <button class="px-3 py-1.5 min-h-[36px] rounded-lg bg-surface-variant hover:bg-surface-bright text-xs font-semibold text-primary transition-all active:scale-95 flex items-center gap-1" onclick="openPresetsModal()" type="button">Customize ›</button>
         </div>
       </div>
 

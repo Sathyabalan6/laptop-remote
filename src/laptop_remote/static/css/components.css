@@ -141,11 +141,47 @@
 }
 
 /* ── DESTRUCTIVE CONFIRMATION BUTTON ── */
-.forget-device-btn.confirming {
-  background-color: rgba(239, 68, 68, 0.35) !important;
-  border-color: rgba(239, 68, 68, 0.7) !important;
-  color: #ffffff !important;
+.forget-device-btn.confirming,
+.macro-btn.confirming {
+  background-color: rgba(255, 159, 10, 0.25) !important;
+  border-color: rgba(255, 159, 10, 0.6) !important;
+  color: #ff9f0a !important;
   animation: pulseConfirm 1.2s infinite ease-in-out;
+}
+
+/* ── NATIVE IOS-STYLE TOGGLE SWITCH ── */
+.ios-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 48px;
+  height: 28px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.16);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ios-switch.active {
+  background-color: var(--apple-green, #34c759);
+  border-color: rgba(52, 199, 89, 0.4);
+}
+
+.ios-switch-thumb {
+  position: absolute;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.ios-switch.active .ios-switch-thumb {
+  transform: translateX(20px);
 }
 
 @keyframes pulseConfirm {

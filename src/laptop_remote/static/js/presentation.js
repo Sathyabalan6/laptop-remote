@@ -17,6 +17,52 @@ function startPresentationTimer() {
   }, 1000);
 }
 
+let timerPaused = false;
+
+function togglePresentationTimer() {
+  vibrate(15);
+  if (!timerStarted) {
+    startPresentationTimer();
+    return;
+  }
+  timerPaused = !timerPaused;
+  const label = document.getElementById('timerLabel');
+  if (timerPaused) {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    if (label) label.textContent = 'Paused ⏸';
+    if (typeof showToast === 'function') showToast('⏱️ Timer paused');
+  } else {
+    timerInterval = setInterval(() => {
+      elapsedSeconds++;
+      const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+      const ss = String(elapsedSeconds % 60).padStart(2, '0');
+      const el = document.getElementById('elapsedTimer');
+      if (el) el.textContent = `${mm}:${ss}`;
+    }, 1000);
+    if (label) label.textContent = 'Elapsed ▶';
+    if (typeof showToast === 'function') showToast('⏱️ Timer resumed');
+  }
+}
+
+function resetPresentationTimer() {
+  vibrate(25);
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  elapsedSeconds = 0;
+  timerStarted = false;
+  timerPaused = false;
+  const el = document.getElementById('elapsedTimer');
+  if (el) el.textContent = '00:00';
+  const label = document.getElementById('timerLabel');
+  if (label) label.textContent = 'Elapsed';
+  if (typeof showToast === 'function') showToast('⏱️ Timer reset to 00:00');
+}
+
 let slideIndex = 1;
 
 function updateSlideCounter() {
@@ -201,6 +247,8 @@ if (typeof window !== 'undefined') {
   window.toggleBlackout = toggleBlackout;
   window.togglePresentation = togglePresentation;
   window.startPresentationTimer = startPresentationTimer;
+  window.togglePresentationTimer = togglePresentationTimer;
+  window.resetPresentationTimer = resetPresentationTimer;
   window.applyLaserAvailability = applyLaserAvailability;
   window.setSlideIndex = setSlideIndex;
   window.promptSlideNumber = promptSlideNumber;

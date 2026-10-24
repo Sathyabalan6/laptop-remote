@@ -32,7 +32,7 @@ function setTheme(theme) {
   if (typeof document !== 'undefined') {
     const btn = document.getElementById('themeToggleBtn');
     if (btn) {
-      btn.textContent = currentTheme === 'oled' ? 'OLED Black' : 'Dark Glass';
+      btn.textContent = (currentTheme === 'oled' ? 'OLED Black' : 'Dark Glass') + ' ›';
       btn.setAttribute('data-theme', currentTheme);
     }
   }
@@ -55,7 +55,7 @@ function setScrollDirection(dir) {
   localStorage.setItem('scroll_direction', scrollDirection);
   const btn = document.getElementById('scrollDirToggleBtn');
   if (btn) {
-    btn.textContent = scrollDirection === 'inverted' ? 'Inverted' : 'Natural';
+    btn.textContent = (scrollDirection === 'inverted' ? 'Inverted' : 'Natural') + ' ›';
     btn.setAttribute('data-dir', scrollDirection);
   }
 }
@@ -99,8 +99,12 @@ function syncScrollInertiaUI() {
   if (typeof document !== 'undefined') {
     const btn = document.getElementById('scrollInertiaToggleBtn');
     if (btn) {
-      btn.textContent = scrollInertia ? 'Smooth' : 'Instant';
-      btn.setAttribute('data-inertia', scrollInertia ? 'true' : 'false');
+      if (btn.classList.contains('ios-switch')) {
+        btn.classList.toggle('active', scrollInertia);
+      } else {
+        btn.textContent = scrollInertia ? 'Smooth' : 'Instant';
+      }
+      btn.setAttribute('aria-checked', scrollInertia ? 'true' : 'false');
     }
   }
 }
@@ -121,8 +125,12 @@ function syncPinchZoomUI() {
   if (typeof document !== 'undefined') {
     const btn = document.getElementById('pinchZoomToggleBtn');
     if (btn) {
-      btn.textContent = pinchZoomEnabled ? 'Enabled' : 'Disabled';
-      btn.setAttribute('data-zoom', pinchZoomEnabled ? 'true' : 'false');
+      if (btn.classList.contains('ios-switch')) {
+        btn.classList.toggle('active', pinchZoomEnabled);
+      } else {
+        btn.textContent = pinchZoomEnabled ? 'Enabled' : 'Disabled';
+      }
+      btn.setAttribute('aria-checked', pinchZoomEnabled ? 'true' : 'false');
     }
   }
 }
@@ -143,8 +151,12 @@ function syncFocusModeUI() {
   if (typeof document === 'undefined') return;
   const btn = document.getElementById('focusModeToggleBtn');
   if (btn) {
-    btn.textContent = focusModeEnabled ? 'Active' : 'Off';
-    btn.setAttribute('data-focus', focusModeEnabled ? 'true' : 'false');
+    if (btn.classList.contains('ios-switch')) {
+      btn.classList.toggle('active', focusModeEnabled);
+    } else {
+      btn.textContent = focusModeEnabled ? 'Active' : 'Off';
+    }
+    btn.setAttribute('aria-checked', focusModeEnabled ? 'true' : 'false');
   }
 }
 
