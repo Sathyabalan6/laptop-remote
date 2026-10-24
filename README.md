@@ -39,14 +39,15 @@
 
 * **⚡ Terminal / Headless Edition**: A lightweight, no-GUI server that prints a QR code and pairing PIN directly in the terminal.
 * **🌐 Zero-Config Discovery**: Connect instantly via QR code scan, local IP, or mDNS (`http://remotedeck.local:5000`).
-* **🔒 Secure PIN Pairing**: Protected with 6-digit rolling PIN verification, session Bearer tokens, and brute-force IP rate limiting.
-* **🎵 Smart Media Deck**: Context-aware media controls for YouTube, Netflix, Disney+ Hotstar, Prime Video, VLC, and web players.
-* **🔍 Auto-Profile Detection**: Automatically detects the active foreground window and switches key mappings on the fly.
-* **🖱️ Low-Latency Trackpad**: Smooth mouse movement powered by WebSockets, native OS input simulation, DPI scaling, tap-to-click, and 2-finger inertia scrolling.
-* **⌨️ Keyboard & Navigation Keypad**: Send text input/search queries directly to your laptop, use a 5-way D-Pad, and trigger 1-touch hotkey tiles (skip intro, cycle audio tracks, speed +/-).
-* **📊 Presentation Mode with Laser Pointer**: Projects a red laser dot across your laptop screen in real time, with slide controls, blackout mode, and an elapsed presentation timer.
-* **📱 Progressive Web App (PWA)**: Installable to your phone's home screen for a distraction-free, full-screen remote experience.
-* **🔋 Host Status**: Live laptop battery percentage and active profile indicators.
+* **🔒 Multi-Device PIN Pairing**: Protected with 6-digit rolling PIN verification, cryptographic session Bearer tokens, active device tracking, and per-device revocation.
+* **🖱️ Precision Trackpad & 1-Thumb Scroll Rail**: Smooth cursor movement with DPI-scaled acceleration, tap-to-click, 2-finger pinch-to-zoom, and a dedicated right-edge scroll rail with 5ms tactile haptic ticks.
+* **🎵 Nested Floating Media Deck**: Thumb-accessible playback controls (`-10s`, `Play/Pause`, `+10s`, `Mute`) directly on the trackpad, eliminating tab-switching friction.
+* **⚡ Focus Mode (Smart App Sensing)**: Automatically senses active laptop applications (PowerPoint, Keynote, Google Slides, YouTube, VLC) and auto-switches your phone to the matching tab on the fly.
+* **🎨 Apple HIG Glass & OLED Themes**: Translucent blur materials with high-contrast typography, safe-area insets, and an ultra-pure OLED Pitch Black theme.
+* **⌨️ Keys Tab & System Macros**: Stream live text typing, navigate menus with a 5-way D-Pad, and trigger 1-touch macros (with double-tap safety confirmation on `Lock PC` and `Close Win`).
+* **📊 Presentation Mode with Laser Pointer**: Projects a red laser dot over your laptop screen in real time, with asymmetric slide controls, blackout mode, interactive timer (tap to pause/resume), and tap-to-edit slide counter.
+* **📱 Progressive Web App (PWA)**: Full offline precaching via service workers (`sw.js`) and installable to your phone's home screen.
+* **🔋 Live Host Status**: Real-time laptop battery percentage, active profile, and volume status indicators.
 
 ---
 
@@ -54,7 +55,7 @@
 
 ### 1. Fastest Way: Zero-Install with `uv` (Recommended)
 
-If you have [uv](https://docs.astral.sh/uv/) installed (Windows, macOS, Linux):
+If you have [uv](https://docs.astral.sh/uv/) installed:
 
 ```bash
 # Run immediately in 1 second (no installation, zero PATH issues):
@@ -64,6 +65,10 @@ uvx laptop-remote
 uv tool install laptop-remote
 laptop-remote
 ```
+
+> **Don't have `uv` yet?** Install it in one second:
+> - **Linux / macOS**: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+> - **Windows**: `winget install astral-sh.uv` or in PowerShell: `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
 
 ---
 
@@ -75,10 +80,14 @@ laptop-remote
 
 ---
 
-### 3. Via `pip` or `pipx` (Cross-Platform)
+### 3. Via `pipx` or `pip` (Cross-Platform)
 
 ```bash
-# Standard install (Windows, macOS, Linux):
+# Modern Linux (Ubuntu 23.04+, Debian 12+, Fedora, Arch) via pipx:
+pipx install laptop-remote
+laptop-remote
+
+# Standard install on Windows or macOS:
 pip install laptop-remote
 laptop-remote
 
@@ -86,10 +95,6 @@ laptop-remote
 python -m laptop_remote
 # or using Windows Python launcher:
 py -m laptop_remote
-
-# Modern Linux (Ubuntu/Debian) with pipx:
-pipx install laptop-remote
-laptop-remote
 ```
 
 ---
@@ -122,14 +127,16 @@ Linux users can also use the launcher script:
 
 ## 🛠️ Remote Deck Controls & Tabs
 
-### 🖱️ 1. Trackpad Tab (Precision Mouse & Drag Lock)
-* **High-Precision Trackpad**: Move cursor with one finger. Backed by native OS cursor calls (`win32api` / macOS Quartz / Linux Wayland & X11) with DPI-scaled acceleration curves for smooth, responsive movement.
-* **Persistent Gesture Guide**: Quick glanceable glyphs (`👆 Move · 👇 Tap · ✌️ Scroll`) for instant discoverability.
-* **Tap-to-Click**: Tap trackpad surface for instant left-click.
-* **Tactile Click Buttons**: Dedicated Left Click and Right Click pads.
+### 🖱️ 1. Trackpad Tab (Precision Mouse & Quick Deck)
+* **High-Precision Trackpad**: Move cursor with one finger. Backed by native OS cursor calls (`win32api` / macOS Quartz / Linux Wayland & X11) with Per-Monitor DPI scaling for pixel-exact movement.
+* **1-Thumb Right-Edge Scroll Rail**: Dedicated 44px vertical rail along the right edge: slide your thumb up/down to scroll with 5ms mechanical tactile haptic ticks.
+* **2-Finger Pinch-to-Zoom**: Automatic gesture intent lock lets you pinch or spread two fingers to smoothly zoom web pages, maps, PDFs, and CAD drawings.
+* **Nested Floating Media Deck**: Quick thumb-accessible playback bar (`⏪ -10s`, `⏯ Play/Pause`, `⏩ +10s`, `🔇 Mute`) directly on the trackpad.
+* **Tap-to-Click & 2-Finger Right Click**: Tap with 1 finger to left click, tap with 2 fingers for tactile right click.
+* **Tactile Click Buttons**: Dedicated Left Click, Lock, and Right Click buttons.
 * **🔒 Tactile Drag Lock**: Dedicated toggle to keep the left mouse button held down for effortless window moving and text highlighting without finger gymnastics.
-* **2-Finger Momentum Scroll**: Drag with two fingers to scroll web pages, documents, or timelines with natural physics decay.
-* **🎛️ Sensitivity Slider**: Fine-tune cursor speed and acceleration response directly from your phone.
+* **2-Finger Momentum Scroll**: Drag with two fingers to scroll web pages with smooth friction decay.
+* **🎛️ Dual Sensitivity Popover**: Fine-tune both **Pointer Speed** and **Scroll Speed** directly from the trackpad pill.
 
 ---
 
@@ -142,22 +149,22 @@ Linux users can also use the launcher script:
 
 ---
 
-### ⌨️ 3. Dedicated Remote & Keys Tab (D-Pad, Typing & Macros)
+### ⌨️ 3. Keys Tab (D-Pad, Typing & Macros)
 * **Live Typing & Search Dispatch**: Type text or URLs on your phone and press **Send** to stream keystrokes directly to the active text field on your laptop.
 * **One-Touch Focus Pills**:
   * `/ Find`: Jumps directly to in-page search bars.
   * `Ctrl+L URL Bar`: Jumps focus to the browser's address bar.
-* **Tactile 5-Way D-Pad**: High-contrast directional buttons (`Up`, `Down`, `Left`, `Right`, `OK / Enter`) with hold-to-repeat support for navigating menus, spreadsheets, and media lists.
+* **Tactile 5-Way D-Pad**: Sized for thumb ergonomics (`Up`, `Down`, `Left`, `Right`, `OK / Enter`) with hold-to-repeat support for navigating menus, spreadsheets, and media lists.
 * **Browser Navigation Keys**: Quick buttons for `◀ Back`, `Esc`, `Tab ⇥`, `⌫ Delete`, `⇧ Tab`, `Next Tab`, and `Reload`.
 * **⚡ System Productivity Macros**:
-  | Macro Button | Hotkey Action | Supported OS |
-  | :--- | :--- | :--- |
-  | **Copy** | `Ctrl+C` / `Cmd+C` | Windows, macOS, Linux |
-  | **Paste** | `Ctrl+V` / `Cmd+V` | Windows, macOS, Linux |
-  | **App Switch** | `Alt+Tab` / `Cmd+Tab` | Windows, macOS, Linux |
-  | **Screenshot** | `Win+Shift+S` / `Cmd+Shift+4` | Windows, macOS, Linux |
-  | **Close Window** | `Alt+F4` / `Cmd+W` | Windows, macOS, Linux |
-  | **Lock PC** | `Win+L` / `Ctrl+Cmd+Q` | Windows, macOS, Linux |
+  | Macro Button | Hotkey Action | Supported OS | Safety |
+  | :--- | :--- | :--- | :--- |
+  | **Copy** | `Ctrl+C` / `Cmd+C` | Windows, macOS, Linux | Instant |
+  | **Paste** | `Ctrl+V` / `Cmd+V` | Windows, macOS, Linux | Instant |
+  | **App Switch** | `Alt+Tab` / `Cmd+Tab` | Windows, macOS, Linux | Instant |
+  | **Screenshot** | `Win+Shift+S` / `Cmd+Shift+4` | Windows, macOS, Linux | Instant |
+  | **Close Window** | `Alt+F4` / `Cmd+W` | Windows, macOS, Linux | ⚠️ Double-tap confirm |
+  | **Lock PC** | `Win+L` / `Ctrl+Cmd+Q` | Windows, macOS, Linux | ⚠️ Double-tap confirm |
 
 ---
 
@@ -165,9 +172,10 @@ Linux users can also use the launcher script:
 * **Screen Laser Pointer**: Touch and drag your finger across the pad to project a smooth, hardware-rendered red laser dot over your laptop screen in real time.
 * **Asymmetric Slide Navigation**: Giant **Next Slide (70%)** and **Prev Slide (30%)** buttons for confident, blind tactile control during speeches.
 * **Auto-Start Presentation**: Mapped to `F5` (or `Ctrl+F5` when Google Slides, Canva, Prezi, or Docs are active).
+* **Interactive Presentation Timer**: Built-in presentation stopwatch (`00:00`). Tap the timer to pause/resume (`⏸`/`▶`), double-tap to reset.
+* **Tappable Slide Counter**: Tap the slide number anytime to set or resync your slide count if you skipped slides on the laptop.
 * **Blackout Screen**: Blank the laptop display with one tap during presentations or breaks.
-* **Slide Counter & Live Timer**: Track slide numbers and presentation duration automatically from first touch.
-* **❓ Built-in Help Overlay**: Tap `(?)` in the top header anytime to view visual gesture cheat sheets and preset documentation.
+* **❓ Built-in Help Overlay**: Tap `(?)` in the top header anytime to view visual gesture cheat sheets, preset documentation, or replay the tutorial.
 
 ---
 
@@ -257,19 +265,22 @@ laptop-remote/
 │       ├── core/               # Platform backends & utilities
 │       │   ├── input.py        # Mouse/keyboard drivers (Windows/macOS/X11/Wayland)
 │       │   ├── keys.py         # Key-name → Linux input-event keycode mapping
-│       │   ├── auth.py         # PIN generation, bearer tokens, rate limiting
-│       │   ├── config.py       # Presets JSON loader & path resolver
+│       │   ├── logger.py       # Centralized logging configuration (--verbose/--quiet)
+│       │   ├── auth.py         # PIN generation, bearer tokens, multi-device sessions
+│       │   ├── config.py       # Presets JSON loader & storage
+│       │   ├── device.py       # Friendly device naming
 │       │   ├── network.py      # Local IP resolution & SSL certificate setup
-│       │   ├── overlay.py    # Platform selection and Windows overlay
-│       │   ├── overlay_x11.py # Linux X11 SHAPE overlay
+│       │   ├── overlay.py      # Platform selection and Windows overlay
+│       │   ├── overlay_x11.py  # Linux X11 SHAPE overlay
 │       │   ├── power.py        # Battery status monitor
 │       │   ├── window.py       # Foreground window detection & auto-preset
 │       │   ├── audio.py        # Cross-platform volume control
 │       │   └── tray.py         # System tray icon manager
 │       └── static/             # Web frontend (served as the remote UI)
-│           ├── index.html
+│           ├── index.html      # Single-page PWA application
+│           ├── sw.js           # Service worker offline precaching
 │           ├── css/            # tokens.css, base.css, components.css
-│           └── js/             # app.js, transport.js, trackpad.js, ...
+│           └── js/             # app.js, transport.js, trackpad.js, presentation.js, ...
 ├── docs/                       # Design notes & research
 ├── tests/                      # pytest test suite
 └── README.md
@@ -297,11 +308,11 @@ laptop-remote/
 ## 🧪 Running Tests
  
 ```bash
-# Python backend tests (82 tests)
+# Python backend tests (151 tests)
 pip install -e ".[dev]"
 pytest
 
-# Frontend unit tests (17 Vitest tests)
+# Frontend unit tests (49 Vitest tests)
 npm install
 npm test
 ```
