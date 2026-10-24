@@ -39,6 +39,16 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
     if name:
         set_custom_device_name(name)
 
+    if sys.platform.startswith('win'):
+        with contextlib.suppress(Exception):
+            import ctypes
+            windll = getattr(ctypes, 'windll', None)
+            if windll:
+                handle = windll.kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+                mode = ctypes.c_ulong()
+                if windll.kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+                    windll.kernel32.SetConsoleMode(handle, mode.value | 0x0004)  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+
     try:
         import qrcode
     except ImportError:

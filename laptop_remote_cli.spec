@@ -30,6 +30,7 @@ hiddenimports = [
     'laptop_remote.core.power',
     'laptop_remote.core.window',
     'laptop_remote.core.audio',
+    'laptop_remote.core.logger',
     'laptop_remote.server',
     'laptop_remote.server._app',
     'laptop_remote.server.state',
