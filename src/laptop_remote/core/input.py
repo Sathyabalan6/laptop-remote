@@ -476,12 +476,9 @@ if not USE_NATIVE_MOUSE:
             if WAYLAND_TOOL == 'dotool':
                 ok = _run_wayland_tool(['scroll', str(clicks)])
             else:
-                code = '0xC4' if clicks > 0 else '0xC5'
-                ok = True
-                repeat = min(4, abs(clicks))
-                for _ in range(repeat):
-                    if not _run_wayland_tool(['click', code]):
-                        ok = False
+                # ydotool uses `mousemove -w -- 0 <vertical>` for mouse wheel scrolling.
+                # In ydotool, negative vertical is wheel up, positive is wheel down.
+                ok = _run_wayland_tool(['mousemove', '-w', '--', '0', str(-clicks)])
             if ok:
                 return
         if pyautogui:
@@ -718,7 +715,14 @@ def reset_zoom_accumulator():
 
 
 def handle_mouse_stop():
-    reset_scroll_accumulator()
+    global _scroll_accumulator
+    with INPUT_LOCK:
+        if abs(_scroll_accumulator) >= 0.5:
+            final_click = 1 if _scroll_accumulator > 0 else -1
+            _scroll_accumulator = 0.0
+            InputBackend.scroll_mouse(final_click)
+        else:
+            _scroll_accumulator = 0.0
     reset_zoom_accumulator()
 
 

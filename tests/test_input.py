@@ -226,15 +226,15 @@ class TestWaylandButtonCodes:
         inp.InputBackend.click_mouse("middle")
         assert calls == [["click", "0xC2"]]
 
-    def test_scroll_up_uses_button_4(self, monkeypatch):
+    def test_scroll_up_uses_wheel(self, monkeypatch):
         calls = self._capture(monkeypatch)
         inp.handle_mouse_scroll(2)
-        assert calls == [["click", "0xC4"], ["click", "0xC4"]]
+        assert calls == [["mousemove", "-w", "--", "0", "-2"]]
 
-    def test_scroll_down_uses_button_5(self, monkeypatch):
+    def test_scroll_down_uses_wheel(self, monkeypatch):
         calls = self._capture(monkeypatch)
         inp.handle_mouse_scroll(-2)
-        assert calls == [["click", "0xC5"], ["click", "0xC5"]]
+        assert calls == [["mousemove", "-w", "--", "0", "2"]]
 
     def test_no_click_code_is_bare_down(self, monkeypatch):
         """Every click we emit must include the 'up' bit (0xC0 mask)."""

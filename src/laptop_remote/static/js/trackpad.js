@@ -468,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const curSens = typeof scrollSensitivity !== 'undefined' ? scrollSensitivity : 1.0;
       const curDir = typeof scrollDirection !== 'undefined' ? scrollDirection : 'natural';
-      const scrollUnit = computeScrollDelta(dy, curSens, curDir, 18.0);
+      const scrollUnit = computeScrollDelta(dy, curSens, curDir, 12.0);
 
       pendingScrollDy += scrollUnit;
       scrollSent = true;
@@ -613,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const curSens = typeof scrollSensitivity !== 'undefined' ? scrollSensitivity : 1.0;
       const curDir = typeof scrollDirection !== 'undefined' ? scrollDirection : 'natural';
-      const scrollUnit = computeScrollDelta(dy, curSens, curDir, 16.0);
+      const scrollUnit = computeScrollDelta(dy, curSens, curDir, 12.0);
 
       pendingScrollDy += scrollUnit;
       if (!scrollThrottle) {
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       railAccumulatedPixels += Math.abs(dy);
-      if (railAccumulatedPixels >= 16) {
+      if (railAccumulatedPixels >= 12) {
         railAccumulatedPixels = 0;
         if (typeof window !== 'undefined' && window.haptic) {
           window.haptic.detent();
