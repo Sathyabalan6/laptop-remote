@@ -571,21 +571,14 @@ SCREEN_W, SCREEN_H = _detect_screen_size()
 if IS_WAYLAND:
     if WAYLAND_TOOL_PATH:
         if WAYLAND_TOOL == 'ydotool' and not _ydotoold_running() and not _ensure_wayland_daemon():
-            print("═" * 60)
-            print("⚠️  ydotool found, but its daemon (ydotoold) is not running.")
-            print("   Mouse control will NOT work until it is started.")
-            print("   Run once:  sudo usermod -aG input $USER   (then log out/in)")
-            print("   Then:       ydotoold &")
-            print("═" * 60)
+            logger.warning("⚠️  ydotool found, but its daemon (ydotoold) is not running.")
+            logger.warning("   Mouse control will NOT work until it is started.")
+            logger.warning("   Run once:  sudo usermod -aG input $USER   (then log out/in)")
+            logger.warning("   Then:       ydotoold &")
     else:
-        print("═" * 60)
-        print("⚠️  Wayland detected, but no native input tool found.")
-        print("   Mouse move/click/scroll AND keyboard/text input will NOT work.")
-        print("   Install one of these and restart the app:")
-        print("     • sudo apt install ydotool   (then: sudo usermod -aG input $USER; re-login)")
-        print("     • or the dotool daemon (see https://git.sr.ht/~geb/dotool)")
-        print("   Alternatively, log into an 'Xorg' session to keep using pyautogui.")
-        print("═" * 60)
+        logger.warning("⚠️  Wayland detected, but no native input tool found.")
+        logger.warning("   Mouse move/click/scroll AND keyboard/text input will NOT work.")
+        logger.warning("   Install ydotool: sudo apt install ydotool")
 
 INPUT_LOCK = threading.Lock()
 _last_cursor_pos = (SCREEN_W // 2, SCREEN_H // 2)

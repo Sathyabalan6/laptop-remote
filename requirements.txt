@@ -10,7 +10,7 @@ Pillow>=10.0
 pyperclip>=1.8
 pyautogui>=0.9.54
 python-xlib>=0.33; sys_platform == 'linux'
-zeroconf>=0.130; sys_platform != 'win32'
+zeroconf>=0.130
 ifaddr>=0.2
 
 # Windows-only (real mouse/keyboard input and audio mixer). Ignored on other platforms.

@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import secrets
@@ -66,7 +67,7 @@ def is_ip_locked(ip):
     """Check if an IP address or the global server is currently locked out from pairing attempts."""
     now = time.time()
     with ip_rate_lock:
-        if now < _global_lockout_until:
+        if not is_localhost(ip) and now < _global_lockout_until:
             return True, int(_global_lockout_until - now)
 
         rec = failed_attempts_by_ip.get(ip)
@@ -85,21 +86,22 @@ def check_and_record_failed_ip(ip):
     global _global_failed_attempts, _global_last_attempt, _global_lockout_until
     now = time.time()
     with ip_rate_lock:
-        if now < _global_lockout_until:
-            return False, int(_global_lockout_until - now)
+        if not is_localhost(ip):
+            if now < _global_lockout_until:
+                return False, int(_global_lockout_until - now)
 
-        # Reset global brute-force window if last failed attempt was over 5 minutes ago
-        if (now - _global_last_attempt) > 300.0:
-            _global_failed_attempts = 0
+            # Reset global brute-force window if last failed attempt was over 5 minutes ago
+            if (now - _global_last_attempt) > 300.0:
+                _global_failed_attempts = 0
 
-        _global_last_attempt = now
-        _global_failed_attempts += 1
+            _global_last_attempt = now
+            _global_failed_attempts += 1
 
-        # Global brute-force guard: 15 failed PIN guesses LAN-wide triggers a 60s global lockout
-        if _global_failed_attempts >= 15:
-            _global_lockout_until = now + 60.0
-            _global_failed_attempts = 0
-            return False, 60
+            # Global brute-force guard: 15 failed PIN guesses LAN-wide triggers a 60s global lockout
+            if _global_failed_attempts >= 15:
+                _global_lockout_until = now + 60.0
+                _global_failed_attempts = 0
+                return False, 60
 
         if len(failed_attempts_by_ip) > 100:
             _cleanup_expired_ips(now)
@@ -143,19 +145,29 @@ def _get_sessions_file_path():
         return None
 
 
-def _save_sessions_to_disk():
-    """Persist authorized device tokens and metadata to disk."""
+def _save_sessions_to_disk(tokens_snapshot=None, sessions_snapshot=None):
+    """Persist authorized device tokens and metadata to disk with secure 0600 permissions.
+
+    Always executed outside of auth_lock to prevent blocking concurrent connects.
+    """
     path = _get_sessions_file_path()
     if not path:
         return
+    if tokens_snapshot is None or sessions_snapshot is None:
+        with auth_lock:
+            tokens_snapshot = list(VALID_TOKENS)
+            sessions_snapshot = dict(PAIRED_SESSIONS)
     try:
         data = {
-            'tokens': list(VALID_TOKENS),
-            'sessions': PAIRED_SESSIONS,
+            'tokens': tokens_snapshot,
+            'sessions': sessions_snapshot,
         }
         temp_path = f"{path}.tmp"
-        with open(temp_path, 'w', encoding='utf-8') as f:
+        fd = os.open(temp_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with open(fd, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2)
+        with contextlib.suppress(OSError):
+            os.chmod(temp_path, 0o600)
         os.replace(temp_path, path)
     except Exception as e:
         logger.debug(f"Error persisting sessions: {e}")
@@ -186,7 +198,7 @@ _load_persisted_sessions()
 
 
 def register_session(token, client_ip, device_name="Phone"):
-    """Register a new active device session token with metadata and persist it."""
+    """Register a new active device session token with metadata and persist it outside auth_lock."""
     with auth_lock:
         VALID_TOKENS.add(token)
         PAIRED_SESSIONS[token] = {
@@ -196,7 +208,9 @@ def register_session(token, client_ip, device_name="Phone"):
             'created_at': time.time(),
             'last_seen': time.time(),
         }
-        _save_sessions_to_disk()
+        tokens_snap = list(VALID_TOKENS)
+        sessions_snap = dict(PAIRED_SESSIONS)
+    _save_sessions_to_disk(tokens_snap, sessions_snap)
 
 
 def touch_session(token):
@@ -207,7 +221,7 @@ def touch_session(token):
 
 
 def revoke_session(token_or_id):
-    """Revoke a single session token or token ID and update persistent storage."""
+    """Revoke a single session token or token ID and update persistent storage outside auth_lock."""
     with auth_lock:
         target_token = None
         for tok, data in list(PAIRED_SESSIONS.items()):
@@ -217,26 +231,29 @@ def revoke_session(token_or_id):
         if target_token:
             VALID_TOKENS.discard(target_token)
             PAIRED_SESSIONS.pop(target_token, None)
-            _save_sessions_to_disk()
-            return True
-        if token_or_id in VALID_TOKENS:
+            tokens_snap = list(VALID_TOKENS)
+            sessions_snap = dict(PAIRED_SESSIONS)
+        elif token_or_id in VALID_TOKENS:
             VALID_TOKENS.discard(token_or_id)
-            _save_sessions_to_disk()
-            return True
-        return False
+            tokens_snap = list(VALID_TOKENS)
+            sessions_snap = dict(PAIRED_SESSIONS)
+        else:
+            return False
+    _save_sessions_to_disk(tokens_snap, sessions_snap)
+    return True
 
 
 def revoke_all_sessions():
-    """Revoke all paired sessions in memory and purge persisted session storage."""
+    """Revoke all paired sessions in memory and purge persisted session storage outside auth_lock."""
     with auth_lock:
         VALID_TOKENS.clear()
         PAIRED_SESSIONS.clear()
-        path = _get_sessions_file_path()
-        if path and os.path.exists(path):
-            try:
-                os.remove(path)
-            except OSError as e:
-                logger.debug(f"Failed to remove sessions file {path}: {e}")
+    path = _get_sessions_file_path()
+    if path and os.path.exists(path):
+        try:
+            os.remove(path)
+        except OSError as e:
+            logger.debug(f"Failed to remove sessions file {path}: {e}")
 
 def get_active_sessions():
     """Return a list of currently paired and authorized device sessions."""

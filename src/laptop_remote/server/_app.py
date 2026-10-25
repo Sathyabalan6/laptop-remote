@@ -86,3 +86,20 @@ from ..core.overlay import LaserOverlay  # noqa: E402
 
 overlay = LaserOverlay()
 active_authorized_sids = set()
+client_connected_event = threading.Event()
+
+
+def add_authorized_sid(sid):
+    active_authorized_sids.add(sid)
+    client_connected_event.set()
+
+
+def remove_authorized_sid(sid):
+    active_authorized_sids.discard(sid)
+    if not active_authorized_sids:
+        client_connected_event.clear()
+
+
+def clear_authorized_sids():
+    active_authorized_sids.clear()
+    client_connected_event.clear()

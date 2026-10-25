@@ -7,9 +7,10 @@ from typing import Any
 
 from .. import __version__
 from ..core.auth import auth_lock
+from ..core.logger import logger
 from ..core.power import get_battery_percent
 from ..core.window import detect_active_preset
-from ._app import active_authorized_sids, socketio
+from ._app import active_authorized_sids, client_connected_event, socketio
 
 ServiceInfo: Any = None
 Zeroconf: Any = None
@@ -82,11 +83,15 @@ def preset_monitor():
     battery_poll_counter = 0
 
     while True:
-        time.sleep(2.0)
+        # Event-driven sleep: blocks indefinitely with 0% CPU when no clients are connected
+        client_connected_event.wait()
+
         with auth_lock:
             authorized_sids = list(active_authorized_sids)
         if not authorized_sids:
+            client_connected_event.clear()
             continue
+
         try:
             p = detect_active_preset()
             _cached_preset = p
@@ -96,7 +101,7 @@ def preset_monitor():
                 for sid in authorized_sids:
                     socketio.emit('preset_changed', {'preset': p}, to=sid)
         except Exception as e:
-            print(f"preset monitor: {e}")
+            logger.debug(f"preset monitor: {e}")
 
         # Check battery status every 4 seconds (every 2 cycles)
         battery_poll_counter += 1
@@ -109,4 +114,7 @@ def preset_monitor():
                     for sid in authorized_sids:
                         socketio.emit('battery_update', {'battery': b}, to=sid)
             except Exception as e:
-                print(f"battery monitor: {e}")
+                logger.debug(f"battery monitor: {e}")
+
+        # Interval between active monitoring passes (wakes early if disconnected)
+        client_connected_event.wait(timeout=2.0)

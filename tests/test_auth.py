@@ -99,6 +99,10 @@ class TestIpRateLimiting:
         assert is_locked is True
         assert remaining > 0
 
+        # Loopback is excluded from global network lockout so host owner can still connect
+        localhost_locked, _ = auth.is_ip_locked("127.0.0.1")
+        assert localhost_locked is False
+
 
 class TestMultiDeviceSessions:
     def test_register_and_get_sessions(self):
@@ -159,6 +163,22 @@ class TestMultiDeviceSessions:
         auth.revoke_all_sessions()
         assert sample_token not in auth.VALID_TOKENS
         assert len(auth.PAIRED_SESSIONS) == 0
+
+    def test_session_persistence_file_permissions(self, tmp_path, monkeypatch):
+        import os
+        import stat
+        import sys
+
+        test_file = str(tmp_path / "sessions.json")
+        monkeypatch.setattr(auth, "_get_sessions_file_path", lambda: test_file)
+
+        sample_token = secrets.token_hex(16)
+        auth.register_session(sample_token, "192.168.1.150", "Secure Phone")
+
+        # Check permissions on POSIX systems (0600)
+        if not sys.platform.startswith("win"):
+            mode = stat.S_IMODE(os.stat(test_file).st_mode)
+            assert mode == 0o600
 
 
 class TestCorsOriginValidator:

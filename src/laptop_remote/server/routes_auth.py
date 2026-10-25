@@ -21,7 +21,13 @@ from ..core.auth import (
 )
 from ..core.network import get_local_ip
 from ..core.overlay import SCREEN_H, SCREEN_W
-from ._app import active_authorized_sids, app, overlay, socketio
+from ._app import (
+    active_authorized_sids,
+    app,
+    clear_authorized_sids,
+    overlay,
+    socketio,
+)
 from .discovery import get_cached_preset
 from .state import build_state
 
@@ -124,7 +130,7 @@ def revoke():
         _auth.PAIRING_PIN = generate_pairing_pin()
         new_pin = _auth.PAIRING_PIN
         sids_to_notify = list(active_authorized_sids)
-        active_authorized_sids.clear()
+        clear_authorized_sids()
 
     for sid in sids_to_notify:
         socketio.emit('state', build_state(None), to=sid)

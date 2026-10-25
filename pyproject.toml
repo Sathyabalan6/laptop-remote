@@ -36,7 +36,7 @@ dependencies = [
     "pyperclip>=1.8",
     "pyautogui>=0.9.54",
     "python-xlib>=0.33; sys_platform == 'linux'",
-    "zeroconf>=0.130; sys_platform != 'win32'",
+    "zeroconf>=0.130",
     "ifaddr>=0.2",
     "pywin32>=306; sys_platform == 'win32'",
     "pycaw>=20240210; sys_platform == 'win32'",

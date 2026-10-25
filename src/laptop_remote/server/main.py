@@ -17,7 +17,13 @@ from ..core.logger import logger  # type: ignore
 from ..core.network import get_local_ip, setup_ssl_context
 from ..core.window import detect_active_preset
 from . import discovery
-from ._app import active_authorized_sids, app, overlay, socketio
+from ._app import (
+    active_authorized_sids,
+    app,
+    clear_authorized_sids,
+    overlay,
+    socketio,
+)
 
 
 def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
@@ -116,7 +122,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
             _auth.PAIRING_PIN = generate_pairing_pin()
             new_pin = _auth.PAIRING_PIN
             sids_to_notify = list(active_authorized_sids)
-            active_authorized_sids.clear()
+            clear_authorized_sids()
         _notify_revoked_clients(sids_to_notify)
         return new_pin
 
@@ -125,7 +131,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
             revoke_all_sessions()
             _auth.PAIRING_PIN = generate_pairing_pin()
             sids_to_notify = list(active_authorized_sids)
-            active_authorized_sids.clear()
+            clear_authorized_sids()
         _notify_revoked_clients(sids_to_notify)
 
     if tray_enabled or '--tray' in sys.argv:

@@ -18,7 +18,13 @@ from ..core.input import (
     handle_text_input,
 )
 from ..core.overlay import SCREEN_H, SCREEN_W
-from ._app import active_authorized_sids, overlay, socketio
+from ._app import (
+    active_authorized_sids,
+    add_authorized_sid,
+    overlay,
+    remove_authorized_sid,
+    socketio,
+)
 from .state import build_state
 
 
@@ -48,7 +54,7 @@ def on_connect(auth):
         valid = bool(token and token in VALID_TOKENS)
         session['token'] = token if valid else None
         if session['token']:
-            active_authorized_sids.add(request.sid)  # type: ignore
+            add_authorized_sid(request.sid)  # type: ignore
     if session.get('token'):
         touch_session(session['token'])
     emit('state', build_state(session['token']))
@@ -59,7 +65,7 @@ def on_disconnect():
     token = session.get('token')
     if token:
         with auth_lock:
-            active_authorized_sids.discard(request.sid)  # type: ignore
+            remove_authorized_sid(request.sid)  # type: ignore
 
 
 @socketio.on('get_battery')

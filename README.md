@@ -318,7 +318,7 @@ laptop-remote/
 ## 🧪 Running Tests
  
 ```bash
-# Python backend tests (168 tests)
+# Python backend tests (169 tests)
 pip install -e ".[dev]"
 pytest
 
