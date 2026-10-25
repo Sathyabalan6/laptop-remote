@@ -191,11 +191,26 @@ html.theme-oled body {
   background-image: none;
 }
 
+html.theme-oled body,
 html.theme-oled .bg-surface-container,
 html.theme-oled .bg-surface-container-low,
 html.theme-oled .bg-surface-container-high,
+html.theme-oled .bg-surface-container-highest,
+html.theme-oled .bg-surface,
+html.theme-oled .bg-surface-dim,
+html.theme-oled .bg-surface-variant,
 html.theme-oled .modal-panel {
   background-color: #000000;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+html.theme-oled #trackpad {
+  background: #000000;
   border-color: rgba(255, 255, 255, 0.14);
+}
+
+html.theme-oled header,
+html.theme-oled nav > div {
+  background-color: rgba(0, 0, 0, 0.94);
 }
 

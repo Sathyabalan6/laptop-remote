@@ -89,13 +89,36 @@ function setSlideIndex(val) {
   }
 }
 
-function promptSlideNumber() {
+function openSlidePickerModal() {
   vibrate(15);
-  const current = String(slideIndex);
-  const input = prompt('Enter current slide number:', current);
-  if (input !== null) {
-    setSlideIndex(input);
+  const input = document.getElementById('slidePickerInput');
+  if (input) input.value = slideIndex;
+  if (typeof openOverlay === 'function') {
+    openOverlay('slidePickerModal', 'slidePickerInput');
   }
+}
+
+function closeSlidePickerModal() {
+  if (typeof closeOverlay === 'function') {
+    closeOverlay('slidePickerModal');
+  }
+}
+
+function stepSlideNumber(delta) {
+  vibrate(12);
+  const input = document.getElementById('slidePickerInput');
+  if (input) {
+    const cur = Number.parseInt(input.value, 10) || 1;
+    input.value = Math.max(1, cur + delta);
+  }
+}
+
+function saveSlidePickerNumber() {
+  const input = document.getElementById('slidePickerInput');
+  if (input) {
+    setSlideIndex(input.value);
+  }
+  closeSlidePickerModal();
 }
 
 let restartConfirmTimeout = null;
@@ -251,5 +274,8 @@ if (typeof window !== 'undefined') {
   window.resetPresentationTimer = resetPresentationTimer;
   window.applyLaserAvailability = applyLaserAvailability;
   window.setSlideIndex = setSlideIndex;
-  window.promptSlideNumber = promptSlideNumber;
+  window.openSlidePickerModal = openSlidePickerModal;
+  window.closeSlidePickerModal = closeSlidePickerModal;
+  window.stepSlideNumber = stepSlideNumber;
+  window.saveSlidePickerNumber = saveSlidePickerNumber;
 }
