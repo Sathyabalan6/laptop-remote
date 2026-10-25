@@ -7,9 +7,9 @@ import threading
 from .. import __version__
 from ..core import auth as _auth
 from ..core.auth import (
-    VALID_TOKENS,
     auth_lock,
     generate_pairing_pin,
+    revoke_all_sessions,
     set_pairing_pin,
 )
 from ..core.device import set_custom_device_name
@@ -111,7 +111,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
 
     def regenerate_pin_action():
         with auth_lock:
-            VALID_TOKENS.clear()
+            revoke_all_sessions()
             _auth.PAIRING_PIN = generate_pairing_pin()
             new_pin = _auth.PAIRING_PIN
             sids_to_notify = list(active_authorized_sids)
@@ -121,7 +121,7 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
 
     def revoke_all_action():
         with auth_lock:
-            VALID_TOKENS.clear()
+            revoke_all_sessions()
             _auth.PAIRING_PIN = generate_pairing_pin()
             sids_to_notify = list(active_authorized_sids)
             active_authorized_sids.clear()

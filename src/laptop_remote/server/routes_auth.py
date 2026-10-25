@@ -16,6 +16,7 @@ from ..core.auth import (
     is_ip_locked,
     is_localhost,
     register_session,
+    revoke_all_sessions,
     revoke_session,
 )
 from ..core.network import get_local_ip
@@ -119,8 +120,7 @@ def revoke():
         return jsonify({'ok': revoked, 'message': f'Device {target_device_id} revoked.' if revoked else 'Device not found'})
 
     with auth_lock:
-        VALID_TOKENS.clear()
-        _auth.PAIRED_SESSIONS.clear()
+        revoke_all_sessions()
         _auth.PAIRING_PIN = generate_pairing_pin()
         new_pin = _auth.PAIRING_PIN
         sids_to_notify = list(active_authorized_sids)

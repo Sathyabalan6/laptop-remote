@@ -18,6 +18,13 @@ def client():
         yield c
 
 
+@pytest.fixture(autouse=True)
+def _reset_limits():
+    auth_core.reset_rate_limits()
+    yield
+    auth_core.reset_rate_limits()
+
+
 @pytest.fixture()
 def auth_token():
     token = secrets.token_hex(24)

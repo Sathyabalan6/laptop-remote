@@ -46,6 +46,12 @@ class TestIsLocalhost:
 
 
 class TestIpRateLimiting:
+    def setup_method(self):
+        auth.reset_rate_limits()
+
+    def teardown_method(self):
+        auth.reset_rate_limits()
+
     def test_initial_ip_is_not_locked(self):
         locked, remaining = auth.is_ip_locked("203.0.113.1")
         assert locked is False
@@ -74,6 +80,25 @@ class TestIpRateLimiting:
         auth.clear_failed_ip(ip)
         assert auth.is_ip_locked(ip)[0] is False
 
+    def test_global_distributed_lockout_triggers_across_different_ips(self):
+        """Simulate an attacker rotating through multiple IPs to brute-force the PIN."""
+        for i in range(14):
+            ip = f"10.0.1.{i}"
+            allowed, _ = auth.check_and_record_failed_ip(ip)
+            assert allowed is True
+
+        # 15th failed attempt globally triggers LAN-wide lockout
+        ip_15 = "10.0.1.99"
+        allowed, lockout_secs = auth.check_and_record_failed_ip(ip_15)
+        assert allowed is False
+        assert lockout_secs > 0
+
+        # Any other fresh IP is now globally locked out
+        fresh_ip = "192.168.1.200"
+        is_locked, remaining = auth.is_ip_locked(fresh_ip)
+        assert is_locked is True
+        assert remaining > 0
+
 
 class TestMultiDeviceSessions:
     def test_register_and_get_sessions(self):
@@ -101,4 +126,65 @@ class TestMultiDeviceSessions:
 
     def test_revoke_nonexistent_returns_false(self):
         assert auth.revoke_session("nonexistent_id_999") is False
+
+    def test_reentrant_lock_safety(self):
+        """Verify that holding auth_lock and calling functions that also acquire auth_lock does not deadlock."""
+        with auth.auth_lock:
+            sample_token = secrets.token_hex(16)
+            auth.register_session(sample_token, "127.0.0.1", "Reentrant Test")
+            sessions = auth.get_active_sessions()
+            assert any(s["id"] == sample_token[:8] for s in sessions)
+            auth.touch_session(sample_token)
+            assert auth.revoke_session(sample_token) is True
+
+    def test_session_persistence_roundtrip(self, tmp_path, monkeypatch):
+        test_file = str(tmp_path / "sessions.json")
+        monkeypatch.setattr(auth, "_get_sessions_file_path", lambda: test_file)
+
+        sample_token = secrets.token_hex(16)
+        auth.register_session(sample_token, "192.168.1.150", "Persisted Phone")
+
+        # Clear in-memory state
+        auth.VALID_TOKENS.clear()
+        auth.PAIRED_SESSIONS.clear()
+        assert sample_token not in auth.VALID_TOKENS
+
+        # Load from disk
+        auth._load_persisted_sessions()
+        assert sample_token in auth.VALID_TOKENS
+        assert sample_token in auth.PAIRED_SESSIONS
+        assert auth.PAIRED_SESSIONS[sample_token]["device_name"] == "Persisted Phone"
+
+        # Revoke all purges the file
+        auth.revoke_all_sessions()
+        assert sample_token not in auth.VALID_TOKENS
+        assert len(auth.PAIRED_SESSIONS) == 0
+
+
+class TestCorsOriginValidator:
+    def test_cors_origin_allowed(self):
+        from laptop_remote.server._app import is_cors_origin_allowed
+
+        # None / empty (native clients, PWA, same-origin)
+        assert is_cors_origin_allowed(None) is True
+        assert is_cors_origin_allowed("") is True
+
+        # Loopback
+        assert is_cors_origin_allowed("http://localhost:5000") is True
+        assert is_cors_origin_allowed("http://127.0.0.1:5000") is True
+        assert is_cors_origin_allowed("https://127.0.0.1") is True
+
+        # mDNS
+        assert is_cors_origin_allowed("http://remotedeck.local:5000") is True
+        assert is_cors_origin_allowed("https://remotedeck.local") is True
+
+        # Private LAN IPs
+        assert is_cors_origin_allowed("http://192.168.1.42:5000") is True
+        assert is_cors_origin_allowed("http://10.0.0.15:5000") is True
+        assert is_cors_origin_allowed("http://172.20.10.2:5000") is True
+
+        # External / Malicious origins blocked
+        assert is_cors_origin_allowed("https://evil.com") is False
+        assert is_cors_origin_allowed("http://attacker.org:5000") is False
+        assert is_cors_origin_allowed("https://google.com") is False
 
