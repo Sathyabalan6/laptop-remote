@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0\.."
 echo.
 echo ========================================
 echo   Laptop Remote - EXE Builder (CLI)

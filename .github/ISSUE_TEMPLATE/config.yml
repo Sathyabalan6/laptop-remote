@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/Sathyabalan6/laptop-remote/discussions
     about: Ask questions and share setups here instead of opening an issue.
   - name: 📖 Documentation
-    url: https://github.com/Sathyabalan6/laptop-remote/blob/main/DOCUMENTATION.md
+    url: https://github.com/Sathyabalan6/laptop-remote/tree/main/docs
     about: Read the architecture and usage documentation first.

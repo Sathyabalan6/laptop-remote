@@ -13,7 +13,7 @@
   <img src="docs/images/laser-trackpad-demo.gif" alt="Laser Pointer & Trackpad Demo" width="650">
 </p>
 
-> ⚠️ **LAN-only tool.** Designed for trusted local networks (home Wi-Fi / hotspot). Do **not** expose it to the public internet — see [SECURITY.md](SECURITY.md).
+> ⚠️ **LAN-only tool.** Designed for trusted local networks (home Wi-Fi / hotspot). Do **not** expose it to the public internet — see [.github/SECURITY.md](.github/SECURITY.md).
 
 ---
 
@@ -243,11 +243,13 @@ python -m laptop_remote
 laptop-remote/
 ├── pyproject.toml              # Packaging metadata & dependencies
 ├── requirements.txt            # Runtime dependencies
-├── run.sh / build.sh           # Linux launcher / builder
-├── build.bat                   # Windows builder
-├── setup_linux.sh              # One-time Wayland (ydotool) setup on Linux
+├── run.sh                      # Quick Linux launcher (auto-detects Wayland/X11)
 ├── presets.json                # Keyboard shortcut profiles (user-editable)
 ├── logo.ico                    # App icon
+├── scripts/                    # Build & platform setup scripts
+│   ├── build.sh                # Linux PyInstaller standalone builder
+│   ├── build.bat               # Windows PyInstaller standalone builder
+│   └── setup_linux.sh          # One-time Wayland (ydotool) permissions setup
 ├── src/
 │   └── laptop_remote/          # Main application package
 │       ├── __init__.py
@@ -281,8 +283,14 @@ laptop-remote/
 │           ├── sw.js           # Service worker offline precaching
 │           ├── css/            # tokens.css, base.css, components.css
 │           └── js/             # app.js, transport.js, trackpad.js, presentation.js, ...
-├── docs/                       # Design notes & research
-├── tests/                      # pytest test suite
+├── docs/                       # Architecture, roadmaps & research
+│   ├── DOCUMENTATION.md        # Technical architecture & module deep-dive
+│   ├── ROADMAP.md              # Planned milestones
+│   ├── idea.md                 # System architecture overview
+│   ├── research.md             # Shortcuts & streaming services reference
+│   ├── archive/                # Completed milestone & audit history
+│   └── images/                 # App preview screenshots & diagrams
+├── tests/                      # pytest backend & vitest frontend test suites
 └── README.md
 ```
 
@@ -295,7 +303,7 @@ laptop-remote/
 | **Windows** | ✅ Native (`win32api`) | ✅ Red dot overlay |
 | **macOS** | ✅ Native (`Quartz`) | ❌ Not yet |
 | **Linux (X11)** | pyautogui / XTest | X11 SHAPE 1.1 overlay |
-| **Linux (Wayland)** | ydotool / dotool; one-time setup_linux.sh | XWayland only when DISPLAY and SHAPE 1.1 are available |
+| **Linux (Wayland)** | ydotool / dotool; one-time scripts/setup_linux.sh | XWayland only when DISPLAY and SHAPE 1.1 are available |
 
 > **Laser pointer note:** Windows uses its native Tk overlay. Linux uses an X11
 > SHAPE 1.1 window with an empty input shape so mouse and touch events pass through.
@@ -323,9 +331,9 @@ Tests run automatically on Linux, Windows, and macOS via GitHub Actions.
 
 ## 🤝 Contributing
 
-Contributions are very welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup
+Contributions are very welcome! See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) for setup
 instructions, coding guidelines, and platform testing notes. Please also read our
-[Code of Conduct](CODE_OF_CONDUCT.md).
+[.github/CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md).
 
 - 🐛 [Report a bug](https://github.com/Sathyabalan6/laptop-remote/issues/new?template=bug_report.yml)
 - ✨ [Request a feature](https://github.com/Sathyabalan6/laptop-remote/issues/new?template=feature_request.yml)
@@ -335,7 +343,7 @@ instructions, coding guidelines, and platform testing notes. Please also read ou
 
 ## 🔐 Security
 
-This is a **LAN-only** tool. Please read [SECURITY.md](SECURITY.md) before
+This is a **LAN-only** tool. Please read [.github/SECURITY.md](.github/SECURITY.md) before
 reporting vulnerabilities or deploying it.
 
 ---

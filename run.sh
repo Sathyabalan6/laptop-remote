@@ -34,13 +34,13 @@ fi
 
 # ── Wayland mouse support ─────────────────────────────────────────────────────
 # On Wayland, mouse injection needs ydotool + membership in the 'input' group.
-# This is a one-time requirement (see setup_linux.sh). Auto-start the daemon if
+# This is a one-time requirement (see scripts/setup_linux.sh). Auto-start the daemon if
 # the user can already access /dev/uinput (i.e. is in the input group).
 if [ -n "$WAYLAND_DISPLAY" ] && [ "${XDG_SESSION_TYPE:-}" != "x11" ]; then
   if ! command -v ydotool >/dev/null 2>&1; then
-    echo "⚠️  Wayland detected but 'ydotool' is missing. Run: bash setup_linux.sh"
+    echo "⚠️  Wayland detected but 'ydotool' is missing. Run: bash scripts/setup_linux.sh"
   elif [ ! -w /dev/uinput ] && ! id -nG | grep -qw input; then
-    echo "⚠️  You are not in the 'input' group yet. Run once: bash setup_linux.sh"
+    echo "⚠️  You are not in the 'input' group yet. Run once: bash scripts/setup_linux.sh"
   elif ! pgrep -x ydotoold >/dev/null 2>&1; then
     echo "🖱️  Starting ydotoold for Wayland mouse control..."
     ydotoold &

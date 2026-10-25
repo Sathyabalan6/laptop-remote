@@ -63,7 +63,7 @@ tests/              # pytest suite
 | Windows | `win32api` | Native, no extra setup |
 | macOS | `Quartz` | Native, needs Accessibility permission |
 | Linux (X11) | `pyautogui` / XTest | Works out of the box |
-| Linux (Wayland) | `ydotool` / `dotool` | Requires one-time `setup_linux.sh` |
+| Linux (Wayland) | `ydotool` / `dotool` | Requires one-time `scripts/setup_linux.sh` |
 
 If you touch `core/input.py`, please test on as many of these as you can and note what you tested in the PR.
 

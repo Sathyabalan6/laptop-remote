@@ -113,9 +113,18 @@ laptop-remote/
 ├── pyproject.toml            # Packaging metadata & dependencies
 ├── requirements.txt          # Runtime dependencies
 ├── run.sh                    # One-click Linux launcher (X11 + Wayland setup)
-├── setup_linux.sh            # One-time Wayland (ydotool) setup
-├── build.sh                  # PyInstaller standalone binary builder (Linux)
-├── build.bat                 # PyInstaller standalone Windows builder
+├── presets.json              # Keyboard shortcut profiles (user-editable)
+├── logo.ico                  # Application icon
+├── scripts/                  # Builders & platform helpers
+│   ├── build.sh              # Standalone executable builder (Linux)
+│   ├── build.bat             # Standalone Windows builder (PyInstaller)
+│   └── setup_linux.sh        # One-time Wayland (ydotool) setup
+├── docs/                     # Guides, architecture & roadmaps
+│   ├── DOCUMENTATION.md      # Detailed module architecture & developer guide
+│   ├── ROADMAP.md            # Planned milestones
+│   ├── idea.md               # System design notes
+│   ├── research.md           # Keyboard shortcuts reference
+│   └── archive/              # Completed roadmap & audit records
 ├── src/
 │   └── laptop_remote/        # Main application package
 │       ├── __main__.py       # python -m laptop_remote
@@ -196,7 +205,7 @@ This is a **one-time** setup (and only for Linux/Wayland users):
 
 ```bash
 # One-time setup (installs ydotool + adds you to the input group)
-bash setup_linux.sh
+bash scripts/setup_linux.sh
 
 # Log out and back in, then start Laptop Remote normally
 ./run.sh
@@ -209,4 +218,4 @@ Laptop Remote auto-starts the `ydotoold` daemon on launch when possible, and pri
 | Windows | ❌ No (native `win32api`) |
 | macOS | ❌ No (native `Quartz`) |
 | Linux (Xorg session) | ❌ No (PyAutoGUI/X11) |
-| Linux (Wayland session) | ✅ Yes (one-time `setup_linux.sh`) |
+| Linux (Wayland session) | ✅ Yes (one-time `scripts/setup_linux.sh`) |
