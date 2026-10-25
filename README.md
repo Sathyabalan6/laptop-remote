@@ -244,7 +244,7 @@ laptop-remote/
 ├── pyproject.toml              # Packaging metadata & dependencies
 ├── requirements.txt            # Runtime dependencies
 ├── run.sh / build.sh           # Linux launcher / builder
-├── build.bat / build_cli.bat   # Windows builders
+├── build.bat                   # Windows builder
 ├── setup_linux.sh              # One-time Wayland (ydotool) setup on Linux
 ├── presets.json                # Keyboard shortcut profiles (user-editable)
 ├── logo.ico                    # App icon

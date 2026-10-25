@@ -115,7 +115,7 @@ laptop-remote/
 ├── run.sh                    # One-click Linux launcher (X11 + Wayland setup)
 ├── setup_linux.sh            # One-time Wayland (ydotool) setup
 ├── build.sh                  # PyInstaller standalone binary builder (Linux)
-├── build.bat / build_cli.bat # PyInstaller builders (Windows)
+├── build.bat                 # PyInstaller standalone Windows builder
 ├── src/
 │   └── laptop_remote/        # Main application package
 │       ├── __main__.py       # python -m laptop_remote
