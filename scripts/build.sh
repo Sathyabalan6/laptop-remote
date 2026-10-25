@@ -4,13 +4,13 @@
 # ==============================================================================
 set -e
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
 if [ ! -d ".venv" ]; then
-    echo "📦 Initializing virtual environment (.venv)..."
-    python3 -m venv .venv
-    .venv/bin/pip install --upgrade pip
+  echo "📦 Initializing virtual environment (.venv)..."
+  python3 -m venv .venv
+  .venv/bin/pip install --upgrade pip
 fi
 
 echo "[1/3] Ensuring dependencies are installed..."

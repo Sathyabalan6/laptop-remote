@@ -4,32 +4,32 @@
 # ==============================================================================
 set -e
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 if [ ! -d ".venv" ]; then
-    echo "📦 Initializing virtual environment (.venv)..."
-    python3 -m venv .venv
-    .venv/bin/pip install --upgrade pip
-    .venv/bin/pip install -r requirements.txt
+  echo "📦 Initializing virtual environment (.venv)..."
+  python3 -m venv .venv
+  .venv/bin/pip install --upgrade pip
+  .venv/bin/pip install -r requirements.txt
 fi
 
 # Make the package importable (src layout) if not already installed.
 if ! .venv/bin/python -c "import laptop_remote" 2>/dev/null; then
-    .venv/bin/pip install -e . --quiet
+  .venv/bin/pip install -e . --quiet
 fi
 
 # Enable local X11/Xwayland connection access for PyAutoGUI/mouse controls
 if command -v xhost >/dev/null 2>&1; then
-    xhost +local: >/dev/null 2>&1 || true
+  xhost +local: >/dev/null 2>&1 || true
 fi
 
 # Detect dynamic Xwayland auth if needed
 if [ -z "$XAUTHORITY" ] && [ -n "$XDG_RUNTIME_DIR" ]; then
-    M_AUTH=$(ls -d "$XDG_RUNTIME_DIR"/.mutter-Xwaylandauth* 2>/dev/null | head -n 1)
-    if [ -n "$M_AUTH" ]; then
-        export XAUTHORITY="$M_AUTH"
-    fi
+  M_AUTH=$(ls -d "$XDG_RUNTIME_DIR"/.mutter-Xwaylandauth* 2>/dev/null | head -n 1)
+  if [ -n "$M_AUTH" ]; then
+    export XAUTHORITY="$M_AUTH"
+  fi
 fi
 
 # ── Wayland mouse support ─────────────────────────────────────────────────────
