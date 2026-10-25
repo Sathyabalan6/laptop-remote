@@ -20,7 +20,7 @@ echo "[2/3] Cleaning previous build artifacts..."
 rm -rf build dist
 
 echo "[3/3] Compiling LaptopRemote-CLI standalone executable..."
-.venv/bin/pyinstaller laptop_remote_cli.spec --noconfirm
+.venv/bin/pyinstaller scripts/laptop_remote_cli.spec --noconfirm
 
 echo ""
 echo "=================================================="

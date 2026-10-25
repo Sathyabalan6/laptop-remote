@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       publish_to_pypi:
-        description: 'Publish package to PyPI (requires PyPI Trusted Publisher configured)'
+        description: >-
+          Publish package to PyPI (requires Trusted Publisher)
         required: false
         type: boolean
         default: false
@@ -32,7 +33,7 @@ jobs:
           python -m pip install -e ".[windows,build]"
 
       - name: Build LaptopRemote-CLI.exe
-        run: pyinstaller laptop_remote_cli.spec --noconfirm
+        run: pyinstaller scripts/laptop_remote_cli.spec --noconfirm
 
       - name: Smoke test executable
         run: .\dist\LaptopRemote-CLI.exe --help
@@ -99,7 +100,9 @@ jobs:
   pypi-publish:
     name: Publish to PyPI
     needs: [build-package]
-    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish_to_pypi == 'true'
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event.inputs.publish_to_pypi == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi

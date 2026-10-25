@@ -112,13 +112,15 @@ server reports the laser as unavailable instead of moving the system cursor.
 laptop-remote/
 ├── pyproject.toml            # Packaging metadata & dependencies
 ├── requirements.txt          # Runtime dependencies
-├── run.sh                    # One-click Linux launcher (X11 + Wayland setup)
 ├── presets.json              # Keyboard shortcut profiles (user-editable)
-├── logo.ico                  # Application icon
-├── scripts/                  # Builders & platform helpers
+├── assets/                   # Visual branding assets
+│   └── logo.ico              # Application icon
+├── scripts/                  # Launchers, builders & platform helpers
+│   ├── run.sh                # One-click Linux launcher (X11 + Wayland setup)
 │   ├── build.sh              # Standalone executable builder (Linux)
 │   ├── build.bat             # Standalone Windows builder (PyInstaller)
-│   └── setup_linux.sh        # One-time Wayland (ydotool) setup
+│   ├── setup_linux.sh        # One-time Wayland (ydotool) setup
+│   └── laptop_remote_cli.spec # Standalone binary PyInstaller spec
 ├── docs/                     # Guides, architecture & roadmaps
 │   ├── DOCUMENTATION.md      # Detailed module architecture & developer guide
 │   ├── ROADMAP.md            # Planned milestones
@@ -183,7 +185,7 @@ uvx laptop-remote
 pipx install laptop-remote
 
 # Standard local repo launch
-./run.sh
+./scripts/run.sh
 
 # Run with verbose debug logging
 laptop-remote --verbose
@@ -208,7 +210,7 @@ This is a **one-time** setup (and only for Linux/Wayland users):
 bash scripts/setup_linux.sh
 
 # Log out and back in, then start Laptop Remote normally
-./run.sh
+./scripts/run.sh
 ```
 
 Laptop Remote auto-starts the `ydotoold` daemon on launch when possible, and prints a clear message if the `input` group membership is still missing.

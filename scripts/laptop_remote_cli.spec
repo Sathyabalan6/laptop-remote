@@ -9,8 +9,9 @@ datas = [
     ('presets.json', '.'),
 ]
 
-if os.path.exists('logo.ico'):
-    datas.append(('logo.ico', '.'))
+icon_file = 'assets/logo.ico' if os.path.exists('assets/logo.ico') else ('logo.ico' if os.path.exists('logo.ico') else None)
+if icon_file:
+    datas.append((icon_file, '.'))
 
 hiddenimports = [
     'engineio.async_drivers.threading',
@@ -83,5 +84,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='logo.ico' if os.path.exists('logo.ico') else None,
+    icon=icon_file,
 )

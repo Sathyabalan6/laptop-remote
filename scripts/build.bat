@@ -30,7 +30,7 @@ if exist dist rmdir /s /q dist
 
 :: Build
 echo [3/3] Building LaptopRemote-CLI.exe (Terminal Edition)...
-pyinstaller laptop_remote_cli.spec --noconfirm
+pyinstaller scripts\laptop_remote_cli.spec --noconfirm
 if errorlevel 1 (
     echo.
     echo [ERROR] Build failed. Check output above.

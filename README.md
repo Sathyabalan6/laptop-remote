@@ -120,7 +120,7 @@ laptop-remote --ssl
 
 Linux users can also use the launcher script:
 ```bash
-./run.sh
+./scripts/run.sh
 ```
 
 ---
@@ -243,13 +243,15 @@ python -m laptop_remote
 laptop-remote/
 ├── pyproject.toml              # Packaging metadata & dependencies
 ├── requirements.txt            # Runtime dependencies
-├── run.sh                      # Quick Linux launcher (auto-detects Wayland/X11)
 ├── presets.json                # Keyboard shortcut profiles (user-editable)
-├── logo.ico                    # App icon
-├── scripts/                    # Build & platform setup scripts
+├── assets/                     # Visual branding assets
+│   └── logo.ico                # App icon
+├── scripts/                    # Launchers, builders & platform setup
+│   ├── run.sh                  # Quick Linux launcher (auto-detects Wayland/X11)
 │   ├── build.sh                # Linux PyInstaller standalone builder
 │   ├── build.bat               # Windows PyInstaller standalone builder
-│   └── setup_linux.sh          # One-time Wayland (ydotool) permissions setup
+│   ├── setup_linux.sh          # One-time Wayland (ydotool) permissions setup
+│   └── laptop_remote_cli.spec  # Standalone binary PyInstaller spec
 ├── src/
 │   └── laptop_remote/          # Main application package
 │       ├── __init__.py
