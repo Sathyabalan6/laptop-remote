@@ -44,3 +44,13 @@ class TestWindowPresetDetection:
     def test_none_window_title_returns_none(self, monkeypatch):
         monkeypatch.setattr(window, "_get_active_window_title", lambda: None)
         assert window.detect_active_preset() is None
+
+    def test_macos_osascript_active_window(self, monkeypatch):
+        monkeypatch.setattr("sys.platform", "darwin")
+        monkeypatch.setattr("shutil.which", lambda cmd: "/usr/bin/osascript" if cmd == "osascript" else None)
+        monkeypatch.setattr(
+            "subprocess.check_output",
+            lambda *args, **kwargs: b"Google Chrome - YouTube - Google Chrome\n"
+        )
+        assert window._get_active_window_title() == "Google Chrome - YouTube - Google Chrome"
+        assert window.detect_active_preset() == "youtube_hotstar"

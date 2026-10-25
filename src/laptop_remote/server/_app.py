@@ -22,19 +22,7 @@ from urllib.parse import urlparse
 from flask import Flask
 from flask_socketio import SocketIO
 
-# Prevent mouseinfo/pymsgbox sys.exit when python3-tk is not installed on Linux
-if 'tkinter' not in sys.modules:
-    try:
-        import tkinter
-    except ImportError:
-        import types
-        mock_tk = types.ModuleType('tkinter')
-        mock_tk.TkVersion = 8.6  # type: ignore
-        mock_tk.TclVersion = 8.6  # type: ignore
-        mock_tk.ttk = types.ModuleType('ttk')  # type: ignore
-        mock_tk.Event = object  # type: ignore
-        sys.modules['tkinter'] = mock_tk
-        sys.modules['tkinter.ttk'] = mock_tk.ttk
+from ..core import _tkinter_guard  # noqa: F401
 
 try:
     import pyautogui

@@ -1,5 +1,4 @@
 import contextlib
-import importlib.util
 import os
 import shutil
 import subprocess
@@ -11,25 +10,6 @@ from typing import Any
 from .config import load_presets
 from .keys import char_to_press, key_name_to_code, split_keys
 from .logger import logger  # type: ignore
-
-# ── Tkinter Guard ─────────────────────────────────────────────────────────────
-# PyAutoGUI's internal sub-dependencies (pymsgbox, mouseinfo) unconditionally
-# attempt to `import tkinter` on startup. On Linux systems without `python3-tk`
-# installed, this raises an uncaught exception that calls sys.exit(1), killing
-# the entire headless/terminal server at import time.
-# To allow Laptop Remote to run purely in the terminal or on minimal servers without
-# requiring an unused desktop GUI package, we provide a minimal mock tkinter module
-# before importing pyautogui. Do NOT remove this guard.
-# ─────────────────────────────────────────────────────────────────────────────
-if 'tkinter' not in sys.modules and importlib.util.find_spec('tkinter') is None:
-    import types
-    mock_tk = types.ModuleType('tkinter')
-    mock_tk.TkVersion = 8.6  # type: ignore
-    mock_tk.TclVersion = 8.6  # type: ignore
-    mock_tk.ttk = types.ModuleType('ttk')  # type: ignore
-    mock_tk.Event = object  # type: ignore
-    sys.modules['tkinter'] = mock_tk
-    sys.modules['tkinter.ttk'] = mock_tk.ttk
 
 try:
     import pyautogui

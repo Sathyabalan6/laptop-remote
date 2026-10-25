@@ -39,6 +39,20 @@ def _get_active_window_title():
             if win_id.startswith('0x'):
                 name_out = subprocess.check_output(['xprop', '-id', win_id, 'WM_NAME', '_NET_WM_NAME'], stderr=subprocess.DEVNULL).decode()
                 return name_out
+    elif sys.platform == 'darwin' and shutil.which('osascript'):
+        with contextlib.suppress(Exception):
+            cmd = [
+                'osascript', '-e',
+                'tell application "System Events" to tell (first process whose frontmost is true) '
+                'to if (count of windows) > 0 then return name & " - " & (name of window 1) else return name'
+            ]
+            out = subprocess.check_output(
+                cmd,
+                stderr=subprocess.DEVNULL,
+                timeout=2.0
+            ).decode('utf-8', errors='replace').strip()
+            if out:
+                return out
     return None
 
 def detect_active_preset():

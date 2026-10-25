@@ -65,6 +65,10 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
     url = f"{scheme}://{ip}{port_str}"
     mdns_url = f"{scheme}://remotedeck.local{port_str}"
 
+    # Start mDNS registration and the preset-change monitor.
+    zeroconf_instance, service_info = discovery.register_mdns(ip, port, ssl_enabled, mdns_url)
+    threading.Thread(target=discovery.preset_monitor, daemon=True).start()
+
     if quiet:
         logger.info(f"Server started at {url} (PIN: {_auth.PAIRING_PIN})")
     else:
@@ -72,7 +76,8 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
         print(f"  ⚡ LAPTOP REMOTE v{__version__} · TERMINAL EDITION")
         print("=" * 52)
         print(f"  🌐 Local URL      : {url}")
-        print(f"  📢 mDNS Discovery : {mdns_url}")
+        if zeroconf_instance:
+            print(f"  📢 mDNS Discovery : {mdns_url}")
         print(f"  🔒 Pairing PIN    : {_auth.PAIRING_PIN}")
         if ssl_enabled:
             print("  🛡️  Transport      : Encrypted (HTTPS / WSS)")
@@ -87,10 +92,6 @@ def main(custom_pin=None, ssl_enabled=False, ssl_cert=None,
                 qr.make(fit=True)
                 qr.print_ascii(invert=True)
                 print("\n  👉 Scan the QR code above with your phone to connect!\n")
-
-    # Start mDNS registration and the preset-change monitor.
-    zeroconf_instance, service_info = discovery.register_mdns(ip, port, ssl_enabled, mdns_url)
-    threading.Thread(target=discovery.preset_monitor, daemon=True).start()
 
     def get_companion_state():
         with auth_lock:
