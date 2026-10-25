@@ -11,14 +11,38 @@ from .config import load_presets
 from .keys import char_to_press, key_name_to_code, split_keys
 from .logger import logger  # type: ignore
 
-try:
-    import pyautogui
-    pyautogui.PAUSE = 0
-    pyautogui.FAILSAFE = False
-    pyautogui.MINIMUM_DURATION = 0
-    pyautogui.MINIMUM_SLEEP = 0
-except (Exception, SystemExit):
-    pyautogui = None
+_pyautogui_module = None
+_pyautogui_attempted = False
+
+
+def _get_pyautogui():
+    global _pyautogui_module, _pyautogui_attempted
+    if not _pyautogui_attempted:
+        _pyautogui_attempted = True
+        try:
+            import pyautogui
+            pyautogui.PAUSE = 0
+            pyautogui.FAILSAFE = False
+            pyautogui.MINIMUM_DURATION = 0
+            pyautogui.MINIMUM_SLEEP = 0
+            _pyautogui_module = pyautogui
+        except (Exception, SystemExit):
+            _pyautogui_module = None
+    return _pyautogui_module
+
+
+class _LazyPyAutoGUI:
+    def __getattr__(self, name: str) -> Any:
+        pg = _get_pyautogui()
+        if pg is None:
+            raise AttributeError(f"pyautogui is not available on this platform (cannot access {name})")
+        return getattr(pg, name)
+
+    def __bool__(self) -> bool:
+        return _get_pyautogui() is not None
+
+
+pyautogui: Any = _LazyPyAutoGUI()
 
 IS_WINDOWS = sys.platform.startswith('win')
 IS_MAC = sys.platform.startswith('darwin')
@@ -530,13 +554,18 @@ class InputBackend:
         except Exception as e:
             print(f"Error simulating keys {keys}: {e}")
 
-try:
-    if pyautogui:
-        SCREEN_W, SCREEN_H = pyautogui.size()
-    else:
-        SCREEN_W, SCREEN_H = 1920, 1080
-except Exception:
-    SCREEN_W, SCREEN_H = 1920, 1080
+def _detect_screen_size():
+    if IS_WINDOWS and USE_NATIVE_MOUSE and win32api:
+        with contextlib.suppress(Exception):
+            return win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1)
+    if not IS_WAYLAND:
+        with contextlib.suppress(Exception):
+            if pyautogui:
+                return pyautogui.size()
+    return 1920, 1080
+
+
+SCREEN_W, SCREEN_H = _detect_screen_size()
 
 # ── Startup diagnostics ───────────────────────────────────────────────────────
 if IS_WAYLAND:
