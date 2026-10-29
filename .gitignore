@@ -33,3 +33,13 @@ env/
 # Node.js dependencies
 node_modules/
 .vitest/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS artifacts
+.DS_Store
+Thumbs.db
